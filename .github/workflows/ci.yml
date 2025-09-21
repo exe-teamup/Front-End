@@ -7,9 +7,35 @@ on:
     branches: [develop]
 
 jobs:
+  branch-status:
+    name: Branch Status
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Verify PR branch naming convention
+        shell: bash
+        run: |
+          echo "Base ref: ${{ github.base_ref }}"
+          echo "Head ref: ${{ github.head_ref }}"
+          BRANCH="${{ github.head_ref }}"
+          if [ "${{ github.actor }}" = "dependabot[bot]" ]; then
+            echo "Skipping branch name check for Dependabot."
+            exit 0
+          fi
+          if echo "$BRANCH" | grep -Eq '^(feature|feat|bugfix|fix|hotfix|chore|refactor|release|docs|test)/[a-z0-9._-]+$'; then
+            echo "Branch name OK"
+          else
+            echo "::error::Branch '$BRANCH' does not match expected pattern: type/name (e.g., feature/add-cool-thing)"
+            exit 1
+          fi
+          if [[ "${{ github.base_ref }}" != "develop" ]]; then
+            echo "::warning::PR base is '${{ github.base_ref }}', expected 'develop'."
+          fi
+
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
+    needs: branch-status
 
     steps:
       - name: Checkout code
@@ -49,6 +75,7 @@ jobs:
   dependency-check:
     name: Dependency Check
     runs-on: ubuntu-latest
+    needs: branch-status
 
     steps:
       - name: Checkout code
