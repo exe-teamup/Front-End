@@ -1,3 +1,21 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #f37021;
+  --color-primary-blue: #0066b3;
+  --color-primary-green: #0db14b;
+
+  /* Notification Colors */
+  --color-error: #fb2c36;
+  --color-danger: #fb2c36;
+
+  /* Text Colors */
+  --color-text-title: #1a1919;
+  --color-text-subtitle: #5a5555;
+  --color-text-primary: #1a1919;
+  --color-text-secondary: #5a5555;
+
+  /* Background Colors */
+  --color-background-card: #f7f7f7;
+  --color-background-secondary: #f7f7f7;
+}
