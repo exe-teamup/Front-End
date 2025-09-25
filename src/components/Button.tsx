@@ -1,5 +1,5 @@
 interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'success' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   onClick?: () => void;
   children: React.ReactNode;
@@ -17,9 +17,12 @@ export const Button: React.FC<ButtonProps> = ({
     'font-semibold rounded focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200';
 
   const variantClasses = {
-    primary: 'bg-blue-500 hover:bg-blue-700 text-white focus:ring-blue-500',
-    secondary: 'bg-gray-500 hover:bg-gray-700 text-white focus:ring-gray-500',
-    danger: 'bg-red-500 hover:bg-red-700 text-white focus:ring-red-500',
+    primary: 'bg-primary hover:bg-primary/90 text-white focus:ring-primary',
+    secondary:
+      'bg-primary-blue hover:bg-primary-blue/90 text-white focus:ring-primary-blue',
+    success:
+      'bg-primary-green hover:bg-primary-green/90 text-white focus:ring-primary-green',
+    danger: 'bg-error hover:bg-error/90 text-white focus:ring-error',
   };
 
   const sizeClasses = {
@@ -29,6 +32,8 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : '';
+
+  // console.log();
 
   return (
     <button
