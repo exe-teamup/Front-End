@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 function App() {
   const [count, setCount] = useState(0);
+  // const [test, setTest] = useState(0);
 
   return (
     <div className='min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8'>
