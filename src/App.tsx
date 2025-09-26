@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from './components/Button';
 
 function App() {
   const [count, setCount] = useState(0);
@@ -19,15 +20,15 @@ function App() {
           <div className='w-16 h-16 bg-error rounded'></div>
         </div>
         <div className='flex gap-4'>
-          <button className='bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded'>
-            Primary Button
-          </button>
-          <button className='bg-primary-blue hover:bg-primary-blue/90 text-white px-4 py-2 rounded'>
-            Blue Button
-          </button>
-          <button className='bg-error hover:bg-error/90 text-white px-4 py-2 rounded'>
-            Error Button
-          </button>
+          <Button size='sm' variant='blue'>
+            Small Button
+          </Button>
+          <Button size='md' variant='green'>
+            Medium Button
+          </Button>
+          <Button size='lg' disabled>
+            Large Button
+          </Button>
         </div>
       </div>
 
