@@ -5,6 +5,8 @@ import { Button } from '../Button/Button';
 
 export function AuthButton() {
   const { status, user, signOut } = useAuthStore();
+  console.log('🚀 ~ AuthButton ~ status:', status);
+  console.log('🚀 ~ AuthButton ~ user:', user);
   const navigate = useNavigate();
   const handleSignIn = () => {
     navigate(ROUTES.LOGIN);
@@ -13,11 +15,6 @@ export function AuthButton() {
   const handleSignOut = async () => {
     await signOut();
   };
-
-  // Don't show button while loading initial auth state
-  if (status === 'idle') {
-    return null;
-  }
 
   // Show loading state
   if (status === 'loading') {
@@ -29,7 +26,7 @@ export function AuthButton() {
   }
 
   // Show sign out button when authenticated
-  if (status === 'authenticated' && user) {
+  if (user && status !== 'unauthenticated') {
     return (
       <div className='flex items-center gap-3'>
         <div className='flex items-center gap-2'>
