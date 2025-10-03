@@ -5,8 +5,6 @@ import { Button } from '../Button/Button';
 
 export function AuthButton() {
   const { status, user, signOut } = useAuthStore();
-  console.log('🚀 ~ AuthButton ~ status:', status);
-  console.log('🚀 ~ AuthButton ~ user:', user);
   const navigate = useNavigate();
   const handleSignIn = () => {
     navigate(ROUTES.LOGIN);
