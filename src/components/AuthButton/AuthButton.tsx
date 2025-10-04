@@ -14,11 +14,6 @@ export function AuthButton() {
     await signOut();
   };
 
-  // Don't show button while loading initial auth state
-  if (status === 'idle') {
-    return null;
-  }
-
   // Show loading state
   if (status === 'loading') {
     return (
@@ -29,7 +24,7 @@ export function AuthButton() {
   }
 
   // Show sign out button when authenticated
-  if (status === 'authenticated' && user) {
+  if (user && status !== 'unauthenticated') {
     return (
       <div className='flex items-center gap-3'>
         <div className='flex items-center gap-2'>
