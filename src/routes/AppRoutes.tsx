@@ -4,6 +4,7 @@ import { MainLayout } from '../layouts/MainLayout';
 import { Login } from '../pages/auth/Login';
 import { About } from '../pages/About';
 import { Home } from '../pages/Home';
+import { Profile } from '../pages/Profile';
 import { ROUTES } from '../constants/routes';
 
 export function AppRoutes() {
@@ -32,6 +33,10 @@ export function AppRoutes() {
         {
           path: 'about',
           element: <About />,
+        },
+        {
+          path: ROUTES.PROFILE.replace(/^\//, ''),
+          element: <Profile />,
         },
       ],
     },
