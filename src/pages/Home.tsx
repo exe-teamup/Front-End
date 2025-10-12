@@ -1,4 +1,8 @@
-import { BannerSection, LatestPostSection } from '../components/home';
+import {
+  BannerSection,
+  LatestPostSection,
+  PostSection,
+} from '../components/home';
 
 export function Home() {
   return (
@@ -6,6 +10,7 @@ export function Home() {
       <BannerSection className='mb-12' />
       <div className='max-w-7xl mx-auto px-4'>
         <LatestPostSection />
+        <PostSection />
       </div>
     </div>
   );
