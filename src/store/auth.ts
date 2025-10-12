@@ -10,12 +10,12 @@ import { ApiClient } from '../lib/axios';
 import { AuthTokenManager } from '../lib/axios/authToken';
 import { auth, googleProvider } from '../services/firebase/config';
 import type { AuthStatus, AuthUser } from '../services/firebase/types';
-import type { Account } from '../types/account';
+import type { AuthResponse } from '../types/auth';
 
 type AuthState = {
   status: AuthStatus;
   user: AuthUser | null;
-  account: Account | null;
+  account: AuthResponse | null;
   error?: string;
 
   initAuthListener: () => void;
@@ -84,12 +84,12 @@ export const useAuthStore = create<AuthState>()(
             AuthTokenManager.setToken(idToken);
           }
 
-          const response = await ApiClient.post<Account>(
+          const response = await ApiClient.post<AuthResponse>(
             serviceConfig.ENDPOINTS.LOGIN_GOOGLE,
             { idToken }
           );
 
-          const account: Account = response.data;
+          const account: AuthResponse = response.data;
 
           // onAuthStateChanged will update to authenticated; we set early for better UX
           set({

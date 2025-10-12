@@ -7,10 +7,10 @@ import type { UserRole } from '../types/account';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  role?: UserRole;
+  userRole?: UserRole;
 }
 
-export function ProtectedRoute({ children, role }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, userRole }: ProtectedRouteProps) {
   const location = useLocation();
   const status = useAuthStore(s => s.status);
   const account = useAuthStore(s => s.account);
@@ -32,7 +32,7 @@ export function ProtectedRoute({ children, role }: ProtectedRouteProps) {
     );
   }
 
-  if (role && account && account.role !== role) {
+  if (userRole && account && account.role !== userRole) {
     return <div className='p-4 text-center'>Access denied</div>;
   }
 
