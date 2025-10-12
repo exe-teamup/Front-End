@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
-import { Header } from '../components/Header/Header';
+import { Header } from '../components/common/Header';
+import { Footer } from '../components/common/Footer';
 
 export function MainLayout() {
   return (
@@ -11,12 +12,7 @@ export function MainLayout() {
         <Outlet />
       </main>
 
-      {/* Footer - placeholder */}
-      <footer className='bg-white border-t py-4'>
-        <div className='px-4 text-center text-text-subtitle text-sm'>
-          Footer sẽ có thông tin liên hệ...
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
