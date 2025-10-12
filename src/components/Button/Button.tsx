@@ -2,7 +2,15 @@ import type { ButtonHTMLAttributes } from 'react';
 import { cn } from '../../utils/cn';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'blue' | 'green' | 'error' | 'danger';
+  variant?:
+    | 'primary'
+    | 'blue'
+    | 'green'
+    | 'error'
+    | 'danger'
+    | 'outline'
+    | 'ghost'
+    | 'muted';
   size?: 'sm' | 'md' | 'lg';
   onClick?: () => void;
   children: React.ReactNode;
@@ -22,7 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseClasses =
-    'text-white rounded transition-colors duration-200 cursor-pointer px-2';
+    'rounded transition-colors duration-200 cursor-pointer px-2';
 
   const variantClasses = {
     primary: 'bg-primary hover:bg-primary/80',
@@ -30,6 +38,13 @@ export const Button: React.FC<ButtonProps> = ({
     green: 'bg-primary-green hover:bg-primary-green/80',
     error: 'bg-error hover:bg-error/80',
     danger: 'bg-danger hover:bg-danger/80',
+    // White with border, used for neutral "Xem chi tiết"
+    outline:
+      'bg-white text-text-title border border-border-primary hover:bg-background-card',
+    // Pale primary/peach background with primary text (e.g. soft highlighted action)
+    ghost: 'bg-primary/10 text-primary hover:bg-primary/20',
+    // Muted / disabled style (use with disabled=true)
+    muted: 'bg-gray-300 text-text-subtitle cursor-default',
   };
 
   const sizeClasses = {
@@ -39,7 +54,7 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const disabledClasses =
-    'text-title cursor-default bg-gray-400 opacity-50 pointer-event-none';
+    'text-text-title cursor-default bg-gray-300 opacity-70 pointer-events-none';
 
   const content = (
     <>

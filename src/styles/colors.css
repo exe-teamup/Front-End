@@ -1,0 +1,38 @@
+/* Central color palette (mapped from Figma design)
+   - Use CSS variables directly in non-Tailwind CSS or JS: var(--color-primary)
+   - Tailwind classes are available via `tailwind.config.js` (e.g. `text-primary`, `bg-primary`)
+*/
+
+:root {
+  /* Primary */
+  --color-primary: #f37021; /* Figma Primary (orange) */
+
+  /* Accent / alternatives */
+  --color-primary-blue: #0066b3; /* deep blue */
+  --color-primary-green: #0db14b; /* green */
+
+  /* Notification */
+  --color-error: #fb2c36; /* red */
+  --color-danger: var(--color-error);
+
+  /* Grays */
+  --color-gray-100: #f7f7f7;
+  --color-gray-200: #e6e6e6;
+  --color-gray-300: #bfbfbf; /* light gray */
+  --color-gray-500: #7a7a7a; /* medium */
+  --color-gray-700: #5a5555; /* dark gray / text-muted */
+  --color-gray-900: #202020;
+
+  /* Text */
+  --color-text-title: var(--color-gray-900);
+  --color-text-subtitle: var(--color-gray-700);
+  --color-text-primary: #1a1919;
+  --color-text-secondary: var(--color-gray-700);
+
+  /* Backgrounds */
+  --color-background-card: var(--color-gray-100);
+  --color-background-secondary: var(--color-gray-100);
+
+  /* Border */
+  --color-border-primary: #b0b0b0;
+}
