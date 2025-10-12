@@ -1,6 +1,23 @@
+import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
+import { ROUTES } from '../../constants/routes';
+import { useAuthStore } from '../../store/auth';
 
 export function Login() {
+  const { signInWithGoogle, status, user, error } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as { from?: string } | null;
+
+  useEffect(() => {
+    if (status === 'authenticated' && user) {
+      const from =
+        state?.from && state.from !== ROUTES.LOGIN ? state.from : ROUTES.HOME;
+      navigate(from, { replace: true });
+    }
+  }, [status, user, navigate, state]);
+
   return (
     <div
       className='min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center p-4'
@@ -49,6 +66,12 @@ export function Login() {
                 Lost Password?
               </button>
             </div>
+
+            {error && (
+              <div className='mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm'>
+                {error}
+              </div>
+            )}
           </div>
         </div>
 
@@ -60,13 +83,19 @@ export function Login() {
             <Button
               size='lg'
               className='w-full flex items-center justify-center gap-2 text-text-title hover:text-white rounded-md font-thin bg-transparent border border-border-primary'
+              icon={
+                <img
+                  src='/images/icon-google.svg'
+                  alt='Google'
+                  className='h-5 w-5'
+                />
+              }
+              onClick={signInWithGoogle}
+              disabled={status === 'loading'}
             >
-              <img
-                src='/images/icon-google.svg'
-                alt='Google'
-                className='h-5 w-5'
-              />
-              @fpt.edu.vn (For lecturer only)
+              {status === 'loading'
+                ? 'Signing in...'
+                : '@fpt.edu.vn(For lecturer only)'}
             </Button>
           </div>
 
