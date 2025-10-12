@@ -5,6 +5,7 @@ import { MainLayout } from '../layouts/MainLayout';
 import { About } from '../pages/About';
 import { Login } from '../pages/auth/Login';
 import { Home } from '../pages/Home';
+import { Profile } from '../pages/Profile';
 import { ProtectedRoute } from './ProtectedRoute';
 
 export function AppRoutes() {
@@ -38,6 +39,10 @@ export function AppRoutes() {
             </ProtectedRoute>
           ),
           children: [{ path: 'about', element: <About /> }],
+        },
+        {
+          path: ROUTES.PROFILE.replace(/^\//, ''),
+          element: <Profile />,
         },
       ],
     },
