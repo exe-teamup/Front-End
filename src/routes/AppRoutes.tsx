@@ -6,6 +6,8 @@ import { About } from '../pages/About';
 import { Login } from '../pages/auth/Login';
 import { Home } from '../pages/Home';
 import { Profile } from '../pages/Profile';
+import { AccountSetting } from '../pages/profile/AccountSetting';
+import { UserProfile } from '../pages/UserProfile';
 import { ProtectedRoute } from './ProtectedRoute';
 
 export function AppRoutes() {
@@ -31,6 +33,21 @@ export function AppRoutes() {
           path: ROUTES.HOME,
           element: <Home />,
         },
+        // Public route for demo: profile
+        {
+          path: ROUTES.PROFILE.ROOT,
+          children: [
+            {
+              index: true,
+              element: <AccountSetting />,
+            },
+          ],
+        },
+        // User profile routes
+        {
+          path: 'exe/:username',
+          element: <UserProfile />,
+        },
         // Protected routes (everything else under main layout)
         {
           element: (
@@ -41,7 +58,7 @@ export function AppRoutes() {
           children: [{ path: 'about', element: <About /> }],
         },
         {
-          path: ROUTES.PROFILE.replace(/^\//, ''),
+          path: ROUTES.PROFILE.ROOT,
           element: (
             <ProtectedRoute>
               <Profile />

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { AuthButton } from '../AuthButton';
 import { Button } from '../Button/Button';
 // import { IconBell, IconUser } from '../Icon/icons';
@@ -9,9 +10,9 @@ export function Header() {
       <div className='max-w-7xl mx-auto px-4 h-20 flex items-center justify-between'>
         {/* Left: Logo */}
         <div className='flex items-center flex-1'>
-          <div className='flex items-center gap-4'>
-            <img src='images/logo.svg' alt='Logo' className='h-14 w-14' />
-          </div>
+          <Link to='/' className='flex items-center gap-4'>
+            <img src='/images/logo.svg' alt='Logo' className='h-14 w-14' />
+          </Link>
 
           {/* Middle: Search */}
           <div className='flex-1 max-w-xl mx-6'>
