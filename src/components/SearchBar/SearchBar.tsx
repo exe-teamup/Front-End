@@ -1,3 +1,4 @@
+import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../../utils/cn';
 
@@ -15,7 +16,7 @@ export function SearchBar({
   return (
     <div
       className={cn(
-        'w-full rounded-full',
+        'w-full rounded-xl ring-1 ring-black/20 transition-all duration-200',
         focused
           ? 'ring-2 ring-primary shadow-[0_6px_20px_rgba(243,112,33,0.2)]'
           : 'bg-white',
@@ -23,18 +24,7 @@ export function SearchBar({
       )}
     >
       <div className='flex items-center px-4 py-2 gap-3'>
-        <svg
-          xmlns='http://www.w3.org/2000/svg'
-          viewBox='0 0 24 24'
-          fill='none'
-          stroke='currentColor'
-          strokeWidth='1.5'
-          className='w-5 h-5 text-text-subtitle'
-          aria-hidden='true'
-        >
-          <circle cx='11' cy='11' r='6' />
-          <path d='M21 21l-4.35-4.35' />
-        </svg>
+        <Search className='w-5 h-5 text-text-subtitle' />
 
         <input
           type='text'

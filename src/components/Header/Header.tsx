@@ -1,32 +1,54 @@
+import { AuthButton } from '../AuthButton';
 import { Button } from '../Button/Button';
-import { IconBell, IconUser } from '../Icon/icons';
+// import { IconBell, IconUser } from '../Icon/icons';
 import { SearchBar } from '../SearchBar/SearchBar';
 
 export function Header() {
   return (
-    <div className='bg-white shadow-sm border-b'>
-      <div className='max-w-7xl mx-auto px-4 h-16 flex items-center justify-between'>
+    <div className='bg-white shadow-sm sticky top-0 z-50'>
+      <div className='max-w-7xl mx-auto px-4 h-20 flex items-center justify-between'>
         {/* Left: Logo */}
-        <div className='flex items-center gap-4'>
-          <img src='/logo.ico' alt='Logo' className='h-8 w-8' />
-          <div className='text-text-title font-semibold'>EXE</div>
-        </div>
+        <div className='flex items-center flex-1'>
+          <div className='flex items-center gap-4'>
+            <img src='images/logo.svg' alt='Logo' className='h-14 w-14' />
+          </div>
 
-        {/* Middle: Search */}
-        <div className='flex-1 max-w-xl mx-6'>
-          <SearchBar />
+          {/* Middle: Search */}
+          <div className='flex-1 max-w-xl mx-6'>
+            <SearchBar />
+          </div>
+
+          {/* nav button */}
+          <div className='hidden md:block'>
+            <nav className='flex items-center gap-6 text-text-subtitle'>
+              <a href='/posts' className='hover:text-primary transition-colors'>
+                Bài đăng
+              </a>
+              <a
+                href='/posts/create'
+                className='hover:text-primary transition-colors'
+              >
+                Tạo nhóm
+              </a>
+              <a href='/blog' className='hover:text-primary transition-colors'>
+                Blog
+              </a>
+            </nav>
+          </div>
         </div>
 
         {/* Right: actions */}
         <div className='flex items-center gap-4'>
           <Button
             variant='primary'
-            className='rounded-md bg-transparent text-text-title border border-border-primary hover:bg-primary/10 hover:text-white'
+            className='rounded-md bg-transparent text-text-title border border-border-primary hover:bg-primary hover:text-white hover:border-primary'
           >
             + Tạo nhóm
           </Button>
 
-          <button
+          <AuthButton />
+
+          {/* <button
             aria-label='notifications'
             className='relative text-text-title'
           >
@@ -39,7 +61,7 @@ export function Header() {
           <div className='flex items-center gap-2 text-text-title'>
             <IconUser className='h-5 w-5' />
             <span>Nguyễn Văn An</span>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
