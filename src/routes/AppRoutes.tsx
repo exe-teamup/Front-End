@@ -1,10 +1,12 @@
-import { useRoutes, Navigate } from 'react-router-dom';
+import { Navigate, Outlet, useRoutes } from 'react-router-dom';
+import { ROUTES } from '../constants/routes';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { MainLayout } from '../layouts/MainLayout';
-import { Login } from '../pages/auth/Login';
 import { About } from '../pages/About';
+import { Login } from '../pages/auth/Login';
 import { Home } from '../pages/Home';
-import { ROUTES } from '../constants/routes';
+import { Profile } from '../pages/Profile';
+import { ProtectedRoute } from './ProtectedRoute';
 
 export function AppRoutes() {
   const routing = useRoutes([
@@ -21,17 +23,26 @@ export function AppRoutes() {
     },
     {
       path: '/',
-      // Set protected routes with MainLayout later
       element: <MainLayout />,
       children: [
+        // Public route: Home page
         {
           index: true,
           path: ROUTES.HOME,
           element: <Home />,
         },
+        // Protected routes (everything else under main layout)
         {
-          path: 'about',
-          element: <About />,
+          element: (
+            <ProtectedRoute>
+              <Outlet />
+            </ProtectedRoute>
+          ),
+          children: [{ path: 'about', element: <About /> }],
+        },
+        {
+          path: ROUTES.PROFILE.replace(/^\//, ''),
+          element: <Profile />,
         },
       ],
     },
