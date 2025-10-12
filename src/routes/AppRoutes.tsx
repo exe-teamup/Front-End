@@ -6,7 +6,6 @@ import { About } from '../pages/About';
 import { Login } from '../pages/auth/Login';
 import { Home } from '../pages/Home';
 import { Profile } from '../pages/Profile';
-import { ROUTES } from '../constants/routes';
 import { ProtectedRoute } from './ProtectedRoute';
 
 export function AppRoutes() {
