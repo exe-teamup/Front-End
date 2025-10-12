@@ -2,6 +2,7 @@ import {
   BannerSection,
   LatestPostSection,
   PostSection,
+  BlogSection,
 } from '../components/home';
 
 export function Home() {
@@ -12,6 +13,7 @@ export function Home() {
         <LatestPostSection />
         <PostSection />
       </div>
+      <BlogSection />
     </div>
   );
 }
