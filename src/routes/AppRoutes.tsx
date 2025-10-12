@@ -42,11 +42,23 @@ export function AppRoutes() {
         },
         {
           path: ROUTES.PROFILE.replace(/^\//, ''),
-          element: <Profile />,
+          element: (
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          ),
         },
       ],
     },
-
+    // Admin Routes
+    {
+      path: ROUTES.ADMIN.ROOT.replace(/^\//, ''),
+      element: (
+        <ProtectedRoute userRole='ADMIN'>
+          <MainLayout />
+        </ProtectedRoute>
+      ),
+    },
     // Redirect unknown routes
     {
       path: '*',
