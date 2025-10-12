@@ -14,7 +14,6 @@ export function BannerSection({ className }: BannerSectionProps) {
 
   const handleMajorClick = (majorId: string) => {
     setSelectedMajor(selectedMajor === majorId ? null : majorId);
-    // Navigate to posts page with search filter
     navigate(`/posts?search=${majorId}`);
   };
 
@@ -124,7 +123,6 @@ export function BannerSection({ className }: BannerSectionProps) {
                 alt='Banner home'
                 className='w-full md:h-96 h-auto object-cover'
                 onError={e => {
-                  // Fallback if image doesn't exist
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                   const fallback = target.nextElementSibling as HTMLElement;
