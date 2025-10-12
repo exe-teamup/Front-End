@@ -60,7 +60,7 @@ export function PostCard({ post }: PostCardProps) {
         </div>
         {getStatusBadge(post.status)}
       </div>
-      <p className='text-sm text-text-subtitle mb-4 line-clamp-3'>
+      <p className='text-sm text-text-subtitle mb-4 line-clamp-2'>
         {post.description}
       </p>
       <div className='flex items-center justify-between mb-4'>

@@ -14,6 +14,7 @@ export interface Post {
   groupName: string;
   groupLeader: string;
   groupLeaderId: string;
+  requestCount: number; // Number of people requesting to join
 }
 
 export interface PostPagination {
@@ -41,6 +42,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'AI Innovators',
     groupLeader: 'Nguyễn Văn An',
     groupLeaderId: 'user-1',
+    requestCount: 25,
   },
   {
     id: '2',
@@ -59,6 +61,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Tech Solutions',
     groupLeader: 'Lê Minh Cường',
     groupLeaderId: 'user-2',
+    requestCount: 18,
   },
   {
     id: '3',
@@ -67,7 +70,7 @@ export const MOCK_POSTS: Post[] = [
       'Xây dựng hệ thống bầu cử phi tập trung sử dụng blockchain. Cần hiểu biết về cryptography và smart contracts.',
     status: 'OPEN',
     currentMembers: 5,
-    maxMembers: 8,
+    maxMembers: 6,
     requiredMajors: ['Software Engineering', 'Cybersecurity'],
     instructor: 'Phạm Văn Đức',
     currentMajors: 4,
@@ -77,6 +80,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Blockchain Pioneers',
     groupLeader: 'Hoàng Thị Em',
     groupLeaderId: 'user-3',
+    requestCount: 32,
   },
   {
     id: '4',
@@ -95,6 +99,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Smart Home Lab',
     groupLeader: 'Đặng Văn Giang',
     groupLeaderId: 'user-4',
+    requestCount: 12,
   },
   {
     id: '5',
@@ -102,8 +107,8 @@ export const MOCK_POSTS: Post[] = [
     description:
       'Tạo dashboard phân tích dữ liệu với Python, Pandas và D3.js. Tập trung vào data visualization và machine learning.',
     status: 'OPEN',
-    currentMembers: 6,
-    maxMembers: 8,
+    currentMembers: 4,
+    maxMembers: 6,
     requiredMajors: ['Software Engineering', 'Data Science'],
     instructor: 'Bùi Thị Hoa',
     currentMajors: 3,
@@ -113,6 +118,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Data Wizards',
     groupLeader: 'Ngô Văn Ích',
     groupLeaderId: 'user-5',
+    requestCount: 28,
   },
   {
     id: '6',
@@ -131,6 +137,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'VR Creators',
     groupLeader: 'Trịnh Thị Lan',
     groupLeaderId: 'user-6',
+    requestCount: 15,
   },
   {
     id: '7',
@@ -149,6 +156,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Security Experts',
     groupLeader: 'Phan Thị Nga',
     groupLeaderId: 'user-7',
+    requestCount: 22,
   },
   {
     id: '8',
@@ -157,7 +165,7 @@ export const MOCK_POSTS: Post[] = [
       'Tạo game mobile với Flutter và Unity. Tập trung vào game design, animation và monetization strategies.',
     status: 'OPEN',
     currentMembers: 5,
-    maxMembers: 7,
+    maxMembers: 6,
     requiredMajors: ['Software Engineering', 'Digital Design'],
     instructor: 'Vũ Văn Oanh',
     currentMajors: 3,
@@ -167,6 +175,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Game Studio',
     groupLeader: 'Cao Thị Phượng',
     groupLeaderId: 'user-8',
+    requestCount: 35,
   },
   {
     id: '9',
@@ -185,6 +194,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Cloud Masters',
     groupLeader: 'Đỗ Thị Rồng',
     groupLeaderId: 'user-9',
+    requestCount: 8,
   },
   {
     id: '10',
@@ -203,6 +213,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'AR Innovators',
     groupLeader: 'Bùi Thị Tâm',
     groupLeaderId: 'user-10',
+    requestCount: 19,
   },
   {
     id: '11',
@@ -210,8 +221,8 @@ export const MOCK_POSTS: Post[] = [
     description:
       'Xây dựng pipeline xử lý dữ liệu và training models với Python và TensorFlow. Tập trung vào MLOps và data engineering.',
     status: 'OPEN',
-    currentMembers: 6,
-    maxMembers: 8,
+    currentMembers: 4,
+    maxMembers: 6,
     requiredMajors: ['Software Engineering', 'Data Science'],
     instructor: 'Trần Văn Uy',
     currentMajors: 4,
@@ -221,6 +232,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'ML Engineers',
     groupLeader: 'Phạm Thị Vân',
     groupLeaderId: 'user-11',
+    requestCount: 41,
   },
   {
     id: '12',
@@ -239,6 +251,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Fintech Solutions',
     groupLeader: 'Võ Thị Yến',
     groupLeaderId: 'user-12',
+    requestCount: 14,
   },
   {
     id: '13',
@@ -257,6 +270,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Health Tech',
     groupLeader: 'Đặng Thị An',
     groupLeaderId: 'user-13',
+    requestCount: 26,
   },
   {
     id: '14',
@@ -265,7 +279,7 @@ export const MOCK_POSTS: Post[] = [
       'Xây dựng platform quản lý thành phố thông minh với IoT và big data. Tập trung vào urban planning và sustainability.',
     status: 'OPEN',
     currentMembers: 5,
-    maxMembers: 7,
+    maxMembers: 6,
     requiredMajors: ['Software Engineering', 'Urban Planning'],
     instructor: 'Trịnh Văn Bình',
     currentMajors: 4,
@@ -275,6 +289,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Smart City Lab',
     groupLeader: 'Phan Thị Cường',
     groupLeaderId: 'user-14',
+    requestCount: 33,
   },
   {
     id: '15',
@@ -293,6 +308,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'EdTech Pioneers',
     groupLeader: 'Cao Văn Em',
     groupLeaderId: 'user-15',
+    requestCount: 17,
   },
   {
     id: '16',
@@ -311,6 +327,7 @@ export const MOCK_POSTS: Post[] = [
     groupName: 'Smart Case Creators',
     groupLeader: 'Phạm Hồng Yến Linh',
     groupLeaderId: 'user-16',
+    requestCount: 6,
   },
 ];
 
@@ -334,4 +351,11 @@ export const getNewestPosts = (limit: number = 15): Post[] => {
   return MOCK_POSTS.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   ).slice(0, limit);
+};
+
+export const getHotPosts = (limit: number = 10): Post[] => {
+  return MOCK_POSTS.sort((a, b) => b.requestCount - a.requestCount).slice(
+    0,
+    limit
+  );
 };
