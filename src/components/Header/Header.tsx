@@ -1,5 +1,6 @@
 import { Button } from '../Button/Button';
 import { IconBell, IconUser } from '../Icon/icons';
+import { SearchBar } from '../SearchBar/SearchBar';
 
 export function Header() {
   return (
@@ -13,11 +14,7 @@ export function Header() {
 
         {/* Middle: Search */}
         <div className='flex-1 max-w-xl mx-6'>
-          <input
-            type='text'
-            placeholder='Tìm kiếm nhóm, chuyên ngành,...'
-            className='w-full border border-border-primary rounded-full px-4 py-2 focus:outline-none focus:ring-1 focus:ring-primary'
-          />
+          <SearchBar />
         </div>
 
         {/* Right: actions */}
