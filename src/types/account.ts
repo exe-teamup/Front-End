@@ -1,7 +1,7 @@
-export type UserRole = 'student' | 'lecturer' | 'admin';
+export type UserRole = 'STUDENT' | 'LECTURER' | 'ADMIN';
 
 export interface Account {
-  userId: string;
+  accountId: string;
   role: UserRole;
   // Extend with more fields from backend when available
 }

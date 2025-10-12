@@ -12,6 +12,7 @@ export function AuthButton() {
 
   const handleSignOut = async () => {
     await signOut();
+    navigate(ROUTES.HOME);
   };
 
   // Show loading state
