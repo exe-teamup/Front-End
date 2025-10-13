@@ -1,7 +1,19 @@
+import {
+  BannerSection,
+  LatestPostSection,
+  PostSection,
+  BlogSection,
+} from '../components/home';
+
 export function Home() {
   return (
-    <div className='max-w-4xl mx-auto py-12 px-4'>
-      <h1 className='text-3xl font-bold text-text-title mb-4'>Home Page</h1>
+    <div className='min-h-screen '>
+      <BannerSection className='mb-12' />
+      <div className='max-w-7xl mx-auto px-4'>
+        <LatestPostSection />
+        <PostSection />
+      </div>
+      <BlogSection />
     </div>
   );
 }

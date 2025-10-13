@@ -1,13 +1,11 @@
-export type UserRole = 'student' | 'lecturer' | 'admin';
+export type UserRole = 'STUDENT' | 'LECTURER' | 'ADMIN';
+export type AccountStatus = 'ACTIVE' | 'INACTIVE' | 'BANNED';
 
 export interface Account {
-  userId: string;
+  accountId: string;
+  email: string;
+  fullName: string;
   role: UserRole;
-  // Extend with more fields from backend when available
+  createdAt: string;
+  accountStatus: AccountStatus;
 }
-
-export interface LoginGoogleRequest {
-  idToken: string;
-}
-
-export type LoginGoogleResponse = Account;

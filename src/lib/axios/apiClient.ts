@@ -15,7 +15,7 @@ export class ApiClient {
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
     const response = await axiosInstance.get(url, { params, ...config });
-    return response.data;
+    return response;
   }
 
   /**
@@ -27,7 +27,7 @@ export class ApiClient {
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
     const response = await axiosInstance.post(url, data, config);
-    return response.data;
+    return response;
   }
 
   /**
@@ -39,7 +39,7 @@ export class ApiClient {
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
     const response = await axiosInstance.put(url, data, config);
-    return response.data;
+    return response;
   }
 
   /**
@@ -51,7 +51,7 @@ export class ApiClient {
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
     const response = await axiosInstance.patch(url, data, config);
-    return response.data;
+    return response;
   }
 
   /**
@@ -62,7 +62,7 @@ export class ApiClient {
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
     const response = await axiosInstance.delete(url, config);
-    return response.data;
+    return response;
   }
 
   /**
@@ -74,7 +74,10 @@ export class ApiClient {
     config?: AxiosRequestConfig
   ): Promise<PaginatedResponse<T>> {
     const response = await axiosInstance.get(url, { params, ...config });
-    return response.data;
+    return {
+      data: response.data.data,
+      pagination: response.data.pagination,
+    };
   }
 }
 
