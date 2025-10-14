@@ -3,6 +3,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import { MAJORS } from '../../mock/major.mockapi';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface BannerSectionProps {
   className?: string;
@@ -10,6 +19,7 @@ interface BannerSectionProps {
 
 export function BannerSection({ className }: BannerSectionProps) {
   const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
+  const [openEnterConfirm, setOpenEnterConfirm] = useState(false);
   const navigate = useNavigate();
 
   const handleMajorClick = (majorId: string) => {
@@ -21,8 +31,8 @@ export function BannerSection({ className }: BannerSectionProps) {
     navigate('/posts');
   };
 
-  const handleCreateGroup = () => {
-    navigate('/posts/create');
+  const handleFindMember = () => {
+    setOpenEnterConfirm(true);
   };
 
   return (
@@ -97,7 +107,7 @@ export function BannerSection({ className }: BannerSectionProps) {
               </button>
 
               <button
-                onClick={handleCreateGroup}
+                onClick={handleFindMember}
                 className='p-4 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all cursor-pointer border border-blue-200 rounded-lg group relative'
               >
                 <div className='flex items-center gap-3'>
@@ -106,7 +116,7 @@ export function BannerSection({ className }: BannerSectionProps) {
                   </div>
                   <div>
                     <span className='text-base font-semibold text-text-title'>
-                      Tạo nhóm mới
+                      Tuyển thành viên
                     </span>
                   </div>
                   <span className='absolute top-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded-full'>
@@ -139,6 +149,26 @@ export function BannerSection({ className }: BannerSectionProps) {
           </div>
         </div>
       </div>
+      <AlertDialog open={openEnterConfirm} onOpenChange={setOpenEnterConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Bạn có muốn đăng bài tuyển thành viên?
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setOpenEnterConfirm(false);
+                navigate('/posts/create-team');
+              }}
+            >
+              Tiếp tục
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
