@@ -46,6 +46,8 @@
 
   --primary: oklch(0.6924 0.1812 46.21);
   --primary-foreground: oklch(0.985 0 0);
+  --primary-blue: #0066b3;
+  --primary-green: #0db14b;
 
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);

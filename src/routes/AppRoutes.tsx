@@ -10,6 +10,7 @@ import { AccountSetting } from '../pages/profile/AccountSetting';
 import { UserProfile } from '../pages/UserProfile';
 import { ProtectedRoute } from './ProtectedRoute';
 import { CreateTeam } from '@/pages/posts/CreateTeam';
+import { Groups } from '@/pages/Groups';
 
 export function AppRoutes() {
   const routing = useRoutes([
@@ -37,6 +38,18 @@ export function AppRoutes() {
         {
           path: '/posts/create-post',
           element: <CreateTeam />,
+        },
+        {
+          path: '/groups',
+          element: <Groups />,
+        },
+        {
+          path: '/groups/my',
+          element: <Groups />,
+        },
+        {
+          path: '/groups/request',
+          element: <Groups />,
         },
         // Public route for demo: profile
         {

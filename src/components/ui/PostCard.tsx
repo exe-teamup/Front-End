@@ -1,5 +1,5 @@
 import { Clock, Users, MapPin, User, GraduationCap } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import { type Post } from '../../mock/post.mockapi';
 import { toast } from 'sonner';
@@ -9,7 +9,7 @@ interface PostCardProps {
 }
 
 export function PostCard({ post }: PostCardProps) {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   function handleApplied() {
     // TODO: Implement apply logic - open application modal or navigate to post details
