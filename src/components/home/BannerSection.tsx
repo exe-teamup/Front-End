@@ -12,6 +12,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 
 interface BannerSectionProps {
   className?: string;
@@ -21,6 +32,22 @@ export function BannerSection({ className }: BannerSectionProps) {
   const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
   const [openEnterConfirm, setOpenEnterConfirm] = useState(false);
   const navigate = useNavigate();
+  const [openFindModal, setOpenFindModal] = useState(false);
+
+  const schema = z.object({
+    title: z.string().min(3, 'Tối thiểu 3 ký tự').max(80),
+    desc: z.string().min(10, 'Tối thiểu 10 ký tự').max(500),
+  });
+  type FormValues = z.infer<typeof schema>;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { title: '', desc: '' },
+  });
 
   const handleMajorClick = (majorId: string) => {
     setSelectedMajor(selectedMajor === majorId ? null : majorId);
@@ -28,7 +55,11 @@ export function BannerSection({ className }: BannerSectionProps) {
   };
 
   const handleFindGroups = () => {
-    navigate('/posts');
+    setOpenFindModal(true);
+  };
+
+  const handlePost = () => {
+    // TODO: This function is now handled in the form's onSubmit from api
   };
 
   const handleFindMember = () => {
@@ -161,7 +192,7 @@ export function BannerSection({ className }: BannerSectionProps) {
             <AlertDialogAction
               onClick={() => {
                 setOpenEnterConfirm(false);
-                navigate('/posts/create-team');
+                navigate('/posts/create-post');
               }}
             >
               Tiếp tục
@@ -169,6 +200,79 @@ export function BannerSection({ className }: BannerSectionProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal: Post looking-for-team */}
+      <Dialog open={openFindModal} onOpenChange={setOpenFindModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Đăng bài tìm nhóm</DialogTitle>
+          </DialogHeader>
+          <form
+            className='space-y-4'
+            onSubmit={handleSubmit(() => {
+              toast.success('Đăng bài thành công!');
+              reset();
+              setOpenFindModal(false);
+            })}
+          >
+            <div>
+              <label
+                htmlFor='find-title'
+                className='block text-sm font-medium text-text-title mb-2'
+              >
+                Tiêu đề
+              </label>
+              <input
+                id='find-title'
+                {...register('title')}
+                placeholder='VD: Tìm nhóm project Marketing...'
+                className='w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-primary'
+              />
+              {errors.title && (
+                <p className='text-sm text-red-600 mt-1'>
+                  {errors.title.message}
+                </p>
+              )}
+            </div>
+            <div>
+              <label
+                htmlFor='find-desc'
+                className='block text-sm font-medium text-text-title mb-2'
+              >
+                Mô tả
+              </label>
+              <textarea
+                id='find-desc'
+                rows={4}
+                {...register('desc')}
+                placeholder='Giới thiệu ngắn về bản thân, kỹ năng, mong muốn...'
+                className='w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-primary'
+              />
+              {errors.desc && (
+                <p className='text-sm text-red-600 mt-1'>
+                  {errors.desc.message}
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <button
+                type='button'
+                className='border px-4 py-2 rounded-lg cursor-pointer hover:border-primary'
+                onClick={() => setOpenFindModal(false)}
+              >
+                Hủy
+              </button>
+              <button
+                type='submit'
+                className='bg-primary text-white px-4 py-2 rounded-lg cursor-pointer hover:opacity-90'
+                onClick={handlePost}
+              >
+                Đăng bài
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

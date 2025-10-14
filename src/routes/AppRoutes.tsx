@@ -35,7 +35,7 @@ export function AppRoutes() {
           element: <Home />,
         },
         {
-          path: '/posts/create-team',
+          path: '/posts/create-post',
           element: <CreateTeam />,
         },
         // Public route for demo: profile

@@ -2,6 +2,7 @@ import { Clock, Users, MapPin, User, GraduationCap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import { type Post } from '../../mock/post.mockapi';
+import { toast } from 'sonner';
 
 interface PostCardProps {
   post: Post;
@@ -12,11 +13,12 @@ export function PostCard({ post }: PostCardProps) {
 
   function handleApplied() {
     // TODO: Implement apply logic - open application modal or navigate to post details
-    alert(`Ứng tuyển vào nhóm: ${post.title}`);
+    toast.info('Chức năng ứng tuyển đang được phát triển!');
   }
 
   function handleViewDetails() {
-    navigate(`/posts/${post.id}`);
+    // navigate(`/posts/${post.id}`);
+    toast.info('Trang xem chi tiết đang được phát triển!');
   }
 
   const getStatusBadge = (status: string) => {
