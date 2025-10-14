@@ -203,7 +203,6 @@ export function CreateGroupModal({
               {...register('maxMembers', { valueAsNumber: true })}
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary'
             >
-              <option value={3}>3 thành viên</option>
               <option value={4}>4 thành viên</option>
               <option value={5}>5 thành viên</option>
               <option value={6}>6 thành viên</option>
