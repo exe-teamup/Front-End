@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { AuthButton } from '../AuthButton';
-import { Button } from '../Button/Button';
+import { Button } from '@/components/Button/Button';
 // import { IconBell, IconUser } from '../Icon/icons';
-import { SearchBar } from '../SearchBar/SearchBar';
+import { SearchBar } from '@/components/SearchBar/SearchBar';
 
 export function Header() {
   return (
@@ -31,7 +32,14 @@ export function Header() {
               >
                 Tạo nhóm
               </a>
-              <a href='/blog' className='hover:text-primary transition-colors'>
+              <a
+                href='/blog'
+                className='hover:text-primary transition-colors'
+                onClick={e => {
+                  e.preventDefault();
+                  toast.info('Trang đang được phát triển');
+                }}
+              >
                 Blog
               </a>
             </nav>
