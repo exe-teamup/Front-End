@@ -36,7 +36,8 @@ function GroupCard({
   };
 
   const handleViewDetails = () => {
-    // Navigate to group details page group/{id}
+    // Navigate to group details page
+    window.location.href = `/groups/${group.id}`;
     setShowActionsMenu(false);
   };
 
