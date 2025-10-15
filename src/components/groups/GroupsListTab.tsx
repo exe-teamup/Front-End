@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Search, Filter, Users, ChevronLeft, ChevronRight } from 'lucide-react';
-import { searchGroups } from '../../mock/groups.mockapi';
-import GroupCard from '../../components/groups/GroupCard';
+import { searchGroups } from '@/mock/groups.mockapi';
+import GroupCard from '@/components/groups/GroupCard';
 
 function GroupsListTab() {
   const [searchQuery, setSearchQuery] = useState('');

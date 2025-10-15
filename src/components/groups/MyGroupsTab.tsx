@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { getUserGroupStatus } from '../../mock/groups.mockapi';
+import { getUserGroupStatus } from '@/mock/groups.mockapi';
+import GroupCard from './GroupCard';
 
 function MyGroupsTab() {
   const userStatus = getUserGroupStatus();
@@ -32,10 +33,11 @@ function MyGroupsTab() {
         <p className='text-sm text-gray-500'>Nhóm bạn đang tham gia</p>
       </div>
 
-      {/* TODO: Hiển thị thông tin nhóm */}
-      <div className='p-4 border rounded-lg'>
-        <p className='text-gray-600'>Thông tin nhóm sẽ hiển thị ở đây</p>
-      </div>
+      <GroupCard
+        group={userStatus.currentGroup}
+        showActions={true}
+        isMyGroup={true}
+      />
     </div>
   );
 }

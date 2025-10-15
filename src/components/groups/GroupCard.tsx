@@ -2,7 +2,17 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MoreHorizontal, Copy, Eye, Users, User } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Group } from '../../mock/groups.mockapi';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import type { Group } from '@/mock/groups.mockapi';
+import { Button } from '../Button';
 
 interface GroupCardProps {
   group: Group;
@@ -16,6 +26,7 @@ function GroupCard({
   isMyGroup: _isMyGroup = false,
 }: GroupCardProps) {
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState<string | null>(null);
 
   const handleCopyLink = () => {
     const groupUrl = `${window.location.origin}/groups/${group.id}`;
@@ -25,8 +36,23 @@ function GroupCard({
   };
 
   const handleViewDetails = () => {
-    // Navigate to group details page group/{id}
+    // Navigate to group details page
+    window.location.href = `/groups/${group.id}`;
     setShowActionsMenu(false);
+  };
+
+  const handleJoinRequest = (groupId: string) => {
+    setShowCancelDialog(groupId);
+  };
+
+  const confirmCancelRequest = () => {
+    if (showCancelDialog) {
+      // Call API to cancel request
+      toast.success(
+        'Đã gửi yêu cầu tham gia nhóm. Vui long chờ trưởng nhóm phê duyệt.'
+      );
+      setShowCancelDialog(null);
+    }
   };
 
   const getStatusBadge = () => {
@@ -40,7 +66,7 @@ function GroupCard({
       case 'FULL':
         return (
           <span className='px-2 py-1 bg-primary/80 text-white text-xs rounded-full hidden md:inline-block'>
-            Đã đầy
+            Đủ thành viên
           </span>
         );
       case 'CLOSED':
@@ -55,7 +81,7 @@ function GroupCard({
   };
 
   return (
-    <div className='relative p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow'>
+    <div className='relative p-6 border-b-1 border-gray-200 transition-shadow'>
       <div className='flex items-start justify-between'>
         <div className='flex items-start gap-4 flex-1'>
           <img
@@ -90,14 +116,29 @@ function GroupCard({
           </div>
         </div>
 
+        {/* join button */}
+        {!_isMyGroup && group.status === 'ACTIVE' && (
+          <div className='ml-4'>
+            <Button
+              variant='primary'
+              size='md'
+              className='text-white mr-2 hidden md:block'
+              onClick={() => {
+                handleJoinRequest(group.id);
+              }}
+            >
+              Tham gia nhóm
+            </Button>
+          </div>
+        )}
         {/* Actions Menu */}
         {showActions && (
           <div className='relative'>
             <button
               onClick={() => setShowActionsMenu(!showActionsMenu)}
-              className='p-2 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors'
+              className='p-2 cursor-pointer hover:bg-gray-100 hover:text-primary rounded-lg transition-colors'
             >
-              <MoreHorizontal className='w-5 h-5 text-gray-400' />
+              <MoreHorizontal className='w-5 h-5' />
             </button>
 
             {showActionsMenu && (
@@ -140,6 +181,32 @@ function GroupCard({
           </div>
         )}
       </div>
+
+      <AlertDialog
+        open={!!showCancelDialog}
+        onOpenChange={() => setShowCancelDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gửi yêu cầu tham gia?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className='py-4'>
+            <p className='text-sm text-gray-900'>
+              Bạn có chắc chắn muốn tham gia nhóm này? <br />
+              Yêu cầu sẽ được gửi đi và chờ trưởng nhóm phê duyệt.
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Không</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancelRequest}
+              className='bg-primary hover:bg-primary/80 text-white'
+            >
+              Gửi yêu cầu
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

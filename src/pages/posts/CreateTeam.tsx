@@ -7,7 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../components/ui/alert-dialog';
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';

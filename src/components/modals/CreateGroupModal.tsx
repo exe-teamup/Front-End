@@ -9,7 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '../../components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,8 +18,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../components/ui/alert-dialog';
-import { searchFriends, type Friend } from '../../mock/friends.mockapi';
+} from '@/components/ui/alert-dialog';
+import { searchFriends, type Friend } from '@/mock/friends.mockapi';
 
 interface CreateGroupModalProps {
   open: boolean;

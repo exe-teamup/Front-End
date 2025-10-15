@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { Clock, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import {
-  getUserGroupStatus,
-  cancelGroupRequest,
-} from '../../mock/groups.mockapi';
+import { getUserGroupStatus, cancelGroupRequest } from '@/mock/groups.mockapi';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -13,7 +10,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../components/ui/alert-dialog';
+} from '@/components/ui/alert-dialog';
 
 function RequestsTab() {
   const userStatus = getUserGroupStatus();

@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { Button } from '../components/Button/Button';
-import { CreateGroupModal } from '../components/modals/CreateGroupModal';
+import { Button } from '@/components/Button/Button';
+import { CreateGroupModal } from '@/components/modals/CreateGroupModal';
 import MyGroupsTab from '../components/groups/MyGroupsTab';
 import GroupsListTab from '../components/groups/GroupsListTab';
 import RequestsTab from '../components/groups/RequestsTab';
-import { getUserGroupStatus } from '../mock/groups.mockapi';
+import { getUserGroupStatus } from '@/mock/groups.mockapi';
 
 type TabType = 'my-groups' | 'all-groups' | 'requests';
 

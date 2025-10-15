@@ -1,11 +1,16 @@
 import { Clock, BookOpen } from 'lucide-react';
 import { type Blog } from '../../mock/blog.mockapi';
+import { toast } from 'sonner';
 
 interface BlogCardProps {
   blog: Blog;
 }
 
 export function BlogCard({ blog }: BlogCardProps) {
+  function handleViewDetails() {
+    toast.info('Trang xem chi tiết bài viết đang được phát triển!');
+  }
+
   return (
     <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow'>
       <div className='relative h-48 overflow-hidden'>
@@ -54,7 +59,10 @@ export function BlogCard({ blog }: BlogCardProps) {
           </div>
         </div>
 
-        <button className='w-full mt-4 bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer'>
+        <button
+          className='w-full mt-4 bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer'
+          onClick={handleViewDetails}
+        >
           Đọc thêm
         </button>
       </div>
