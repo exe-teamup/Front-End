@@ -11,6 +11,7 @@ import { UserProfile } from '../pages/UserProfile';
 import { ProtectedRoute } from './ProtectedRoute';
 import { CreateTeam } from '@/pages/posts/CreateTeam';
 import { Groups } from '@/pages/Groups';
+import { GroupDetail } from '@/pages/GroupDetail';
 
 export function AppRoutes() {
   const routing = useRoutes([
@@ -50,6 +51,10 @@ export function AppRoutes() {
         {
           path: '/groups/request',
           element: <Groups />,
+        },
+        {
+          path: '/groups/:groupId',
+          element: <GroupDetail />,
         },
         // Public route for demo: profile
         {

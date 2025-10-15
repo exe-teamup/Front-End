@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { cn } from '@/utils/cn';
 import { AuthButton } from '../AuthButton';
 import { Button } from '@/components/Button/Button';
 // import { IconBell, IconUser } from '../Icon/icons';
@@ -27,12 +28,26 @@ export function Header() {
           {/* nav button */}
           <div className='hidden md:block'>
             <nav className='flex items-center gap-6 text-text-subtitle'>
-              <a href='/posts' className='hover:text-primary transition-colors'>
+              <a
+                href='/posts'
+                className={cn(
+                  'hover:text-primary transition-colors',
+                  window.location.pathname === '/posts' && 'text-primary'
+                )}
+                onClick={e => {
+                  e.preventDefault();
+                  toast.info('Trang đang được phát triển');
+                }}
+              >
                 Bài đăng
               </a>
               <a
                 href='/groups'
-                className='hover:text-primary transition-colors'
+                className={cn(
+                  'hover:text-primary transition-colors',
+                  window.location.pathname === '/groups' &&
+                    'text-primary border-b-2 border-primary'
+                )}
               >
                 Xem nhóm
               </a>
