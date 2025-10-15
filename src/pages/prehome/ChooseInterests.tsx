@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StepProgress from '../components/Progress/StepProgress';
+import StepProgress from '@/components/Progress/StepProgress';
+import { Button } from '@/components/Button';
 
 const DEFAULT_OPTIONS = [
   'Phát triển web',
@@ -50,7 +51,7 @@ export function ChooseInterests() {
     } catch {
       // Ignore storage errors
     }
-    navigate('/suggest-groups');
+    navigate('/hot-setup/group-suggestions');
   }
 
   function handleSkip() {
@@ -60,7 +61,7 @@ export function ChooseInterests() {
     } catch {
       // Ignore storage errors
     }
-    navigate('/');
+    navigate('/hot-setup/group-suggestions');
   }
 
   return (
@@ -94,7 +95,7 @@ export function ChooseInterests() {
                   }
                 }}
                 className={`flex items-center justify-center h-20 rounded-md border transition-shadow select-none cursor-pointer
-                  ${active ? 'bg-orange-500 text-white shadow-lg border-orange-400' : 'bg-white text-gray-800 border-gray-200 hover:shadow-sm'}`}
+                  ${active ? 'bg-primary text-white shadow-lg border-primary' : 'bg-white text-gray-800 border-gray-200 hover:shadow-sm'}`}
               >
                 <span className='text-lg font-medium'>{opt}</span>
               </div>
@@ -103,16 +104,21 @@ export function ChooseInterests() {
         </div>
 
         <div className='mt-8 flex items-center justify-center gap-4'>
-          <button onClick={handleSkip} className='px-6 py-2 rounded-md border'>
+          <Button
+            variant='outline'
+            onClick={handleSkip}
+            className='px-6 py-2 rounded-md border'
+          >
             Bỏ qua
-          </button>
-          <button
+          </Button>
+          <Button
+            variant='primary'
             onClick={handleContinue}
             disabled={!canContinue}
             className={`px-6 py-2 rounded-md text-white ${canContinue ? 'bg-orange-500' : 'bg-gray-300 cursor-not-allowed'}`}
           >
             Tiếp tục
-          </button>
+          </Button>
         </div>
       </div>
     </div>
