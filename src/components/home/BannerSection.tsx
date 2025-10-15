@@ -4,15 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import { MAJORS } from '../../mock/major.mockapi';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
   Dialog,
   DialogContent,
   DialogFooter,
@@ -30,7 +21,6 @@ interface BannerSectionProps {
 
 export function BannerSection({ className }: BannerSectionProps) {
   const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
-  const [openEnterConfirm, setOpenEnterConfirm] = useState(false);
   const navigate = useNavigate();
   const [openFindModal, setOpenFindModal] = useState(false);
 
@@ -63,7 +53,7 @@ export function BannerSection({ className }: BannerSectionProps) {
   };
 
   const handleFindMember = () => {
-    setOpenEnterConfirm(true);
+    navigate('/posts/create-post');
   };
 
   return (
@@ -138,7 +128,7 @@ export function BannerSection({ className }: BannerSectionProps) {
               </button>
 
               <button
-                onClick={handleFindMember}
+                onClick={() => handleFindMember()}
                 className='p-4 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all cursor-pointer border border-blue-200 rounded-lg group relative'
               >
                 <div className='flex items-center gap-3'>
@@ -150,9 +140,6 @@ export function BannerSection({ className }: BannerSectionProps) {
                       Tuyển thành viên
                     </span>
                   </div>
-                  <span className='absolute top-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded-full'>
-                    Trở thành leader
-                  </span>
                 </div>
               </button>
             </div>
@@ -180,26 +167,6 @@ export function BannerSection({ className }: BannerSectionProps) {
           </div>
         </div>
       </div>
-      <AlertDialog open={openEnterConfirm} onOpenChange={setOpenEnterConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Bạn có muốn đăng bài tuyển thành viên?
-            </AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setOpenEnterConfirm(false);
-                navigate('/posts/create-post');
-              }}
-            >
-              Tiếp tục
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Modal: Post looking-for-team */}
       <Dialog open={openFindModal} onOpenChange={setOpenFindModal}>

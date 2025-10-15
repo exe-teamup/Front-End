@@ -255,7 +255,7 @@ export function CreateTeam() {
               )}
             </div>
 
-            <div className='flex flex-col sm:flex-row gap-3 pt-2'>
+            <div className='flex flex-col-reverse sm:flex-row gap-3 pt-2'>
               <button
                 type='button'
                 className='flex-1 border py-2 rounded-lg text-lg cursor-pointer hover:border-primary'
