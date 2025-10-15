@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { PostCard } from '../components/Card/PostCard';
-import StepProgress from '../components/Progress/StepProgress';
-import { getNewestPosts } from '../mock/post.mockapi';
+import { PostCard } from '@/components/ui/PostCard';
+import StepProgress from '@/components/Progress/StepProgress';
+import { getNewestPosts } from '@/mock/post.mockapi';
+import { Button } from '@/components/Button';
 
 export function SuggestGroups() {
   const navigate = useNavigate();
@@ -13,16 +14,6 @@ export function SuggestGroups() {
     <div className='min-h-screen bg-gray-100 p-8'>
       <div className='max-w-6xl mx-auto bg-white rounded-lg p-8'>
         <StepProgress step={4} total={4} className='mb-6' />
-
-        <div className='mb-6 flex items-center justify-between'>
-          <div className='text-sm text-gray-500'>Bước 4 / 4</div>
-          <button
-            className='text-sm text-gray-600'
-            onClick={() => navigate('/')}
-          >
-            Bỏ qua
-          </button>
-        </div>
 
         <div className='text-center mb-6'>
           <h1 className='text-3xl font-bold'>Nhóm phù hợp với bạn</h1>
@@ -38,19 +29,21 @@ export function SuggestGroups() {
         </div>
 
         <div className='mt-8 flex items-center justify-center gap-4'>
-          <button
+          <Button
+            variant='outline'
             onClick={() => navigate('/')}
             className='px-6 py-2 rounded-md border'
           >
             Bỏ qua
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant='primary'
             onClick={() => navigate('/')}
             className='px-6 py-2 rounded-md bg-orange-500 text-white'
           >
             Vào trang chủ
-          </button>
+          </Button>
         </div>
       </div>
     </div>
