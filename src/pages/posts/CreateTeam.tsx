@@ -105,7 +105,7 @@ export function CreateTeam() {
               <input
                 id='team-name'
                 {...register('name')}
-                placeholder='Nhập tên nhóm...'
+                placeholder='Nhập tiêu đề (tên nhóm, tên dự án,..)'
                 className='w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-primary'
               />
               {errors.name && (
@@ -255,7 +255,7 @@ export function CreateTeam() {
               )}
             </div>
 
-            <div className='flex flex-col sm:flex-row gap-3 pt-2'>
+            <div className='flex flex-col-reverse sm:flex-row gap-3 pt-2'>
               <button
                 type='button'
                 className='flex-1 border py-2 rounded-lg text-lg cursor-pointer hover:border-primary'
@@ -266,7 +266,7 @@ export function CreateTeam() {
                 type='submit'
                 className='flex-1 bg-primary text-white py-2 rounded-lg text-lg cursor-pointer hover:opacity-90'
               >
-                Tạo nhóm
+                Đăng bài tuyển
               </button>
             </div>
           </form>

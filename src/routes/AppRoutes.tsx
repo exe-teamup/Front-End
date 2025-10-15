@@ -12,6 +12,10 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { CreateTeam } from '@/pages/posts/CreateTeam';
 import { Groups } from '@/pages/Groups';
 import { GroupDetail } from '@/pages/GroupDetail';
+import { PreHome } from '@/pages/prehome/PreHome';
+import ChooseMajor from '@/pages/prehome/ChooseMajor';
+import ChooseInterests from '@/pages/prehome/ChooseInterests';
+import SuggestGroups from '@/pages/prehome/SuggestGroups';
 
 export function AppRoutes() {
   const routing = useRoutes([
@@ -22,6 +26,22 @@ export function AppRoutes() {
         {
           path: ROUTES.AUTH.ROOT,
           element: <Login />,
+        },
+        {
+          path: '/hot-setup/',
+          element: <PreHome />,
+        },
+        {
+          path: '/hot-setup/choose-major',
+          element: <ChooseMajor />,
+        },
+        {
+          path: '/hot-setup/choose-interests',
+          element: <ChooseInterests />,
+        },
+        {
+          path: '/hot-setup/group-suggestions',
+          element: <SuggestGroups />,
         },
         // Forgot Password route can be added here
       ],
@@ -108,3 +128,5 @@ export function AppRoutes() {
 
   return routing;
 }
+
+export default AppRoutes;
