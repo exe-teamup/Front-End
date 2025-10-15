@@ -108,3 +108,5 @@ export function AppRoutes() {
 
   return routing;
 }
+
+export default AppRoutes;
