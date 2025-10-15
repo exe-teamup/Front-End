@@ -32,12 +32,9 @@ export function Header() {
                 href='/posts'
                 className={cn(
                   'hover:text-primary transition-colors',
-                  window.location.pathname === '/posts' && 'text-primary'
+                  window.location.pathname === '/posts' &&
+                    'border-b-2 border-primary text-primary'
                 )}
-                onClick={e => {
-                  e.preventDefault();
-                  toast.info('Trang đang được phát triển');
-                }}
               >
                 Bài đăng
               </a>
