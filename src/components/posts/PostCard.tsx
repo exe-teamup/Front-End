@@ -1,5 +1,5 @@
 import type { PostItem } from '@/mock/posts.mockapi';
-import { Users, CalendarDays } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface PostCardProps {
