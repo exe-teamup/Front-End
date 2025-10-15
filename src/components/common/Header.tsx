@@ -1,10 +1,16 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { cn } from '@/utils/cn';
 import { AuthButton } from '../AuthButton';
-import { Button } from '../Button/Button';
+import { Button } from '@/components/Button/Button';
 // import { IconBell, IconUser } from '../Icon/icons';
-import { SearchBar } from '../SearchBar/SearchBar';
+import { SearchBar } from '@/components/SearchBar/SearchBar';
+import { CreateGroupModal } from '@/components/modals/CreateGroupModal';
 
 export function Header() {
+  const [openCreateGroup, setOpenCreateGroup] = useState(false);
+
   return (
     <div className='bg-white shadow-sm sticky top-0 z-50'>
       <div className='max-w-7xl mx-auto px-4 h-20 flex items-center justify-between'>
@@ -22,16 +28,37 @@ export function Header() {
           {/* nav button */}
           <div className='hidden md:block'>
             <nav className='flex items-center gap-6 text-text-subtitle'>
-              <a href='/posts' className='hover:text-primary transition-colors'>
+              <a
+                href='/posts'
+                className={cn(
+                  'hover:text-primary transition-colors',
+                  window.location.pathname === '/posts' && 'text-primary'
+                )}
+                onClick={e => {
+                  e.preventDefault();
+                  toast.info('Trang đang được phát triển');
+                }}
+              >
                 Bài đăng
               </a>
               <a
-                href='/posts/create'
-                className='hover:text-primary transition-colors'
+                href='/groups'
+                className={cn(
+                  'hover:text-primary transition-colors',
+                  window.location.pathname === '/groups' &&
+                    'text-primary border-b-2 border-primary'
+                )}
               >
-                Tạo nhóm
+                Xem nhóm
               </a>
-              <a href='/blog' className='hover:text-primary transition-colors'>
+              <a
+                href='/blog'
+                className='hover:text-primary transition-colors'
+                onClick={e => {
+                  e.preventDefault();
+                  toast.info('Trang đang được phát triển');
+                }}
+              >
                 Blog
               </a>
             </nav>
@@ -43,6 +70,7 @@ export function Header() {
           <Button
             variant='primary'
             className='rounded-md bg-transparent text-text-title border border-border-primary hover:bg-primary hover:text-white hover:border-primary'
+            onClick={() => setOpenCreateGroup(true)}
           >
             + Tạo nhóm
           </Button>
@@ -65,6 +93,12 @@ export function Header() {
           </div> */}
         </div>
       </div>
+
+      {/* Create Group Modal */}
+      <CreateGroupModal
+        open={openCreateGroup}
+        onOpenChange={setOpenCreateGroup}
+      />
     </div>
   );
 }

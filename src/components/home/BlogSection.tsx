@@ -1,6 +1,7 @@
 import { getRecentBlogs } from '../../mock/blog.mockapi';
 import { BlogCard } from '../ui/BlogCard';
 import { cn } from '../../utils/cn';
+import { toast } from 'sonner';
 
 interface BlogSectionProps {
   className?: string;
@@ -28,7 +29,12 @@ export function BlogSection({ className }: BlogSectionProps) {
         </div>
 
         <div className='text-center'>
-          <button className='bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer'>
+          <button
+            className='bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer'
+            onClick={() => {
+              toast.info('Trang xem tất cả bài viết đang được phát triển!');
+            }}
+          >
             Xem tất cả bài viết
           </button>
         </div>
