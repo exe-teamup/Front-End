@@ -2,6 +2,7 @@ import { Navigate, Outlet, useRoutes } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { MainLayout } from '../layouts/MainLayout';
+import { PostsLayout } from '../layouts/PostsLayout';
 import { About } from '../pages/About';
 import { Login } from '../pages/auth/Login';
 import { Home } from '../pages/Home';
@@ -16,6 +17,7 @@ import { PreHome } from '@/pages/prehome/PreHome';
 import ChooseMajor from '@/pages/prehome/ChooseMajor';
 import ChooseInterests from '@/pages/prehome/ChooseInterests';
 import SuggestGroups from '@/pages/prehome/SuggestGroups';
+import PostsView from '@/pages/PostsView';
 
 export function AppRoutes() {
   const routing = useRoutes([
@@ -76,6 +78,10 @@ export function AppRoutes() {
           path: '/groups/:groupId',
           element: <GroupDetail />,
         },
+        {
+          path: '/posts',
+          element: <PostsView />,
+        },
         // Public route for demo: profile
         {
           path: ROUTES.PROFILE.ROOT,
@@ -107,6 +113,25 @@ export function AppRoutes() {
               <Profile />
             </ProtectedRoute>
           ),
+        },
+      ],
+    },
+    // Posts-only layout without footer
+    {
+      path: '/posts',
+      element: <PostsLayout />,
+      children: [
+        {
+          index: true,
+          element: <PostsView />,
+        },
+        {
+          path: 'recruit',
+          element: <PostsView />,
+        },
+        {
+          path: 'looking',
+          element: <PostsView />,
         },
       ],
     },
