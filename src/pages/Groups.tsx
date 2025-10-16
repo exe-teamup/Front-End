@@ -50,7 +50,7 @@ export function Groups() {
     {
       id: 'my-groups' as TabType,
       label: 'Nhóm của bạn',
-      count: userStatus.hasGroup ? 1 : 0,
+      count: undefined,
     },
     { id: 'all-groups' as TabType, label: 'Danh sách nhóm', count: undefined },
     {

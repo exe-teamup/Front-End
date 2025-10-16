@@ -18,6 +18,7 @@ import ChooseMajor from '@/pages/prehome/ChooseMajor';
 import ChooseInterests from '@/pages/prehome/ChooseInterests';
 import SuggestGroups from '@/pages/prehome/SuggestGroups';
 import PostsView from '@/pages/PostsView';
+import MyGroupsTab from '@/components/groups/MyGroupsTab';
 
 export function AppRoutes() {
   const routing = useRoutes([
@@ -89,6 +90,10 @@ export function AppRoutes() {
             {
               index: true,
               element: <AccountSetting />,
+            },
+            {
+              path: ROUTES.PROFILE.GROUPS,
+              element: <MyGroupsTab />,
             },
           ],
         },
