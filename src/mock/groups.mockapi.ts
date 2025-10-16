@@ -499,8 +499,8 @@ export const MOCK_GROUP_REQUESTS: GroupRequest[] = [
 // Mock current user status
 export const MOCK_USER_GROUP_STATUS: UserGroupStatus = {
   isLeader: false,
-  hasGroup: false,
-  currentGroup: undefined,
+  hasGroup: true,
+  currentGroup: MOCK_GROUPS[0],
   pendingRequests: MOCK_GROUP_REQUESTS,
 };
 

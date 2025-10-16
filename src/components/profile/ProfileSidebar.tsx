@@ -3,9 +3,15 @@ import { cn } from '../../utils/cn';
 
 interface ProfileSidebarProps {
   className?: string;
+  active?: 'account' | 'settings' | 'posts' | 'groups';
+  onChange?: (key: 'account' | 'settings' | 'posts' | 'groups') => void;
 }
 
-export function ProfileSidebar({ className }: ProfileSidebarProps) {
+export function ProfileSidebar({
+  className,
+  active = 'account',
+  onChange,
+}: ProfileSidebarProps) {
   return (
     <div className={cn('lg:col-span-1', className)}>
       <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-28'>
@@ -13,34 +19,58 @@ export function ProfileSidebar({ className }: ProfileSidebarProps) {
           Tài khoản
         </h3>
         <nav className='space-y-2'>
-          <a
-            href='/profile/account'
-            className='flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 hover:text-primary text-primary font-medium'
+          <button
+            type='button'
+            onClick={() => onChange && onChange('account')}
+            className={cn(
+              'w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:text-primary',
+              active === 'account'
+                ? 'bg-primary/10 text-primary font-medium'
+                : 'text-text-subtitle hover:bg-gray-50'
+            )}
           >
             <User className='w-4 h-4' />
             Thông tin cá nhân
-          </a>
-          <a
-            href='/profile/settings'
-            className='flex items-center gap-3 px-3 py-2 rounded-lg text-text-subtitle hover:text-primary hover:bg-gray-50'
+          </button>
+          <button
+            type='button'
+            onClick={() => onChange && onChange('settings')}
+            className={cn(
+              'w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:text-primary',
+              active === 'settings'
+                ? 'bg-primary/10 text-primary font-medium'
+                : 'text-text-subtitle hover:bg-gray-50'
+            )}
           >
             <Settings className='w-4 h-4' />
             Cài đặt
-          </a>
-          <a
-            href='/profile/posts'
-            className='flex items-center gap-3 px-3 py-2 rounded-lg text-text-subtitle hover:text-primary hover:bg-gray-50'
+          </button>
+          <button
+            type='button'
+            onClick={() => onChange && onChange('posts')}
+            className={cn(
+              'w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:text-primary',
+              active === 'posts'
+                ? 'bg-primary/10 text-primary font-medium'
+                : 'text-text-subtitle hover:bg-gray-50'
+            )}
           >
             <FileText className='w-4 h-4' />
             Bài đăng của tôi
-          </a>
-          <a
-            href='/profile/groups'
-            className='flex items-center gap-3 px-3 py-2 rounded-lg text-text-subtitle hover:text-primary hover:bg-gray-50'
+          </button>
+          <button
+            type='button'
+            onClick={() => onChange && onChange('groups')}
+            className={cn(
+              'w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:text-primary',
+              active === 'groups'
+                ? 'bg-primary/10 text-primary font-medium'
+                : 'text-text-subtitle hover:bg-gray-50'
+            )}
           >
             <Users className='w-4 h-4' />
             Nhóm của tôi
-          </a>
+          </button>
           <a
             href='/'
             className='flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:text-primary hover:bg-red-50'
