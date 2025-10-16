@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StepProgress from '../components/Progress/StepProgress';
-import { MajorSelector } from '../components/Select/MajorSelector';
+import StepProgress from '@/components/Progress/StepProgress';
+import { MajorSelector } from '@/components/Select/MajorSelector';
+import { Button } from '@/components/Button';
 
 export function ChooseMajor() {
   const navigate = useNavigate();
@@ -18,16 +19,16 @@ export function ChooseMajor() {
     } catch {
       // Ignore storage errors
     }
-    navigate('/choose-interests');
+    navigate('/hot-setup/choose-interests');
   }
 
   function handleSkip() {
     try {
-      localStorage.setItem('onboardCompleted', '1');
+      localStorage.setItem('onboardCompleted', '3');
     } catch {
       // Ignore storage errors
     }
-    navigate('/');
+    navigate('/hot-setup/choose-interests');
   }
 
   return (
@@ -55,16 +56,21 @@ export function ChooseMajor() {
         />
 
         <div className='mt-6 flex justify-center gap-4'>
-          <button className='px-6 py-2 rounded-md border' onClick={handleSkip}>
+          <Button
+            variant='outline'
+            className='px-6 py-2 rounded-md border w-full'
+            onClick={handleSkip}
+          >
             Bỏ qua
-          </button>
-          <button
+          </Button>
+          <Button
+            variant='primary'
             className='px-6 py-2 rounded-md bg-primary text-white'
             onClick={handleContinue}
             disabled={!major}
           >
             Tiếp tục
-          </button>
+          </Button>
         </div>
       </div>
     </div>

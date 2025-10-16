@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { AuthButton } from '../AuthButton';
 import { Button } from '@/components/Button/Button';
-// import { IconBell, IconUser } from '../Icon/icons';
 import { SearchBar } from '@/components/SearchBar/SearchBar';
 import { CreateGroupModal } from '@/components/modals/CreateGroupModal';
 
@@ -32,12 +31,9 @@ export function Header() {
                 href='/posts'
                 className={cn(
                   'hover:text-primary transition-colors',
-                  window.location.pathname === '/posts' && 'text-primary'
+                  window.location.pathname === '/posts' &&
+                    'border-b-2 border-primary text-primary'
                 )}
-                onClick={e => {
-                  e.preventDefault();
-                  toast.info('Trang đang được phát triển');
-                }}
               >
                 Bài đăng
               </a>
@@ -76,21 +72,6 @@ export function Header() {
           </Button>
 
           <AuthButton />
-
-          {/* <button
-            aria-label='notifications'
-            className='relative text-text-title'
-          >
-            <IconBell className='h-5 w-5' />
-            <span className='absolute -top-1 -right-2 bg-error text-white text-xs rounded-full px-1'>
-              2
-            </span>
-          </button>
-
-          <div className='flex items-center gap-2 text-text-title'>
-            <IconUser className='h-5 w-5' />
-            <span>Nguyễn Văn An</span>
-          </div> */}
         </div>
       </div>
 

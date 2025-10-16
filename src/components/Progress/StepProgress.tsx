@@ -16,7 +16,12 @@ export default function StepProgress({
         <div>
           Bước {step} / {total}
         </div>
-        <div className='text-sm text-gray-600'>Bỏ qua</div>
+        <button
+          className='text-sm text-black hover:text-primary cursor-pointer'
+          onClick={() => (window.location.href = '/')}
+        >
+          Bỏ qua
+        </button>
       </div>
 
       <div className='w-full h-3 bg-orange-100 rounded-full overflow-hidden'>
