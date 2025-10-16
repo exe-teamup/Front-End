@@ -235,14 +235,6 @@ export function UserProfile() {
         {/* Right Sidebar */}
         <div className='lg:col-span-1'>
           <MemberSuggestions major={profile.major} currentUserId={profile.id} />
-          <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-            <h3 className='text-lg font-semibold text-text-title mb-4'>
-              Cùng chuyên ngành {profile.major}
-            </h3>
-            <p className='text-text-subtitle'>
-              Member suggestions sẽ được thêm vào đây
-            </p>
-          </div>
         </div>
       </div>
     </div>

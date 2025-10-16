@@ -149,54 +149,6 @@ export function AccountSetting() {
                     />
                   </div>
                 </div>
-
-                <div>
-                  <label
-                    htmlFor='phone'
-                    className='block text-sm font-medium text-text-title mb-2'
-                  >
-                    Số điện thoại
-                  </label>
-                  <div className='relative'>
-                    <Phone className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
-                    <input
-                      id='phone'
-                      type='tel'
-                      value={profile.phone || ''}
-                      onChange={e => handleInputChange('phone', e.target.value)}
-                      disabled={!isEditing}
-                      className={cn(
-                        'w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
-                        !isEditing && 'bg-gray-50 cursor-not-allowed'
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor='location'
-                    className='block text-sm font-medium text-text-title mb-2'
-                  >
-                    Vị trí
-                  </label>
-                  <div className='relative'>
-                    <MapPin className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
-                    <input
-                      id='location'
-                      type='text'
-                      value={profile.location}
-                      onChange={e =>
-                        handleInputChange('location', e.target.value)
-                      }
-                      disabled={!isEditing}
-                      className={cn(
-                        'w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
-                        !isEditing && 'bg-gray-50 cursor-not-allowed'
-                      )}
-                    />
-                  </div>
-                </div>
               </div>
 
               {/* Academic Info */}
@@ -223,44 +175,25 @@ export function AccountSetting() {
 
                 <div>
                   <label
-                    htmlFor='year'
+                    htmlFor='phone'
                     className='block text-sm font-medium text-text-title mb-2'
                   >
-                    Năm học
+                    Số điện thoại
                   </label>
-                  <input
-                    id='year'
-                    type='number'
-                    value={profile.year}
-                    onChange={e => handleInputChange('year', e.target.value)}
-                    disabled={!isEditing}
-                    className={cn(
-                      'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
-                      !isEditing && 'bg-gray-50 cursor-not-allowed'
-                    )}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor='university'
-                    className='block text-sm font-medium text-text-title mb-2'
-                  >
-                    Trường đại học
-                  </label>
-                  <input
-                    id='university'
-                    type='text'
-                    value={profile.university}
-                    onChange={e =>
-                      handleInputChange('university', e.target.value)
-                    }
-                    disabled={!isEditing}
-                    className={cn(
-                      'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
-                      !isEditing && 'bg-gray-50 cursor-not-allowed'
-                    )}
-                  />
+                  <div className='relative'>
+                    <Phone className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
+                    <input
+                      id='phone'
+                      type='tel'
+                      value={profile.phone || ''}
+                      onChange={e => handleInputChange('phone', e.target.value)}
+                      disabled={!isEditing}
+                      className={cn(
+                        'w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
+                        !isEditing && 'bg-gray-50 cursor-not-allowed'
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
