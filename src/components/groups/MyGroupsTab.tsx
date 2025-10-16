@@ -93,7 +93,6 @@ function MyGroupsTab() {
           open={openMentor}
           onOpenChange={setOpenMentor}
           groupId={userStatus.currentGroup.id}
-          courseCode='SE1904'
         />
       )}
     </div>
