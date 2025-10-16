@@ -1,4 +1,4 @@
-export type UserRole = 'STUDENT' | 'LECTURER' | 'ADMIN';
+export type UserRole = 'STUDENT' | 'LECTURER' | 'ADMIN' | 'MODERATOR';
 export type AccountStatus = 'ACTIVE' | 'INACTIVE' | 'BANNED';
 
 export interface Account {

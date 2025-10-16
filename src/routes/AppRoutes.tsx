@@ -13,6 +13,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { CreateTeam } from '@/pages/posts/CreateTeam';
 import { Groups } from '@/pages/Groups';
 import { GroupDetail } from '@/pages/GroupDetail';
+import ModeratorRoutes from './ModeratorRoutes';
 import { PreHome } from '@/pages/prehome/PreHome';
 import ChooseMajor from '@/pages/prehome/ChooseMajor';
 import ChooseInterests from '@/pages/prehome/ChooseInterests';
@@ -148,6 +149,21 @@ export function AppRoutes() {
           <MainLayout />
         </ProtectedRoute>
       ),
+    },
+    // Moderator Routes (with MainLayout and ProtectedRoute)
+    {
+      path: '/moderator/*',
+      element: (
+        <ProtectedRoute userRole='MODERATOR'>
+          <MainLayout />
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          path: '*',
+          element: <ModeratorRoutes />,
+        },
+      ],
     },
     // Redirect unknown routes
     {
