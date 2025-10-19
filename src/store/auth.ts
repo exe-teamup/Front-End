@@ -42,7 +42,9 @@ export const useAuthStore = create<AuthState>()(
           if (firebaseUser) {
             try {
               const idToken = await firebaseUser.getIdToken(true);
-              AuthTokenManager.setToken(idToken);
+              if (!idToken) {
+                throw new Error('Failed to retrieve ID token');
+              }
               const user: AuthUser = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
@@ -80,8 +82,8 @@ export const useAuthStore = create<AuthState>()(
           const idToken = await result.user.getIdToken(true);
 
           // Store token into cookies for axios to attach automatically
-          if (idToken) {
-            AuthTokenManager.setToken(idToken);
+          if (!idToken) {
+            throw new Error('Failed to retrieve ID token');
           }
 
           const response = await ApiClient.post<AuthResponse>(
@@ -91,6 +93,7 @@ export const useAuthStore = create<AuthState>()(
 
           const account: AuthResponse = response.data;
 
+          AuthTokenManager.setToken(account.accessToken);
           // onAuthStateChanged will update to authenticated; we set early for better UX
           set({
             status: 'authenticated',
