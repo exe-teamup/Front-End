@@ -17,13 +17,10 @@ export function AccountSetting() {
     bio: '',
   });
 
-  const { fetchProfile, profile, status, updateProfile } =
-    useStudentProfileStore();
+  const { profile, status, updateProfile } = useStudentProfileStore();
 
-  // Fetch profile on mount
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+  // Profile is auto-fetched after sign-in in auth store
+  // No need to fetch again on component mount
 
   // Sync form data with profile when it loads or changes
   useEffect(() => {
