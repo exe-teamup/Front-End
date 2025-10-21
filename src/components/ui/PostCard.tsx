@@ -1,6 +1,6 @@
 import { Clock, Users, MapPin, User, GraduationCap } from 'lucide-react';
 // import { useNavigate } from 'react-router-dom';
-import { cn } from '../../utils/cn';
+import { cn } from '@/lib/utils';
 import { type Post } from '../../mock/post.mockapi';
 import { toast } from 'sonner';
 

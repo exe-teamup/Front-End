@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getNewestPosts } from '../../mock/post.mockapi';
 import { PostCard } from '../ui/PostCard';
-import { cn } from '../../utils/cn';
+import { cn } from '@/lib/utils';
 
 interface LatestPostSectionProps {
   className?: string;

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { cn } from '@/utils/cn';
+import { cn } from '@/lib/utils';
 import { AuthButton } from '../AuthButton';
 import { Button } from '@/components/Button/Button';
 import { SearchBar } from '@/components/SearchBar/SearchBar';

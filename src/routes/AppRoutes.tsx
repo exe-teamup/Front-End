@@ -14,6 +14,7 @@ import { CreateTeam } from '@/pages/posts/CreateTeam';
 import { Groups } from '@/pages/Groups';
 import { GroupDetail } from '@/pages/GroupDetail';
 import ModeratorRoutes from './ModeratorRoutes';
+import AdminRoute from './AdminRoute';
 import { PreHome } from '@/pages/prehome/PreHome';
 import ChooseMajor from '@/pages/prehome/ChooseMajor';
 import ChooseInterests from '@/pages/prehome/ChooseInterests';
@@ -142,14 +143,8 @@ export function AppRoutes() {
       ],
     },
     // Admin Routes
-    {
-      path: ROUTES.ADMIN.ROOT.replace(/^\//, ''),
-      element: (
-        <ProtectedRoute userRole='ADMIN'>
-          <MainLayout />
-        </ProtectedRoute>
-      ),
-    },
+    AdminRoute,
+
     // Moderator Routes (with MainLayout and ProtectedRoute)
     {
       path: '/moderator/*',
