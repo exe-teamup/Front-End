@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Search, Filter, Users, ChevronLeft, ChevronRight } from 'lucide-react';
-import { searchGroups } from '@/mock/groups.mockapi';
 import GroupCard from '@/components/groups/GroupCard';
+import { ChevronLeft, ChevronRight, Filter, Search, Users } from 'lucide-react';
+import { useState } from 'react';
+import { useGroupStore } from '../../store/group';
 
 function GroupsListTab() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -12,7 +12,7 @@ function GroupsListTab() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const allGroups = searchGroups(searchQuery, memberFilter);
+  const { groups: allGroups } = useGroupStore();
   const totalPages = Math.ceil(allGroups.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const groups = allGroups.slice(startIndex, startIndex + itemsPerPage);
@@ -113,7 +113,7 @@ function GroupsListTab() {
         <div className='space-y-4'>
           {groups.map(group => (
             <GroupCard
-              key={group.id}
+              key={group.groupId}
               group={group}
               showActions={true}
               isMyGroup={false}
