@@ -16,7 +16,7 @@ type GroupState = {
   fetchStatus: LoadingStatus;
   fetchError?: string;
 
-  // Group list state (future)
+  // Group list state
   groups: Group[];
   listStatus: LoadingStatus;
   listError?: string;
@@ -26,9 +26,9 @@ type GroupState = {
   clearCreateStatus: () => void;
   fetchGroupById: (id: string) => Promise<void>;
   clearCurrentGroup: () => void;
+  fetchAllGroups: () => Promise<void>;
 
   // Future: Add more group-related actions here
-  // fetchGroups: () => Promise<void>;
   // updateGroup: (id: string, data: Partial<Group>) => Promise<void>;
   // etc.
 };

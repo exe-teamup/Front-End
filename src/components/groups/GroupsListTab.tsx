@@ -1,9 +1,13 @@
 import GroupCard from '@/components/groups/GroupCard';
 import { ChevronLeft, ChevronRight, Filter, Search, Users } from 'lucide-react';
 import { useState } from 'react';
-import { useGroupStore } from '../../store/group';
+import type { Group } from '../../types/group';
 
-function GroupsListTab() {
+interface GroupListProps {
+  groups: Group[];
+}
+
+function GroupsListTab({ groups: allGroups = [] }: GroupListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [memberFilter, setMemberFilter] = useState<number | undefined>(
     undefined
@@ -12,7 +16,6 @@ function GroupsListTab() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const { groups: allGroups } = useGroupStore();
   const totalPages = Math.ceil(allGroups.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const groups = allGroups.slice(startIndex, startIndex + itemsPerPage);
@@ -167,11 +170,12 @@ function GroupsListTab() {
                 <button
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`w-8 h-8 cursor-pointer rounded-full text-sm font-medium transition-colors ${
-                    currentPage === pageNum
-                      ? 'bg-primary text-white'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`w-8 h-8 cursor-pointer rounded-full text-sm font-medium transition-colors 
+                    ${
+                      currentPage === pageNum
+                        ? 'bg-primary text-white'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                    }`}
                 >
                   {pageNum}
                 </button>
