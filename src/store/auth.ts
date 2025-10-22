@@ -11,6 +11,8 @@ import { AuthTokenManager } from '../lib/axios/authToken';
 import { auth, googleProvider } from '../services/firebase/config';
 import type { AuthStatus, AuthUser } from '../services/firebase/types';
 import type { AuthResponse } from '../types/auth';
+import { clearAuthStores } from '../utils/clearAuthStores';
+import { useStudentProfileStore } from './studentProfile';
 
 type AuthState = {
   status: AuthStatus;
@@ -42,7 +44,9 @@ export const useAuthStore = create<AuthState>()(
           if (firebaseUser) {
             try {
               const idToken = await firebaseUser.getIdToken(true);
-              AuthTokenManager.setToken(idToken);
+              if (!idToken) {
+                throw new Error('Failed to retrieve ID token');
+              }
               const user: AuthUser = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
@@ -80,8 +84,8 @@ export const useAuthStore = create<AuthState>()(
           const idToken = await result.user.getIdToken(true);
 
           // Store token into cookies for axios to attach automatically
-          if (idToken) {
-            AuthTokenManager.setToken(idToken);
+          if (!idToken) {
+            throw new Error('Failed to retrieve ID token');
           }
 
           const response = await ApiClient.post<AuthResponse>(
@@ -91,6 +95,8 @@ export const useAuthStore = create<AuthState>()(
 
           const account: AuthResponse = response.data;
 
+          AuthTokenManager.setToken(account.accessToken);
+
           // onAuthStateChanged will update to authenticated; we set early for better UX
           set({
             status: 'authenticated',
@@ -98,6 +104,17 @@ export const useAuthStore = create<AuthState>()(
             account,
             error: undefined,
           });
+
+          // Fetch profile based on user role
+          if (account.role === 'STUDENT') {
+            const { fetchProfile } = useStudentProfileStore.getState();
+            await fetchProfile();
+          }
+          // TODO: Add profile fetch for other roles (LECTURER, ADMIN, MODERATOR)
+          // else if (account.role === 'LECTURER') {
+          //   const { fetchProfile } = useLecturerProfileStore.getState();
+          //   await fetchProfile();
+          // }
         } catch (e: unknown) {
           const message = e instanceof Error ? e.message : 'Sign-in failed';
           set({ status: 'unauthenticated', error: message });
@@ -115,8 +132,11 @@ export const useAuthStore = create<AuthState>()(
               error: undefined,
             });
           });
-          // Clear auth cookies/tokens
+
+          // Clear auth cookies/tokens and related stores
           AuthTokenManager.clearTokens();
+          clearAuthStores();
+
           // onAuthStateChanged will update to unauthenticated
         } catch (e: unknown) {
           const message = e instanceof Error ? e.message : 'Sign-out failed';
