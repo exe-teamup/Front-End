@@ -1,4 +1,5 @@
 import { useGroupStore } from '../store/group';
+import { usePostStore } from '../store/post';
 import { useStudentProfileStore } from '../store/studentProfile';
 // TODO: Import other profile stores when implemented
 // import { useLecturerProfileStore } from '../store/lecturerProfile';
@@ -18,6 +19,10 @@ export const clearAuthStores = () => {
   const { clearCurrentGroup, clearCreateStatus } = useGroupStore.getState();
   clearCurrentGroup();
   clearCreateStatus();
+
+  // Clear post store
+  const { clearPosts } = usePostStore.getState();
+  clearPosts();
 
   // TODO: Add other profile store cleanups when implemented
   // const { clearProfile: clearLecturerProfile } = useLecturerProfileStore.getState();
