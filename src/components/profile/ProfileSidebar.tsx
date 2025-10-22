@@ -1,5 +1,5 @@
 import { User, Settings, FileText, Users } from 'lucide-react';
-import { cn } from '../../utils/cn';
+import { cn } from '@/lib/utils';
 
 interface ProfileSidebarProps {
   className?: string;

@@ -1,6 +1,6 @@
 import { getRecentBlogs } from '../../mock/blog.mockapi';
 import { BlogCard } from '../ui/BlogCard';
-import { cn } from '../../utils/cn';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface BlogSectionProps {

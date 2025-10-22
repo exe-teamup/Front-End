@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react';
 import { useState } from 'react';
-import { cn } from '../../utils/cn';
+import { cn } from '@/lib/utils';
 
 interface SearchBarProps {
   placeholder?: string;

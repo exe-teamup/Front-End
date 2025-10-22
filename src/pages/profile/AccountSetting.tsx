@@ -1,79 +1,96 @@
-import { useState } from 'react';
-import {
-  Mail,
-  Phone,
-  Globe,
-  Linkedin,
-  Github,
-  Save,
-  Plus,
-  X,
-} from 'lucide-react';
-import { cn } from '../../utils/cn';
-import { getUserProfile, type UserProfile } from '../../mock/user.mockapi';
-import { ProfileSidebar } from '../../components/profile/ProfileSidebar';
-import { ProfilePhotoSection } from '../../components/profile/ProfilePhotoSection';
-import { SkillsInterestsSection } from '../../components/profile/SkillsInterestsSection';
 import MyGroupsTab from '@/components/groups/MyGroupsTab';
+import { Mail, Phone, Save } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ProfileSidebar } from '../../components/profile/ProfileSidebar';
+import { useStudentProfileStore } from '../../store/studentProfile';
+import { cn } from '../../utils/cn';
 
 type TabKey = 'account' | 'settings' | 'posts' | 'groups';
 
 export function AccountSetting() {
-  const [profile, setProfile] = useState<UserProfile>(getUserProfile('user-1'));
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('account');
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+    bio: '',
+  });
 
-  const handleSave = () => {
+  const { profile, status, updateProfile } = useStudentProfileStore();
+
+  // Profile is auto-fetched after sign-in in auth store
+  // No need to fetch again on component mount
+
+  // Sync form data with profile when it loads or changes
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        fullName: profile.fullName,
+        email: profile.email,
+        phoneNumber: profile.phoneNumber || '',
+        bio: profile.bio || '',
+      });
+    }
+  }, [profile]);
+
+  const handleSave = async () => {
+    if (!profile) return;
+
+    try {
+      // Only send fields that can be updated
+      await updateProfile({
+        phoneNumber: formData.phoneNumber,
+        bio: formData.bio,
+      });
+      setIsEditing(false);
+      // TODO: Show success notification
+    } catch {
+      // TODO: Show error notification
+      // Error is already handled in the store
+    }
+  };
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCancel = () => {
+    // Reset form data to original profile values
+    if (profile) {
+      setFormData({
+        fullName: profile.fullName,
+        email: profile.email,
+        phoneNumber: profile.phoneNumber || '',
+        bio: profile.bio || '',
+      });
+    }
     setIsEditing(false);
-    // TODO: Implement save functionality
   };
 
-  const handleInputChange = (field: keyof UserProfile, value: string) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
-  };
+  // Show loading state
+  if (status === 'loading') {
+    return (
+      <div className='max-w-7xl mx-auto px-4 py-8'>
+        <div className='flex items-center justify-center h-64'>
+          <div className='text-text-subtitle'>Đang tải thông tin...</div>
+        </div>
+      </div>
+    );
+  }
 
-  const handleSkillsChange = (skills: string[]) => {
-    setProfile(prev => ({ ...prev, skills }));
-  };
-
-  const handleInterestsChange = (interests: string[]) => {
-    setProfile(prev => ({ ...prev, interests }));
-  };
-
-  const handleOtherSocialChange = (index: number, value: string) => {
-    setProfile(prev => {
-      const newOtherSocials = [...(prev.otherSocials || [])];
-      newOtherSocials[index] = value;
-      return {
-        ...prev,
-        otherSocials: newOtherSocials,
-      };
-    });
-  };
-
-  const handleAddOtherSocial = () => {
-    setProfile(prev => {
-      const currentSocials = prev.otherSocials || [];
-      if (currentSocials.length < 4) {
-        return {
-          ...prev,
-          otherSocials: [...currentSocials, ''],
-        };
-      }
-      return prev;
-    });
-  };
-
-  const handleRemoveOtherSocial = (index: number) => {
-    setProfile(prev => {
-      const newOtherSocials = [...(prev.otherSocials || [])];
-      newOtherSocials.splice(index, 1);
-      return {
-        ...prev,
-        otherSocials: newOtherSocials,
-      };
-    });
-  };
+  // Show error state
+  if (status === 'error' || !profile) {
+    return (
+      <div className='max-w-7xl mx-auto px-4 py-8'>
+        <div className='flex items-center justify-center h-64'>
+          <div className='text-red-500'>
+            Không thể tải thông tin profile. Vui lòng thử lại.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='max-w-7xl mx-auto px-4 py-8'>
@@ -92,8 +109,6 @@ export function AccountSetting() {
         <div className='lg:col-span-2 space-y-6'>
           {activeTab === 'account' && (
             <div>
-              <ProfilePhotoSection profile={profile} />
-
               {/* Contact Information */}
               <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
                 <div className='flex items-center justify-between mb-6'>
@@ -101,7 +116,9 @@ export function AccountSetting() {
                     Thông tin liên hệ
                   </h2>
                   <button
-                    onClick={() => setIsEditing(!isEditing)}
+                    onClick={
+                      isEditing ? handleCancel : () => setIsEditing(true)
+                    }
                     className='text-primary hover:text-primary/80 font-medium cursor-pointer'
                   >
                     {isEditing ? 'Hủy' : 'Chỉnh sửa'}
@@ -120,7 +137,7 @@ export function AccountSetting() {
                       <input
                         id='fullName'
                         type='text'
-                        value={profile.fullName}
+                        value={formData.fullName}
                         onChange={e =>
                           handleInputChange('fullName', e.target.value)
                         }
@@ -144,7 +161,7 @@ export function AccountSetting() {
                         <input
                           id='email'
                           type='email'
-                          value={profile.email}
+                          value={formData.email}
                           onChange={e =>
                             handleInputChange('email', e.target.value)
                           }
@@ -158,33 +175,10 @@ export function AccountSetting() {
                     </div>
                   </div>
 
-                  {/* Academic Info */}
                   <div className='space-y-4'>
                     <div>
                       <label
-                        htmlFor='major'
-                        className='block text-sm font-medium text-text-title mb-2'
-                      >
-                        Chuyên ngành
-                      </label>
-                      <input
-                        id='major'
-                        type='text'
-                        value={profile.major}
-                        onChange={e =>
-                          handleInputChange('major', e.target.value)
-                        }
-                        disabled={!isEditing}
-                        className={cn(
-                          'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
-                          !isEditing && 'bg-gray-50 cursor-not-allowed'
-                        )}
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor='phone'
+                        htmlFor='phoneNumber'
                         className='block text-sm font-medium text-text-title mb-2'
                       >
                         Số điện thoại
@@ -192,11 +186,11 @@ export function AccountSetting() {
                       <div className='relative'>
                         <Phone className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
                         <input
-                          id='phone'
+                          id='phoneNumber'
                           type='tel'
-                          value={profile.phone || ''}
+                          value={formData.phoneNumber}
                           onChange={e =>
-                            handleInputChange('phone', e.target.value)
+                            handleInputChange('phoneNumber', e.target.value)
                           }
                           disabled={!isEditing}
                           className={cn(
@@ -218,7 +212,7 @@ export function AccountSetting() {
                   </label>
                   <textarea
                     id='bio'
-                    value={profile.bio || ''}
+                    value={formData.bio}
                     onChange={e => handleInputChange('bio', e.target.value)}
                     disabled={!isEditing}
                     rows={4}
@@ -228,156 +222,6 @@ export function AccountSetting() {
                     )}
                     placeholder='Hãy giới thiệu về bản thân, sở thích và mục tiêu của bạn...'
                   />
-                </div>
-
-                <div className='mt-6'>
-                  <h3 className='text-lg font-medium text-text-title mb-4'>
-                    Liên kết mạng xã hội
-                  </h3>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    <div>
-                      <label
-                        htmlFor='website'
-                        className='block text-sm font-medium text-text-title mb-2'
-                      >
-                        Website
-                      </label>
-                      <div className='relative'>
-                        <Globe className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
-                        <input
-                          id='website'
-                          type='url'
-                          value={profile.website || ''}
-                          onChange={e =>
-                            handleInputChange('website', e.target.value)
-                          }
-                          disabled={!isEditing}
-                          className={cn(
-                            'w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
-                            !isEditing && 'bg-gray-50 cursor-not-allowed'
-                          )}
-                          placeholder='https://yourwebsite.com'
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor='linkedin'
-                        className='block text-sm font-medium text-text-title mb-2'
-                      >
-                        LinkedIn
-                      </label>
-                      <div className='relative'>
-                        <Linkedin className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
-                        <input
-                          id='linkedin'
-                          type='url'
-                          value={profile.linkedin || ''}
-                          onChange={e =>
-                            handleInputChange('linkedin', e.target.value)
-                          }
-                          disabled={!isEditing}
-                          className={cn(
-                            'w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
-                            !isEditing && 'bg-gray-50 cursor-not-allowed'
-                          )}
-                          placeholder='https://linkedin.com/in/yourprofile'
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor='github'
-                        className='block text-sm font-medium text-text-title mb-2'
-                      >
-                        GitHub
-                      </label>
-                      <div className='relative'>
-                        <Github className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
-                        <input
-                          id='github'
-                          type='url'
-                          value={profile.github || ''}
-                          onChange={e =>
-                            handleInputChange('github', e.target.value)
-                          }
-                          disabled={!isEditing}
-                          className={cn(
-                            'w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
-                            !isEditing && 'bg-gray-50 cursor-not-allowed'
-                          )}
-                          placeholder='https://github.com/yourusername'
-                        />
-                      </div>
-                    </div>
-
-                    {/* Other Social Links */}
-                    <div className='col-span-2'>
-                      <div className='flex items-center justify-between mb-4'>
-                        <h4 className='text-lg font-medium text-text-title'>
-                          Liên kết mạng xã hội khác
-                        </h4>
-                        {isEditing &&
-                          (profile.otherSocials?.length || 0) < 4 && (
-                            <button
-                              onClick={handleAddOtherSocial}
-                              className='flex items-center gap-2 px-3 py-1 text-primary hover:text-primary/80 text-sm font-medium cursor-pointer'
-                            >
-                              <Plus className='w-4 h-4' />
-                              Thêm liên kết
-                            </button>
-                          )}
-                      </div>
-
-                      <div className='space-y-3'>
-                        {profile.otherSocials?.map((social, index) => (
-                          <div key={index} className='flex items-center gap-3'>
-                            <div className='flex-1'>
-                              <input
-                                type='url'
-                                value={social}
-                                onChange={e =>
-                                  handleOtherSocialChange(index, e.target.value)
-                                }
-                                disabled={!isEditing}
-                                className={cn(
-                                  'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-sm',
-                                  !isEditing && 'bg-gray-50 cursor-not-allowed'
-                                )}
-                                placeholder='https://example.com/yourprofile'
-                              />
-                            </div>
-                            {isEditing && (
-                              <button
-                                onClick={() => handleRemoveOtherSocial(index)}
-                                className='p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer'
-                              >
-                                <X className='w-4 h-4' />
-                              </button>
-                            )}
-                          </div>
-                        ))}
-
-                        {(!profile.otherSocials ||
-                          profile.otherSocials.length === 0) && (
-                          <div className='text-center py-8 text-text-subtitle'>
-                            <Globe className='w-12 h-12 mx-auto mb-2 text-gray-300' />
-                            <p>Chưa có liên kết mạng xã hội nào</p>
-                            {isEditing && (
-                              <button
-                                onClick={handleAddOtherSocial}
-                                className='mt-2 text-primary hover:text-primary/80 text-sm font-medium'
-                              >
-                                Thêm liên kết đầu tiên
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 {isEditing && (
@@ -391,13 +235,6 @@ export function AccountSetting() {
                     </button>
                   </div>
                 )}
-                {/* Skills & Interests Section */}
-                <SkillsInterestsSection
-                  profile={profile}
-                  isEditing={isEditing}
-                  onSkillsChange={handleSkillsChange}
-                  onInterestsChange={handleInterestsChange}
-                />
               </div>
             </div>
           )}
