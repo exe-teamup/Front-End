@@ -133,10 +133,8 @@ export const useAuthStore = create<AuthState>()(
             });
           });
 
-          // Clear auth cookies/tokens
+          // Clear auth cookies/tokens and related stores
           AuthTokenManager.clearTokens();
-
-          // Clear all auth-related stores
           clearAuthStores();
 
           // onAuthStateChanged will update to unauthenticated
