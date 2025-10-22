@@ -8,6 +8,8 @@ export const serviceConfig = {
     SEARCH_STUDENTS: '/students/search',
     GROUPS: '/groups',
     GROUP_BY_ID: (id: string) => `/groups/${id}`,
+    POSTS: '/posts',
+    GROUP_POSTS: '/posts/group-post',
   },
   TIMEOUT: 5000,
 };

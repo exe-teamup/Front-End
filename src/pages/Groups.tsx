@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
 import { Button } from '@/components/Button/Button';
 import { CreateGroupModal } from '@/components/modals/CreateGroupModal';
-import MyGroupsTab from '../components/groups/MyGroupsTab';
+import { Plus } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import GroupsListTab from '../components/groups/GroupsListTab';
+import MyGroupsTab from '../components/groups/MyGroupsTab';
 import RequestsTab from '../components/groups/RequestsTab';
-import { getUserGroupStatus } from '@/mock/groups.mockapi';
+import { useGroups } from '../hooks/useGroups';
 
 type TabType = 'my-groups' | 'all-groups' | 'requests';
 
@@ -15,7 +15,8 @@ export function Groups() {
   const navigate = useNavigate();
   const [openCreateGroup, setOpenCreateGroup] = useState(false);
 
-  const userStatus = getUserGroupStatus();
+  const { isLoading, myGroup, hasGroup, allGroups, pendingRequestsCount } =
+    useGroups();
 
   const getActiveTabFromPath = useCallback((): TabType => {
     const path = location.pathname;
@@ -52,14 +53,24 @@ export function Groups() {
       label: 'Nhóm của bạn',
       count: undefined,
     },
-    { id: 'all-groups' as TabType, label: 'Danh sách nhóm', count: undefined },
+    {
+      id: 'all-groups' as TabType,
+      label: 'Danh sách nhóm',
+      count: allGroups.length,
+    },
     {
       id: 'requests' as TabType,
       label: 'Yêu cầu tham gia',
-      count: userStatus.pendingRequests.length,
+      count: pendingRequestsCount,
     },
   ];
-
+  if (isLoading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
+      </div>
+    );
+  }
   return (
     <div className='min-h-screen bg-gray-50'>
       <div className='max-w-7xl mx-auto px-4 py-8'>
@@ -84,7 +95,7 @@ export function Groups() {
                 }`}
               >
                 {tab.label}
-                {tab.count !== undefined && tab.count > 0 && (
+                {tab.count !== undefined && (
                   <span className='ml-2 bg-primary text-white text-xs rounded-full px-2 py-1'>
                     {tab.count}
                   </span>
@@ -93,7 +104,7 @@ export function Groups() {
             ))}
           </div>
 
-          {!userStatus.isLeader && (
+          {!hasGroup && (
             <Button
               variant='primary'
               onClick={() => setOpenCreateGroup(true)}
@@ -106,8 +117,10 @@ export function Groups() {
         </div>
 
         <div className='bg-white rounded-lg shadow-sm'>
-          {activeTab === 'my-groups' && <MyGroupsTab />}
-          {activeTab === 'all-groups' && <GroupsListTab />}
+          {activeTab === 'my-groups' && <MyGroupsTab currentGroup={myGroup} />}
+          {activeTab === 'all-groups' && (
+            <GroupsListTab groups={allGroups} hasGroup={hasGroup} />
+          )}
           {activeTab === 'requests' && <RequestsTab />}
         </div>
       </div>

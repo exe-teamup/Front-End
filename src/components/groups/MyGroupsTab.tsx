@@ -61,7 +61,7 @@ function MyGroupsTab({ currentGroup, isLoading = false }: MyGroupsTabProps) {
           </div>
         </div>
 
-        <GroupCard group={currentGroup} showActions={true} isMyGroup={true} />
+        <GroupCard group={currentGroup} showActions={true} isMyGroup />
 
         {/* Members detail list */}
         <div className='mt-6 bg-white rounded-lg border border-gray-200'>
