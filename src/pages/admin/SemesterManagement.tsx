@@ -12,14 +12,31 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
-import { semesterMockAPI, type Semester } from '@/mock/semester.mockapi';
+import {
+  SemesterService,
+  type CreateSemesterRequest,
+  type UpdateSemesterRequest,
+} from '@/services/semesterService';
+import type { Semester } from '@/types/semester';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Calendar } from 'lucide-react';
+import { semesterSchema } from '@/schemas/semester.schema';
+import { z } from 'zod';
 
 export function SemesterManagement() {
   const [semesters, setSemesters] = useState<Semester[]>([]);
@@ -31,8 +48,14 @@ export function SemesterManagement() {
     semesterName: '',
     startDate: '',
     endDate: '',
-    semesterStatus: 'ACTIVE' as 'ACTIVE' | 'UPCOMING' | 'COMPLETED',
+    semesterStatus: 'ACTIVE' as 'ACTIVE' | 'INACTIVE' | 'COMPLETED',
   });
+  const [showCancelDialog, setShowCancelDialog] = useState<Semester | null>(
+    null
+  );
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     loadSemesters();
@@ -41,11 +64,10 @@ export function SemesterManagement() {
   const loadSemesters = async () => {
     try {
       setLoading(true);
-      const data = await semesterMockAPI.getAllSemesters();
+      const data = await SemesterService.getAllSemesters();
       setSemesters(data);
     } catch {
       toast.error('Lỗi khi tải danh sách kỳ học');
-      // console.log;
     } finally {
       setLoading(false);
     }
@@ -53,13 +75,31 @@ export function SemesterManagement() {
 
   const handleCreate = async () => {
     try {
-      await semesterMockAPI.createSemester(formData);
+      // Validate form data
+      const validatedData = semesterSchema.parse(formData);
+      setValidationErrors({});
+
+      await SemesterService.createSemester(
+        validatedData as CreateSemesterRequest
+      );
       toast.success('Tạo kỳ học thành công');
       setOpenDialog(false);
       resetForm();
       loadSemesters();
-    } catch {
-      toast.error('Lỗi khi tạo kỳ học');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        // Map validation errors to form fields
+        const errors: Record<string, string> = {};
+        error.issues.forEach(issue => {
+          if (issue.path.length > 0) {
+            errors[issue.path[0] as string] = issue.message;
+          }
+        });
+        setValidationErrors(errors);
+        toast.error('Vui lòng kiểm tra lại thông tin nhập');
+      } else {
+        toast.error('Lỗi khi tạo kỳ học');
+      }
     }
   };
 
@@ -67,29 +107,52 @@ export function SemesterManagement() {
     if (!editingSemester) return;
 
     try {
-      await semesterMockAPI.updateSemester(
+      // Validate form data
+      const validatedData = semesterSchema.parse(formData);
+      setValidationErrors({});
+
+      await SemesterService.updateSemester(
         editingSemester.semesterId,
-        formData
+        validatedData as UpdateSemesterRequest
       );
       toast.success('Cập nhật kỳ học thành công');
       setOpenDialog(false);
       setEditingSemester(null);
       resetForm();
       loadSemesters();
-    } catch {
-      toast.error('Lỗi khi cập nhật kỳ học');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        // Map validation errors to form fields
+        const errors: Record<string, string> = {};
+        error.issues.forEach(issue => {
+          if (issue.path.length > 0) {
+            errors[issue.path[0] as string] = issue.message;
+          }
+        });
+        setValidationErrors(errors);
+        toast.error('Vui lòng kiểm tra lại thông tin nhập');
+      } else {
+        toast.error('Lỗi khi cập nhật kỳ học');
+      }
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Bạn có chắc muốn xóa kỳ học này?')) return;
+  const confirmCancelRequest = () => {
+    if (showCancelDialog) {
+      handleDelete();
+      setShowCancelDialog(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!showCancelDialog) return;
 
     try {
-      await semesterMockAPI.deleteSemester(id);
+      await SemesterService.deleteSemester(showCancelDialog.semesterId);
       toast.success('Xóa kỳ học thành công');
       loadSemesters();
     } catch {
-      toast.error('Lỗi khi xóa kỳ học');
+      toast.error('Lỗi khi xoá kỳ học');
     }
   };
 
@@ -101,13 +164,14 @@ export function SemesterManagement() {
       endDate: '',
       semesterStatus: 'ACTIVE',
     });
+    setValidationErrors({});
   };
 
   const openEditDialog = (semester: Semester) => {
     setEditingSemester(semester);
     setFormData({
       semesterCode: semester.semesterCode,
-      semesterName: semester.semesterName,
+      semesterName: semester.semesterName ?? '',
       startDate: semester.startDate,
       endDate: semester.endDate,
       semesterStatus: semester.semesterStatus,
@@ -118,15 +182,19 @@ export function SemesterManagement() {
   const getStatusBadge = (status: string) => {
     const statusMap = {
       ACTIVE: 'bg-green-100 text-green-800',
-      UPCOMING: 'bg-blue-100 text-blue-800',
+      INACTIVE: 'bg-blue-100 text-blue-800',
       COMPLETED: 'bg-purple-100 text-purple-800',
     };
 
     return (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${statusMap[status as keyof typeof statusMap]}`}
+        className={`w-2xl px-2 py-1 rounded-full text-xs font-medium ${statusMap[status as keyof typeof statusMap]}`}
       >
-        {status}
+        {status == 'ACTIVE'
+          ? 'Đang diễn ra'
+          : status == 'INACTIVE'
+            ? 'Sắp tới'
+            : 'Đã hoàn thành'}
       </span>
     );
   };
@@ -150,7 +218,6 @@ export function SemesterManagement() {
           <DialogTrigger asChild>
             <Button
               onClick={() => {
-                resetForm();
                 setEditingSemester(null);
               }}
             >
@@ -163,6 +230,11 @@ export function SemesterManagement() {
               <DialogTitle>
                 {editingSemester ? 'Chỉnh sửa kỳ học' : 'Thêm kỳ học mới'}
               </DialogTitle>
+              <DialogDescription>
+                {editingSemester
+                  ? 'Cập nhật thông tin kỳ học'
+                  : 'Nhập thông tin kỳ học mới'}
+              </DialogDescription>
             </DialogHeader>
             <div className='space-y-4'>
               <div>
@@ -174,7 +246,15 @@ export function SemesterManagement() {
                     setFormData({ ...formData, semesterCode: e.target.value })
                   }
                   placeholder='VD: FALL2024'
+                  className={
+                    validationErrors.semesterCode ? 'border-red-500' : ''
+                  }
                 />
+                {validationErrors.semesterCode && (
+                  <p className='text-sm text-red-500 mt-1'>
+                    {validationErrors.semesterCode}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor='semesterName'>Tên kỳ học</Label>
@@ -185,7 +265,15 @@ export function SemesterManagement() {
                     setFormData({ ...formData, semesterName: e.target.value })
                   }
                   placeholder='VD: Học kỳ Fall 2024'
+                  className={
+                    validationErrors.semesterName ? 'border-red-500' : ''
+                  }
                 />
+                {validationErrors.semesterName && (
+                  <p className='text-sm text-red-500 mt-1'>
+                    {validationErrors.semesterName}
+                  </p>
+                )}
               </div>
               <div className='grid grid-cols-2 gap-4'>
                 <div>
@@ -197,7 +285,15 @@ export function SemesterManagement() {
                     onChange={e =>
                       setFormData({ ...formData, startDate: e.target.value })
                     }
+                    className={
+                      validationErrors.startDate ? 'border-red-500' : ''
+                    }
                   />
+                  {validationErrors.startDate && (
+                    <p className='text-sm text-red-500 mt-1'>
+                      {validationErrors.startDate}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor='endDate'>Ngày kết thúc</Label>
@@ -208,7 +304,13 @@ export function SemesterManagement() {
                     onChange={e =>
                       setFormData({ ...formData, endDate: e.target.value })
                     }
+                    className={validationErrors.endDate ? 'border-red-500' : ''}
                   />
+                  {validationErrors.endDate && (
+                    <p className='text-sm text-red-500 mt-1'>
+                      {validationErrors.endDate}
+                    </p>
+                  )}
                 </div>
               </div>
               <div>
@@ -221,16 +323,21 @@ export function SemesterManagement() {
                       ...formData,
                       semesterStatus: e.target.value as
                         | 'ACTIVE'
-                        | 'UPCOMING'
+                        | 'INACTIVE'
                         | 'COMPLETED',
                     })
                   }
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary'
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${validationErrors.semesterStatus ? 'border-red-500' : ''}`}
                 >
                   <option value='ACTIVE'>Hoạt động</option>
-                  <option value='UPCOMING'>Sắp tới</option>
+                  <option value='INACTIVE'>Sắp tới</option>
                   <option value='COMPLETED'>Hoàn thành</option>
                 </select>
+                {validationErrors.semesterStatus && (
+                  <p className='text-sm text-red-500 mt-1'>
+                    {validationErrors.semesterStatus}
+                  </p>
+                )}
               </div>
               <div className='flex justify-end space-x-2'>
                 <Button variant='outline' onClick={() => setOpenDialog(false)}>
@@ -276,7 +383,9 @@ export function SemesterManagement() {
                     {new Date(semester.endDate).toLocaleDateString('vi-VN')}
                   </div>
                 </TableCell>
-                <TableCell>{getStatusBadge(semester.semesterStatus)}</TableCell>
+                <TableCell className='w-36'>
+                  {getStatusBadge(semester.semesterStatus)}
+                </TableCell>
                 <TableCell className='text-right'>
                   <div className='flex items-center justify-end gap-2'>
                     <Button
@@ -289,7 +398,7 @@ export function SemesterManagement() {
                     <Button
                       variant='outline'
                       size='sm'
-                      onClick={() => handleDelete(semester.semesterId)}
+                      onClick={() => setShowCancelDialog(semester)}
                     >
                       <Trash2 className='w-4 h-4' />
                     </Button>
@@ -300,6 +409,31 @@ export function SemesterManagement() {
           </TableBody>
         </Table>
       </div>
+      <AlertDialog
+        open={!!showCancelDialog}
+        onOpenChange={() => setShowCancelDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xoá học kỳ này?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className='py-4'>
+            <p className='text-sm text-gray-900'>
+              Bạn có chắc chắn muốn xoá học kỳ này không? <br />
+              Hành động này không thể hoàn tác.
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Không</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancelRequest}
+              className='bg-red-600 hover:bg-red-600/80 text-white'
+            >
+              Xoá học kỳ
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
