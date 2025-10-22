@@ -1,7 +1,3 @@
-import React from 'react';
-import { Users, UserPlus } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,11 +7,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { RelatedGroup } from '../../mock/groupDetail.mockapi';
+import { UserPlus, Users } from 'lucide-react';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+import type { Group } from '../../types/group';
 
 interface RelatedGroupsListProps {
-  groups: RelatedGroup[];
-  currentGroupMajor: string;
+  groups: Group[];
+  currentGroupMajor?: string;
 }
 
 function RelatedGroupsList({
@@ -40,22 +40,28 @@ function RelatedGroupsList({
     }
   };
 
-  const getStatusBadge = (group: RelatedGroup) => {
-    if (group.status === 'FULL') {
+  const getStatusBadge = (group: Group) => {
+    if (
+      group.groupStatus === 'ACTIVE' &&
+      group.memberCount >= (group.templates?.maxMember || 6)
+    ) {
       return (
         <span className='px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full'>
           Đã đầy
         </span>
       );
     }
-    if (group.status === 'CLOSED') {
+    if (group.groupStatus === 'INACTIVE') {
       return (
         <span className='px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full'>
           Đã đóng
         </span>
       );
     }
-    if (group.isRecruiting) {
+    if (
+      group.groupStatus === 'ACTIVE' &&
+      group.memberCount < (group.templates?.maxMember || 6)
+    ) {
       return (
         <span className='px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full'>
           Đang tuyển
@@ -95,42 +101,44 @@ function RelatedGroupsList({
       <div className='space-y-4'>
         {groups.map(group => (
           <div
-            key={group.id}
+            key={group.groupId}
             className='flex items-start gap-3 p-3 border-b border-gray-200 transition-colors'
           >
             <img
-              src={group.avatar || '/images/logo.svg'}
-              alt={group.name}
+              src={'/images/logo.svg'}
+              alt={group.groupName}
               className='w-12 h-12 rounded-lg object-cover flex-shrink-0'
             />
 
             <div className='flex-1 min-w-0'>
               <Link
-                to={`/groups/${group.id}`}
+                to={`/groups/${group.groupId}`}
                 className='text-lg font-semibold text-gray-900 hover:text-primary transition-colors'
               >
-                {group.name}
+                {group.groupName}
               </Link>
 
               <div className='flex items-center gap-2 mt-1 mb-2'>
                 <div className='flex items-center gap-1 text-sm text-gray-500'>
                   <Users className='w-3 h-3' />
                   <span>
-                    {group.memberCount}/{group.maxMembers}
+                    {group.memberCount}/{group.templates?.maxMember || '---'}{' '}
+                    thành viên
                   </span>
                 </div>
                 {getStatusBadge(group)}
               </div>
 
-              {group.status === 'ACTIVE' && group.isRecruiting && (
-                <button
-                  onClick={() => handleJoinGroup(group.id)}
-                  className='flex items-center gap-1 px-3 py-1 text-sm text-primary rounded-2xl cursor-pointer hover:bg-primary hover:text-white transition-colors'
-                >
-                  <UserPlus className='w-3 h-3' />
-                  Tham gia
-                </button>
-              )}
+              {group.groupStatus === 'ACTIVE' &&
+                group.memberCount < (group.templates?.maxMember || 6) && (
+                  <button
+                    onClick={() => handleJoinGroup(group.groupId)}
+                    className='flex items-center gap-1 px-3 py-1 text-sm text-primary rounded-2xl cursor-pointer hover:bg-primary hover:text-white transition-colors'
+                  >
+                    <UserPlus className='w-3 h-3' />
+                    Tham gia
+                  </button>
+                )}
             </div>
           </div>
         ))}

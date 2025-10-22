@@ -69,8 +69,8 @@ export function AppRoutes() {
           element: <Groups />,
           children: [
             { index: true, path: '/groups/my' },
-            { index: true, path: '/groups/all' },
-            { index: false, path: 'groups/request' },
+            { index: false, path: '/groups/all' },
+            { index: false, path: '/groups/request' },
           ],
         },
         {

@@ -1,7 +1,3 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { Link, Users, GraduationCap } from 'lucide-react';
-import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,22 +7,35 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  getGroupDetail,
-  getRelatedGroups,
-  joinGroup,
-  getStatusInfo,
-} from '../mock/groupDetail.mockapi';
+import { GraduationCap, Link, Users } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import RelatedGroupsList from '../components/groups/RelatedGroupsList';
+import { getStatusInfo, joinGroup } from '../mock/groupDetail.mockapi';
+import { useGroupStore } from '../store/group';
+import { useStudentProfileStore } from '../store/studentProfile';
+import type { Group } from '../types/group';
 
 export function GroupDetail() {
   const { groupId } = useParams<{ groupId: string }>();
   const [showCancelDialog, setShowCancelDialog] = React.useState<string | null>(
     null
   );
+  const navigate = useNavigate();
+  const { fetchGroupById, currentGroup } = useGroupStore();
+  const { profile } = useStudentProfileStore();
 
-  const group = getGroupDetail(groupId || 'group-1');
-  const relatedGroups = group ? getRelatedGroups(group.major, group.id) : [];
+  useEffect(() => {
+    if (groupId) {
+      fetchGroupById(groupId);
+    }
+  }, [groupId, fetchGroupById]);
+
+  const group = currentGroup;
+
+  // TODO: Map from backend response
+  const relatedGroups: Group[] = [];
 
   if (!group) {
     return (
@@ -43,16 +52,21 @@ export function GroupDetail() {
     );
   }
 
-  const statusInfo = getStatusInfo(group.status);
+  const statusInfo = getStatusInfo(group.groupStatus);
 
   const handleCopyLink = () => {
-    const groupUrl = `${window.location.origin}/groups/${group.id}`;
+    const groupUrl = `${window.location.origin}/groups/${group.groupId}`;
     navigator.clipboard.writeText(groupUrl);
     toast.success('Đã sao chép đường dẫn nhóm');
   };
 
   const handleJoinRequest = () => {
-    setShowCancelDialog(group.id);
+    if (!profile) {
+      toast.error('Vui lòng đăng nhập để tham gia nhóm');
+      navigate('/login');
+      return;
+    }
+    setShowCancelDialog(group.groupId);
   };
 
   const handleConfirmJoinRequest = () => {
@@ -73,7 +87,7 @@ export function GroupDetail() {
             <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
               <div className='h-48 relative'>
                 <img
-                  src={group.banner || '/images/cover/cover-profile1.jpg'}
+                  src={'/images/cover/cover-profile1.jpg'}
                   alt='Group banner'
                   className='w-full h-full object-cover'
                 />
@@ -82,24 +96,24 @@ export function GroupDetail() {
               <div className='p-6 -mt-16 relative'>
                 <div className='flex items-start gap-6'>
                   <div className='w-24 h-24 bg-white rounded-full border-4 border-white shadow-md flex items-center justify-center overflow-hidden'>
-                    {group.avatar ? (
+                    {/* {group.avatar  ? (
                       <img
                         src={group.avatar}
                         alt='Group avatar'
                         className='w-full h-full object-cover'
                       />
-                    ) : (
-                      <div className='w-full h-full bg-gray-100 flex items-center justify-center'>
-                        <Users className='w-8 h-8 text-gray-400' />
-                      </div>
-                    )}
+                    ) : ( */}
+                    <div className='w-full h-full bg-gray-100 flex items-center justify-center'>
+                      <Users className='w-8 h-8 text-gray-400' />
+                    </div>
+                    {/* )} */}
                   </div>
 
                   {/* Group Details */}
                   <div className='flex-1 pt-16  '>
                     <div className='flex items-center gap-3 mb-2'>
                       <h1 className='text-lg md:text-2xl font-bold text-gray-900'>
-                        {group.name}
+                        {group.groupName}
                       </h1>
                       <button
                         onClick={handleCopyLink}
@@ -128,12 +142,13 @@ export function GroupDetail() {
                       <div className='flex items-center gap-1 text-black'>
                         <Users className='w-4 h-4' />
                         <span>
-                          {group.memberCount}/{group.maxMembers} thành viên
+                          {group.memberCount}/{group.templates?.maxMember ?? 6}{' '}
+                          thành viên
                         </span>
                       </div>
                     </div>
 
-                    {!group.isJoined && (
+                    {!profile?.groupId && (
                       <button
                         onClick={handleJoinRequest}
                         className='bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 cursor-pointer transition-colors'
@@ -152,7 +167,7 @@ export function GroupDetail() {
                 Mô tả nhóm
               </h2>
               <p className='text-black text-sm md:text-base leading-relaxed'>
-                {group.description}
+                {group.groupName + ' -- Should be group description'}
               </p>
             </div>
 
@@ -166,28 +181,28 @@ export function GroupDetail() {
                 {/* Leader */}
                 <div className='flex items-start gap-4'>
                   <img
-                    src={group.leader.avatar || '/images/avatar.jpg'}
-                    alt={group.leader.name}
+                    src={'/images/avatar.jpg'}
+                    alt={group.leader.studentName}
                     className='w-12 h-12 rounded-full object-cover'
                   />
                   <div className='flex-1'>
                     <div className='flex items-center gap-2 mb-1'>
                       <h3 className='font-medium text-gray-900'>
-                        {group.leader.name}
+                        {group.leader.studentName}
                       </h3>
                       <span className='px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full'>
                         Trưởng nhóm
                       </span>
                     </div>
                     <p className='text-sm text-gray-600'>
-                      {group.leader.email}
+                      {group.leader.studentName + '(should be leader email)'}
                     </p>
                   </div>
                 </div>
 
                 {/* Mentor */}
                 <div className='flex items-start gap-4'>
-                  {group.mentor ? (
+                  {/* {group.mentor ? (
                     <>
                       <img
                         src={group.mentor.avatar || '/images/avatar.jpg'}
@@ -208,20 +223,18 @@ export function GroupDetail() {
                         </p>
                       </div>
                     </>
-                  ) : (
-                    <>
-                      <div className='flex items-center justify-center flex-row gap-4'>
-                        <div className='w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center'>
-                          <GraduationCap className='w-6 h-6 text-gray-400' />
-                        </div>
-                        <div className='flex items-center gap-2 mb-1'>
-                          <h3 className='font-medium text-gray-500'>
-                            Chưa chọn giảng viên
-                          </h3>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  ) : ( } */}
+                  <div className='flex items-center justify-center flex-row gap-4'>
+                    <div className='w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center'>
+                      <GraduationCap className='w-6 h-6 text-gray-400' />
+                    </div>
+                    <div className='flex items-center gap-2 mb-1'>
+                      <h3 className='font-medium text-gray-500'>
+                        Chưa chọn giảng viên
+                      </h3>
+                    </div>
+                  </div>
+                  {/* )} */}
                 </div>
               </div>
             </div>
@@ -229,10 +242,7 @@ export function GroupDetail() {
 
           {/* Right Sidebar */}
           <div className='lg:col-span-1'>
-            <RelatedGroupsList
-              groups={relatedGroups}
-              currentGroupMajor={group.major}
-            />
+            <RelatedGroupsList groups={relatedGroups} />
           </div>
         </div>
       </div>
