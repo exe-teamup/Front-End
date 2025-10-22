@@ -25,17 +25,19 @@ export const useGroups = () => {
     fetchAllGroups,
   } = useGroupStore();
 
-  // Fetch student's own group if they have a groupId
+  // Fetch student's own group if they have a groupId and it's not already loading/loaded
   useEffect(() => {
-    if (profile?.groupId) {
+    if (profile?.groupId && fetchStatus === 'idle') {
       fetchGroupById(profile.groupId);
     }
-  }, [profile?.groupId, fetchGroupById]);
+  }, [profile?.groupId, fetchGroupById, fetchStatus]);
 
-  // Fetch all groups on mount
+  // Fetch all groups on mount only if not already loading/loaded
   useEffect(() => {
-    fetchAllGroups();
-  }, [fetchAllGroups]);
+    if (listStatus === 'idle') {
+      fetchAllGroups();
+    }
+  }, [fetchAllGroups, listStatus]);
 
   // Determine if student is a leader
   const isLeader = useMemo(() => {

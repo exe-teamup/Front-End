@@ -118,7 +118,9 @@ export function Groups() {
 
         <div className='bg-white rounded-lg shadow-sm'>
           {activeTab === 'my-groups' && <MyGroupsTab currentGroup={myGroup} />}
-          {activeTab === 'all-groups' && <GroupsListTab groups={allGroups} />}
+          {activeTab === 'all-groups' && (
+            <GroupsListTab groups={allGroups} hasGroup={hasGroup} />
+          )}
           {activeTab === 'requests' && <RequestsTab />}
         </div>
       </div>

@@ -1,14 +1,17 @@
-import { Link } from 'react-router-dom';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { AuthButton } from '../AuthButton';
 import { Button } from '@/components/Button/Button';
 import { SearchBar } from '@/components/SearchBar/SearchBar';
 import { CreateGroupModal } from '@/components/modals/CreateGroupModal';
+import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useStudentProfileStore } from '../../store/studentProfile';
+import { hasStudentJoinGroup } from '../../utils/groupStatus';
+import { AuthButton } from '../AuthButton';
 
 export function Header() {
   const [openCreateGroup, setOpenCreateGroup] = useState(false);
+  const { profile } = useStudentProfileStore();
 
   return (
     <div className='bg-white shadow-sm sticky top-0 z-50'>
@@ -62,15 +65,17 @@ export function Header() {
         </div>
 
         {/* Right: actions */}
-        <div className='flex items-center gap-4'>
-          <Button
-            variant='primary'
-            className='rounded-md bg-transparent text-text-title border border-border-primary hover:bg-primary hover:text-white hover:border-primary'
-            onClick={() => setOpenCreateGroup(true)}
-          >
-            + Tạo nhóm
-          </Button>
 
+        <div className='flex items-center gap-4'>
+          {!hasStudentJoinGroup(profile) && (
+            <Button
+              variant='primary'
+              className='rounded-md bg-transparent text-text-title border border-border-primary hover:bg-primary hover:text-white hover:border-primary'
+              onClick={() => setOpenCreateGroup(true)}
+            >
+              + Tạo nhóm
+            </Button>
+          )}
           <AuthButton />
         </div>
       </div>

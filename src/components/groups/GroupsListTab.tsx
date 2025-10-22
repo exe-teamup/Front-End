@@ -5,15 +5,17 @@ import type { Group } from '../../types/group';
 
 interface GroupListProps {
   groups: Group[];
+  hasGroup: boolean;
 }
 
-function GroupsListTab({ groups: allGroups = [] }: GroupListProps) {
+function GroupsListTab({ groups: allGroups = [], hasGroup }: GroupListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [memberFilter, setMemberFilter] = useState<number | undefined>(
     undefined
   );
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
   const itemsPerPage = 6;
 
   const totalPages = Math.ceil(allGroups.length / itemsPerPage);
@@ -119,7 +121,7 @@ function GroupsListTab({ groups: allGroups = [] }: GroupListProps) {
               key={group.groupId}
               group={group}
               showActions={true}
-              isMyGroup={false}
+              isMyGroup={hasGroup}
             />
           ))}
         </div>
