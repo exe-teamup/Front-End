@@ -2,6 +2,7 @@ import type { StudentStatus } from './student';
 
 export interface StudentProfile {
   userId: string;
+  courseId: string;
   fullName: string;
   email: string;
   phoneNumber?: string;
