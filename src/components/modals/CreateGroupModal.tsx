@@ -1,15 +1,3 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { X, Search, UserPlus, Users } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +7,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { searchFriends, type Friend } from '@/mock/friends.mockapi';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useGroupStore } from '@/store/group';
+import { useStudentStore } from '@/store/student';
+import { useStudentProfileStore } from '@/store/studentProfile';
+import type { Student } from '@/types/student';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2, Search, UserPlus, Users, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 interface CreateGroupModalProps {
   open: boolean;
@@ -40,13 +43,18 @@ export function CreateGroupModal({
   open,
   onOpenChange,
 }: CreateGroupModalProps) {
-  const [selectedMembers, setSelectedMembers] = useState<Friend[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMemberSearch, setShowMemberSearch] = useState(false);
   const [_avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] =
     useState<string>('/images/logo.svg');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const { searchStudents, searchResults, searchStatus, clearSearchResults } =
+    useStudentStore();
+  const { createGroup, createStatus, clearCreateStatus } = useGroupStore();
+  const { profile, fetchProfile } = useStudentProfileStore();
 
   const {
     register,
@@ -63,7 +71,30 @@ export function CreateGroupModal({
   });
 
   const maxMembers = watch('maxMembers');
-  const filteredFriends = searchFriends(searchQuery);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim().length >= 2) {
+        searchStudents(searchQuery);
+      } else {
+        clearSearchResults();
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, searchStudents, clearSearchResults]);
+
+  // Clear search when modal closes
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery('');
+      clearSearchResults();
+      clearCreateStatus();
+      setSelectedMembers([]);
+      reset();
+    }
+  }, [open, clearSearchResults, clearCreateStatus, reset]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,24 +108,89 @@ export function CreateGroupModal({
     }
   };
 
-  const handleAddMember = (friend: Friend) => {
-    if (selectedMembers.length >= maxMembers - 1) {
-      toast.error(`Tối đa ${maxMembers} thành viên trong nhóm`);
-      return;
-    }
+  const handleAddMember = useCallback(
+    (student: Student) => {
+      if (selectedMembers.length >= maxMembers - 1) {
+        toast.error(`Tối đa ${maxMembers} thành viên trong nhóm`);
+        return;
+      }
 
-    if (selectedMembers.find(m => m.id === friend.id)) {
-      toast.error('Thành viên đã được thêm');
-      return;
-    }
+      if (selectedMembers.find(m => m.userId === student.userId)) {
+        toast.error('Thành viên đã được thêm');
+        return;
+      }
 
-    setSelectedMembers([...selectedMembers, friend]);
-    setSearchQuery('');
-    setShowMemberSearch(false);
+      if (student.userId === profile?.userId) {
+        toast.error('Không thể thêm bản thân');
+        return;
+      }
+
+      setSelectedMembers([...selectedMembers, student]);
+      setSearchQuery('');
+      setShowMemberSearch(false);
+    },
+    [selectedMembers, maxMembers, profile?.userId]
+  );
+
+  const handleRemoveMember = (userId: string) => {
+    setSelectedMembers(selectedMembers.filter(m => m.userId !== userId));
   };
 
-  const handleRemoveMember = (friendId: string) => {
-    setSelectedMembers(selectedMembers.filter(m => m.id !== friendId));
+  const renderSearchResults = () => {
+    // Loading state
+    if (searchStatus === 'loading') {
+      return (
+        <div className='p-4 flex items-center justify-center gap-2 text-sm text-gray-500'>
+          <Loader2 className='w-4 h-4 animate-spin' />
+          Đang tìm kiếm...
+        </div>
+      );
+    }
+
+    // Query too short
+    if (searchQuery.trim().length < 2) {
+      return (
+        <div className='p-3 text-sm text-gray-500'>
+          Nhập ít nhất 2 ký tự để tìm kiếm
+        </div>
+      );
+    }
+
+    // Error state
+    if (searchStatus === 'error' || searchResults.length === 0) {
+      return (
+        <div className='p-3 text-sm text-gray-500'>Không tìm thấy kết quả</div>
+      );
+    }
+
+    // Display results
+    return searchResults.map(student => (
+      <div
+        key={student.userId}
+        onClick={() => handleAddMember(student)}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleAddMember(student);
+          }
+        }}
+        role='button'
+        tabIndex={0}
+        className='flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0'
+      >
+        <div className='w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-semibold'>
+          {student.fullName.charAt(0).toUpperCase()}
+        </div>
+        <div className='flex-1'>
+          <div className='font-medium text-gray-900'>{student.fullName}</div>
+          <div className='text-sm text-gray-500'>{student.email}</div>
+          {student.userCode && (
+            <div className='text-xs text-gray-400'>{student.userCode}</div>
+          )}
+        </div>
+        <Users className='w-4 h-4 text-gray-400' />
+      </div>
+    ));
   };
 
   const onSubmit = (_data: FormValues) => {
@@ -106,24 +202,42 @@ export function CreateGroupModal({
     setShowConfirmDialog(true);
   };
 
-  const handleConfirmCreate = () => {
-    // TODO: Submit to API
-    // console.log('Creating group:', {
-    //   groupName: watch('groupName'),
-    //   maxMembers: watch('maxMembers'),
-    //   avatar: avatarFile,
-    //   memberEmails: selectedMembers.map(m => m.email),
-    // });
+  const handleConfirmCreate = async () => {
+    if (!profile) {
+      toast.error('Không thể tạo nhóm: Thông tin người dùng không tồn tại');
+      return;
+    }
 
-    toast.success(
-      'Yêu cầu đã được gửi, vui lòng đợi người bạn mời chấp nhận, nhóm sẽ được tạo thành công!'
-    );
-    reset();
-    setSelectedMembers([]);
-    setAvatarFile(null);
-    setAvatarPreview('/images/logo.svg');
-    setShowConfirmDialog(false);
-    onOpenChange(false);
+    const courseId = profile.courseId;
+
+    try {
+      await createGroup({
+        courseId,
+        groupName: watch('groupName'),
+        studentId: profile.userId,
+        memberEmails: selectedMembers.map(m => m.email),
+      });
+
+      toast.success(
+        'Yêu cầu đã được gửi, vui lòng đợi người bạn mời chấp nhận, nhóm sẽ được tạo thành công!'
+      );
+
+      // Refresh profile to get updated group info
+      await fetchProfile();
+
+      reset();
+      setSelectedMembers([]);
+      setAvatarFile(null);
+      setAvatarPreview('/images/logo.svg');
+      setShowConfirmDialog(false);
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Có lỗi xảy ra khi tạo nhóm. Vui lòng thử lại.'
+      );
+    }
   };
 
   return (
@@ -230,20 +344,18 @@ export function CreateGroupModal({
                 <div className='flex flex-wrap gap-2'>
                   {selectedMembers.map(member => (
                     <div
-                      key={member.id}
+                      key={member.userId}
                       className='flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1'
                     >
-                      <img
-                        src={member.avatar || '/images/avatar.jpg'}
-                        alt={member.name}
-                        className='w-6 h-6 rounded-full object-cover'
-                      />
+                      <div className='w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold'>
+                        {member.fullName.charAt(0).toUpperCase()}
+                      </div>
                       <span className='text-sm text-primary-blue'>
-                        {member.name}
+                        {member.fullName}
                       </span>
                       <button
                         type='button'
-                        onClick={() => handleRemoveMember(member.id)}
+                        onClick={() => handleRemoveMember(member.userId)}
                         className='text-primary-blue cursor-pointer hover:text-red-600'
                       >
                         <X className='w-4 h-4' />
@@ -285,42 +397,7 @@ export function CreateGroupModal({
               {/* Search Results */}
               {showMemberSearch && (
                 <div className='absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto'>
-                  {filteredFriends.length === 0 ? (
-                    <div className='p-3 text-sm text-gray-500'>
-                      Không tìm thấy kết quả
-                    </div>
-                  ) : (
-                    filteredFriends.map(friend => (
-                      <div
-                        key={friend.id}
-                        onClick={() => handleAddMember(friend)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleAddMember(friend);
-                          }
-                        }}
-                        role='button'
-                        tabIndex={0}
-                        className='flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0'
-                      >
-                        <img
-                          src={friend.avatar || '/images/avatar.jpg'}
-                          alt={friend.name}
-                          className='w-10 h-10 rounded-full object-cover'
-                        />
-                        <div className='flex-1'>
-                          <div className='font-medium text-gray-900'>
-                            {friend.name}
-                          </div>
-                          <div className='text-sm text-gray-500'>
-                            {friend.email}
-                          </div>
-                        </div>
-                        <Users className='w-4 h-4 text-gray-400' />
-                      </div>
-                    ))
-                  )}
+                  {renderSearchResults()}
                 </div>
               )}
             </div>
@@ -364,8 +441,18 @@ export function CreateGroupModal({
             </div>
             <AlertDialogFooter>
               <AlertDialogCancel>Hủy</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmCreate}>
-                Tạo nhóm
+              <AlertDialogAction
+                onClick={handleConfirmCreate}
+                disabled={createStatus === 'loading'}
+              >
+                {createStatus === 'loading' ? (
+                  <>
+                    <Loader2 className='w-4 h-4 animate-spin mr-2' />
+                    Đang tạo...
+                  </>
+                ) : (
+                  'Tạo nhóm'
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
