@@ -28,7 +28,8 @@ export const ROUTES = {
     STUDENTS: '/admin/students',
     LECTURERS: '/admin/lecturers',
     MODERATOR: '/admin/moderator',
-    COURSES: '/admin/courses',
+    SEMESTERS: '/admin/semesters',
+    CLASSES: '/admin/classes',
     SETTINGS: '/admin/settings',
   },
 

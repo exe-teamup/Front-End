@@ -4,6 +4,7 @@ import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { LecturersManagement } from '../pages/admin/LecturersManagement';
 import { StudentsManagement } from '../pages/admin/StudentsManagement';
 import { ModeratorsManagement } from '../pages/admin/ModeratorsManagement';
+import { ClassManagement } from '../pages/admin/CourseManagement';
 import { ROUTES } from '@/constants/routes';
 import { ProtectedRoute } from './ProtectedRoute';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
@@ -29,8 +30,12 @@ const AdminRoute = {
       element: <AdminDashboard />,
     },
     {
-      path: 'courses',
+      path: 'semesters',
       element: <SemesterManagement />,
+    },
+    {
+      path: 'classes',
+      element: <ClassManagement />,
     },
     {
       path: 'lecturers',

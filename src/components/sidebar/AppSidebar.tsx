@@ -49,8 +49,13 @@ const menuData: Record<'ADMIN' | 'MODERATOR', MenuItem[]> = {
     },
     {
       title: 'Kỳ học',
-      url: ROUTES.ADMIN.COURSES, // Temporarily using COURSES for semesters
-      icon: IconList,
+      url: ROUTES.ADMIN.SEMESTERS,
+      icon: IconBarChart,
+    },
+    {
+      title: 'Danh sách lớp học',
+      url: ROUTES.ADMIN.CLASSES,
+      icon: IconDatabase,
     },
     {
       title: 'Giảng viên',
