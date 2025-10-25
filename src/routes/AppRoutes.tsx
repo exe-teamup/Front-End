@@ -150,20 +150,10 @@ export function AppRoutes() {
         </ProtectedRoute>
       ),
     },
-    // Moderator Routes (with MainLayout and ProtectedRoute)
+    // Moderator Routes (temporarily public for testing)
     {
       path: '/moderator/*',
-      element: (
-        <ProtectedRoute userRole='MODERATOR'>
-          <MainLayout />
-        </ProtectedRoute>
-      ),
-      children: [
-        {
-          path: '*',
-          element: <ModeratorRoutes />,
-        },
-      ],
+      element: <ModeratorRoutes />,
     },
     // Redirect unknown routes
     {

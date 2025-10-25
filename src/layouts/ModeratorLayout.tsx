@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import type { MenuProps } from 'antd';
+import exeLogo from '../assets/exe.png';
 
 const { Header, Sider, Content } = Layout;
 
@@ -128,14 +129,21 @@ const ModeratorLayout: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#fff',
-            fontSize: collapsed ? '18px' : '20px',
-            fontWeight: 'bold',
+            padding: '12px',
             borderBottom: '1px solid rgba(255,255,255,0.1)',
             transition: 'all 0.2s',
           }}
         >
-          {collapsed ? '📊' : '📊 EXE Logo'}
+          <img
+            src={exeLogo}
+            alt='EXE Logo'
+            style={{
+              height: collapsed ? '40px' : '48px',
+              width: 'auto',
+              objectFit: 'contain',
+              transition: 'all 0.2s',
+            }}
+          />
         </div>
 
         <div
@@ -153,7 +161,7 @@ const ModeratorLayout: React.FC = () => {
               textAlign: 'center',
             }}
           >
-            MODERATOR
+            {collapsed ? 'MOD' : 'MODERATOR'}
           </div>
         </div>
 
@@ -177,41 +185,36 @@ const ModeratorLayout: React.FC = () => {
             padding: '0 24px',
             background: '#fff',
             display: 'flex',
-            alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 1px 4px rgba(0,21,41,0.08)',
+            alignItems: 'center',
+            boxShadow: '0 1px 4px rgba(0,21,41,.08)',
           }}
         >
           <Input
-            placeholder='Search'
-            prefix={<SearchOutlined style={{ color: '#999' }} />}
+            placeholder='Tìm kiếm...'
+            prefix={<SearchOutlined />}
             style={{
               width: '300px',
-              borderRadius: '8px',
+              borderRadius: '20px',
             }}
           />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <Badge count={11} offset={[-5, 5]}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <Badge count={5}>
               <BellOutlined
                 style={{ fontSize: '20px', cursor: 'pointer', color: '#666' }}
               />
             </Badge>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Avatar
-                style={{ backgroundColor: '#1890ff' }}
-                icon={<UserOutlined />}
-              />
-              <span style={{ fontWeight: 500, color: '#333' }}>Moderator</span>
-            </div>
+            <Avatar
+              style={{ backgroundColor: '#1890ff', cursor: 'pointer' }}
+              icon={<UserOutlined />}
+            />
           </div>
         </Header>
 
         <Content
           style={{
-            margin: '24px',
-            padding: 0,
+            margin: 0,
             minHeight: 280,
             background: '#f0f2f5',
           }}
