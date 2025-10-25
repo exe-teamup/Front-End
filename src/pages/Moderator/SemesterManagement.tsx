@@ -60,7 +60,7 @@ const SemesterManagement: React.FC = () => {
 
   const columns: ColumnsType<Semester> = [
     {
-      title: 'Tên Kỳ hạc',
+      title: 'Tên Kỳ học',
       dataIndex: 'name',
       key: 'name',
       render: text => <span style={{ fontWeight: 'bold' }}>{text}</span>,
@@ -81,7 +81,7 @@ const SemesterManagement: React.FC = () => {
       },
     },
     {
-      title: 'Hành bộn',
+      title: 'Hành động',
       key: 'action',
       render: (_, record) => (
         <Space size='small'>
@@ -102,12 +102,12 @@ const SemesterManagement: React.FC = () => {
       <Card
         title={
           <div>
-            <h2 style={{ margin: 0, fontSize: '24px' }}>Quanlải Kỳ hạq</h2>
+            <h2 style={{ margin: 0, fontSize: '24px' }}>Quản lý Kỳ học</h2>
           </div>
         }
         extra={
           <Button type='primary' icon={<PlusOutlined />} onClick={handleAdd}>
-            Thêm mới Kỳ hạc
+            Thêm mới Kỳ học
           </Button>
         }
         style={{ borderRadius: '12px' }}
@@ -121,7 +121,7 @@ const SemesterManagement: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingId ? 'Sửa Kỳ hạc' : 'Thêm mới Kỳ hạc'}
+        title={editingId ? 'Sửa Kỳ học' : 'Thêm mới Kỳ học'}
         open={isModalOpen}
         onOk={handleModalOk}
         onCancel={handleModalCancel}

@@ -67,7 +67,7 @@ const LecturerManagement: React.FC = () => {
       key: 'email',
     },
     {
-      title: 'Quota (Hạn ngạh)',
+      title: 'Quota (Hạn ngạch)',
       dataIndex: 'quota',
       key: 'quota',
       render: (_quota, record) => <span>{record.currentGroups} nhóm</span>,
@@ -135,7 +135,7 @@ const LecturerManagement: React.FC = () => {
             <Input placeholder='Email' />
           </Form.Item>
 
-          <Form.Item name='quota' label='Quota (Hạn ngạh)'>
+          <Form.Item name='quota' label='Quota (Hạn ngạch)'>
             <InputNumber
               style={{ width: '100%' }}
               min={0}

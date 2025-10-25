@@ -109,7 +109,7 @@ const Dashboard: React.FC = () => {
     <div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>
-          Washboard - Mog vien
+          Dashboard - Moderator
         </h1>
         <p style={{ color: '#666', marginTop: '8px' }}>
           Quản lý và điều tiết hoạt động
@@ -179,7 +179,7 @@ const Dashboard: React.FC = () => {
                 icon={<PlusOutlined />}
                 onClick={handleAddSemester}
               >
-                Thêm mới Kỳ hạq
+                Thêm mới Kỳ học
               </Button>
             }
             style={{ borderRadius: '12px' }}
@@ -360,7 +360,7 @@ const Dashboard: React.FC = () => {
 
       {/* Add Semester Modal */}
       <Modal
-        title='Thêm mới Kỳ hạq'
+        title='Thêm mới Kỳ học'
         open={isModalOpen}
         onOk={handleModalOk}
         onCancel={handleModalCancel}

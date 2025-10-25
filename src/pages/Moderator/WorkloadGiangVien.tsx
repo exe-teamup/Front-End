@@ -34,7 +34,7 @@ const WorkloadGiangVien: React.FC = () => {
       key: 'email',
     },
     {
-      title: 'Quota (Hạn ngạh)',
+      title: 'Quota (Hạn ngạch)',
       dataIndex: 'quota',
       key: 'quota',
       align: 'center',
@@ -114,7 +114,7 @@ const WorkloadGiangVien: React.FC = () => {
           Workload Giảng viên
         </h1>
         <p style={{ color: '#666', marginTop: '8px' }}>
-          Phân tích và theo dõi tải hạn ngạh của giảng viên
+          Phân tích và theo dõi tải hạn ngạch của giảng viên
         </p>
       </div>
 

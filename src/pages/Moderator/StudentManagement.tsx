@@ -154,7 +154,7 @@ const StudentManagement: React.FC = () => {
           }}
         >
           <h3 style={{ margin: 0 }}>
-            Sinh suẫn chưa có nhóm &quot;Thằng lẻ&quot;)
+            Sinh viên chưa có nhóm &quot;Thằng lẻ&quot;)
           </h3>
           <div
             style={{
@@ -165,7 +165,7 @@ const StudentManagement: React.FC = () => {
             }}
           >
             <span style={{ fontWeight: 'bold', color: '#cf1322' }}>
-              Hànẵn (God Mode)
+              Hành động (God Mode)
             </span>
           </div>
         </div>
@@ -181,23 +181,24 @@ const StudentManagement: React.FC = () => {
 
       {/* God Mode Modal */}
       <Modal
-        title='Ép sinh vuiẽn: Phạm Thị Đ'
+        title='Ép sinh viên: Phạm Thị Đ'
         open={isGodModeOpen}
         onOk={handleGodModeOk}
         onCancel={handleGodModeCancel}
-        okText='Xác xhấn Ép'
+        okText='Xác nhận Ép'
         cancelText='Hủy'
         okButtonProps={{ danger: true }}
         width={500}
       >
         <div style={{ marginTop: '24px' }}>
           <p style={{ marginBottom: '16px', color: '#666' }}>
-            Đã vaịnh viên địa e:meo8 tỉng chưa lơ cứmh tiết tô guiêm tram tiếu.
+            Sinh viên này chưa có nhóm. Bạn có thể ép sinh viên vào một nhóm
+            chưa đầy.
           </p>
 
           <div style={{ marginBottom: '16px' }}>
             <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-              Chọn nhóm (vividu: nhóm dằng 4/6)
+              Chọn nhóm (ví dụ: nhóm đang 4/6)
             </div>
             <Select
               style={{ width: '100%' }}

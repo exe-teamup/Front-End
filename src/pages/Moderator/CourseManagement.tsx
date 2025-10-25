@@ -57,7 +57,7 @@ const CourseManagement: React.FC = () => {
 
   const columns: ColumnsType<Course> = [
     {
-      title: 'Tên Lớp hạc',
+      title: 'Tên Lớp học',
       dataIndex: 'name',
       key: 'name',
       render: text => <span style={{ fontWeight: 'bold' }}>{text}</span>,
@@ -100,13 +100,13 @@ const CourseManagement: React.FC = () => {
         title={
           <div>
             <h2 style={{ margin: 0, fontSize: '24px' }}>
-              Quản lý Lớp hạc (CRUD)
+              Quản lý Lớp học (CRUD)
             </h2>
           </div>
         }
         extra={
           <Button type='primary' icon={<PlusOutlined />} onClick={handleAdd}>
-            Thêm mới Lớp hạc
+            Thêm mới Lớp học
           </Button>
         }
         style={{ borderRadius: '12px' }}
@@ -120,7 +120,7 @@ const CourseManagement: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingId ? 'Sửa Lớp hạc' : 'Thêm mới Lớp hạc'}
+        title={editingId ? 'Sửa Lớp học' : 'Thêm mới Lớp học'}
         open={isModalOpen}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
