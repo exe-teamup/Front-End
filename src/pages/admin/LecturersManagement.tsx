@@ -19,8 +19,23 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { LecturerService, type Lecturer } from '@/services/lectureService';
+import { CourseService } from '@/services/courseService';
 import { toast } from 'sonner';
-import { FileUp, UserLock, Mail, GraduationCap } from 'lucide-react';
+import {
+  FileUp,
+  Lock,
+  LockOpen,
+  Mail,
+  GraduationCap,
+  Filter,
+} from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export function LecturersManagement() {
   const [lecturers, setLecturers] = useState<Lecturer[]>([]);
@@ -30,6 +45,39 @@ export function LecturersManagement() {
     null
   );
   const [uploading, setUploading] = useState(false);
+  const [courses, setCourses] = useState<{ courseCode: string }[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [showLockDialog, setShowLockDialog] = useState<Lecturer | null>(null);
+
+  const handleToggleLock = async (lecturer: Lecturer) => {
+    try {
+      const newStatus =
+        lecturer.lecturerStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      // API expects 'status' field, not 'lecturerStatus'
+      await LecturerService.updateLecturer(lecturer.lecturerId, {
+        status: newStatus,
+      } as Partial<Lecturer>);
+
+      // Update local state
+      setLecturers(prev =>
+        prev.map(l =>
+          l.lecturerId === lecturer.lecturerId
+            ? { ...l, lecturerStatus: newStatus }
+            : l
+        )
+      );
+
+      toast.success(
+        newStatus === 'ACTIVE'
+          ? 'Mở khóa giảng viên thành công'
+          : 'Khóa giảng viên thành công'
+      );
+      setShowLockDialog(null);
+    } catch {
+      toast.error('Lỗi khi thay đổi trạng thái giảng viên');
+    }
+  };
 
   const confirmCancelRequest = async () => {
     if (showCancelDialog) {
@@ -41,6 +89,7 @@ export function LecturersManagement() {
           )
         );
         toast.success('Ngừng hoạt động giảng viên thành công');
+        loadLecturers();
         setShowCancelDialog(null);
       } catch {
         toast.error('Lỗi khi ngừng hoạt động giảng viên');
@@ -50,7 +99,21 @@ export function LecturersManagement() {
 
   useEffect(() => {
     loadLecturers();
+    loadCourses();
   }, []);
+
+  const loadCourses = async () => {
+    try {
+      const response = await CourseService.getAllCourses();
+      // Extract unique course codes
+      const uniqueCourses = Array.from(
+        new Set(response.data.map(course => course.courseCode))
+      ).map(code => ({ courseCode: code }));
+      setCourses(uniqueCourses);
+    } catch {
+      // Silently fail, filter will just be empty
+    }
+  };
 
   const loadLecturers = async () => {
     try {
@@ -110,14 +173,25 @@ export function LecturersManagement() {
     }
   };
 
-  const filteredLecturers = lecturers.filter(
-    lecturer =>
+  const filteredLecturers = lecturers.filter(lecturer => {
+    // Search filter
+    const matchesSearch =
       lecturer.lecturerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (lecturer.email &&
         lecturer.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (lecturer.courseCode &&
-        lecturer.courseCode.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+        lecturer.courseCode.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Course filter
+    const matchesCourse =
+      selectedCourse === 'all' || lecturer.courseCode === selectedCourse;
+
+    // Status filter
+    const matchesStatus =
+      selectedStatus === 'all' || lecturer.lecturerStatus === selectedStatus;
+
+    return matchesSearch && matchesCourse && matchesStatus;
+  });
 
   if (loading) {
     return (
@@ -156,10 +230,36 @@ export function LecturersManagement() {
       <div className='flex items-center space-x-4'>
         <div className='flex-1'>
           <Input
-            placeholder='Tìm kiếm giảng viên...'
+            placeholder='Tìm kiếm giảng viên theo tên, email hoặc mã lớp...'
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
+        </div>
+        <div className='flex items-center space-x-2'>
+          <Filter className='w-4 h-4 text-gray-500' />
+          <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+            <SelectTrigger className='w-[180px]'>
+              <SelectValue placeholder='Chọn lớp' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>Tất cả lớp</SelectItem>
+              {courses.map(course => (
+                <SelectItem key={course.courseCode} value={course.courseCode}>
+                  {course.courseCode}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className='w-[180px]'>
+              <SelectValue placeholder='Chọn trạng thái' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>Tất cả trạng thái</SelectItem>
+              <SelectItem value='ACTIVE'>Hoạt động</SelectItem>
+              <SelectItem value='INACTIVE'>Bị khóa</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -222,9 +322,18 @@ export function LecturersManagement() {
                     <Button
                       variant='outline'
                       size='sm'
-                      onClick={() => setShowCancelDialog(lecturer)}
+                      onClick={() => setShowLockDialog(lecturer)}
+                      title={
+                        lecturer.lecturerStatus === 'ACTIVE'
+                          ? 'Khóa giảng viên'
+                          : 'Mở khóa giảng viên'
+                      }
                     >
-                      <UserLock className='w-4 h-4' />
+                      {lecturer.lecturerStatus === 'ACTIVE' ? (
+                        <Lock className='w-4 h-4 text-red-600' />
+                      ) : (
+                        <LockOpen className='w-4 h-4 text-green-600' />
+                      )}
                     </Button>
                   </div>
                 </TableCell>
@@ -233,6 +342,53 @@ export function LecturersManagement() {
           </TableBody>
         </Table>
       </div>
+      {/* Lock/Unlock Dialog */}
+      <AlertDialog
+        open={!!showLockDialog}
+        onOpenChange={() => setShowLockDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {showLockDialog?.lecturerStatus === 'ACTIVE'
+                ? 'Khóa giảng viên này?'
+                : 'Mở khóa giảng viên này?'}
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className='py-4'>
+            <p className='text-sm text-gray-900'>
+              {showLockDialog?.lecturerStatus === 'ACTIVE' ? (
+                <>
+                  Bạn có chắc chắn muốn khóa giảng viên{' '}
+                  <strong>{showLockDialog?.lecturerName}</strong> không? <br />
+                  Giảng viên sẽ không thể truy cập hệ thống.
+                </>
+              ) : (
+                <>
+                  Bạn có chắc chắn muốn mở khóa giảng viên{' '}
+                  <strong>{showLockDialog?.lecturerName}</strong> không? <br />
+                  Giảng viên sẽ có thể truy cập hệ thống trở lại.
+                </>
+              )}
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => showLockDialog && handleToggleLock(showLockDialog)}
+              className={
+                showLockDialog?.lecturerStatus === 'ACTIVE'
+                  ? 'bg-red-600 hover:bg-red-600/80 text-white'
+                  : 'bg-green-600 hover:bg-green-600/80 text-white'
+              }
+            >
+              {showLockDialog?.lecturerStatus === 'ACTIVE' ? 'Khóa' : 'Mở khóa'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Dialog */}
       <AlertDialog
         open={!!showCancelDialog}
         onOpenChange={() => setShowCancelDialog(null)}
