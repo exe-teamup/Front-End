@@ -1,18 +1,23 @@
-import { useState } from 'react';
-import { Search, Filter, Users, ChevronLeft, ChevronRight } from 'lucide-react';
-import { searchGroups } from '@/mock/groups.mockapi';
 import GroupCard from '@/components/groups/GroupCard';
+import { ChevronLeft, ChevronRight, Filter, Search, Users } from 'lucide-react';
+import { useState } from 'react';
+import type { Group } from '../../types/group';
 
-function GroupsListTab() {
+interface GroupListProps {
+  groups: Group[];
+  hasGroup: boolean;
+}
+
+function GroupsListTab({ groups: allGroups = [], hasGroup }: GroupListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [memberFilter, setMemberFilter] = useState<number | undefined>(
     undefined
   );
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
   const itemsPerPage = 6;
 
-  const allGroups = searchGroups(searchQuery, memberFilter);
   const totalPages = Math.ceil(allGroups.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const groups = allGroups.slice(startIndex, startIndex + itemsPerPage);
@@ -113,10 +118,10 @@ function GroupsListTab() {
         <div className='space-y-4'>
           {groups.map(group => (
             <GroupCard
-              key={group.id}
+              key={group.groupId}
               group={group}
               showActions={true}
-              isMyGroup={false}
+              isMyGroup={hasGroup}
             />
           ))}
         </div>
@@ -167,11 +172,12 @@ function GroupsListTab() {
                 <button
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`w-8 h-8 cursor-pointer rounded-full text-sm font-medium transition-colors ${
-                    currentPage === pageNum
-                      ? 'bg-primary text-white'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`w-8 h-8 cursor-pointer rounded-full text-sm font-medium transition-colors 
+                    ${
+                      currentPage === pageNum
+                        ? 'bg-primary text-white'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                    }`}
                 >
                   {pageNum}
                 </button>

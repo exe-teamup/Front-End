@@ -1,7 +1,7 @@
 import { Zap, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '../../utils/cn';
+import { cn } from '@/lib/utils';
 import { MAJORS } from '../../mock/major.mockapi';
 import {
   Dialog,

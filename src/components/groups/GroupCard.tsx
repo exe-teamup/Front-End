@@ -1,7 +1,3 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { MoreHorizontal, Copy, Eye, Users, User } from 'lucide-react';
-import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +7,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { Group } from '@/mock/groups.mockapi';
+import type { Group } from '@/types/group';
+import { Copy, Eye, MoreHorizontal, User, Users } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from '../Button';
 
 interface GroupCardProps {
@@ -29,7 +29,7 @@ function GroupCard({
   const [showCancelDialog, setShowCancelDialog] = useState<string | null>(null);
 
   const handleCopyLink = () => {
-    const groupUrl = `${window.location.origin}/groups/${group.id}`;
+    const groupUrl = `${window.location.origin}/groups/${group.groupId}`;
     navigator.clipboard.writeText(groupUrl);
     toast.success('Đã sao chép đường dẫn nhóm');
     setShowActionsMenu(false);
@@ -37,7 +37,7 @@ function GroupCard({
 
   const handleViewDetails = () => {
     // Navigate to group details page
-    window.location.href = `/groups/${group.id}`;
+    window.location.href = `/groups/${group.groupId}`;
     setShowActionsMenu(false);
   };
 
@@ -56,23 +56,23 @@ function GroupCard({
   };
 
   const getStatusBadge = () => {
-    switch (group.status) {
+    switch (group.groupStatus) {
       case 'ACTIVE':
         return (
           <span className='px-2 py-1 bg-primary-green/30 text-black text-xs rounded-full hidden md:inline-block'>
             Đang tuyển
           </span>
         );
-      case 'FULL':
+      case 'INACTIVE':
         return (
-          <span className='px-2 py-1 bg-primary/80 text-white text-xs rounded-full hidden md:inline-block'>
-            Đủ thành viên
+          <span className='px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full hidden md:inline-block'>
+            Không hoạt động
           </span>
         );
-      case 'CLOSED':
+      case 'LOCKED':
         return (
           <span className='px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full hidden md:inline-block'>
-            Đã đóng
+            Đã khóa
           </span>
         );
       default:
@@ -85,18 +85,18 @@ function GroupCard({
       <div className='flex items-start justify-between'>
         <div className='flex items-start gap-4 flex-1'>
           <img
-            src={group.avatar || '/images/logo.svg'}
-            alt={group.name}
+            src={'/images/logo.svg'}
+            alt={group.groupName}
             className='w-8 h-8 md:w-14 md:h-14 rounded-lg object-cover'
           />
 
           <div className='flex-1'>
             <div className='flex items-center gap-3 mb-2'>
               <Link
-                to={`/groups/${group.id}`}
+                to={`/groups/${group.groupId}`}
                 className='text-lg font-semibold text-gray-900 hover:text-primary transition-colors'
               >
-                {group.name}
+                {group.groupName}
               </Link>
               {getStatusBadge()}
             </div>
@@ -105,26 +105,30 @@ function GroupCard({
               <div className='flex items-center gap-1'>
                 <Users className='w-4 h-4' />
                 <span>
-                  {group.memberCount}/{group.maxMembers} thành viên
+                  {group.memberCount}/{group.templates?.maxMember || '---'}{' '}
+                  thành viên
                 </span>
               </div>
               <div className='flex items-center gap-1'>
                 <User className='w-4 h-4' />
-                <span>Trưởng nhóm: {group.leaderName}</span>
+                <span>
+                  Trưởng nhóm:{' '}
+                  {group.leader.studentName + ' -- Currently leader name'}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         {/* join button */}
-        {!_isMyGroup && group.status === 'ACTIVE' && (
+        {!_isMyGroup && group.groupStatus === 'ACTIVE' && (
           <div className='ml-4'>
             <Button
               variant='primary'
               size='md'
               className='text-white mr-2 hidden md:block'
               onClick={() => {
-                handleJoinRequest(group.id);
+                handleJoinRequest(group.groupId);
               }}
             >
               Tham gia nhóm

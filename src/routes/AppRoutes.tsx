@@ -1,3 +1,11 @@
+import { GroupDetail } from '@/pages/GroupDetail';
+import { Groups } from '@/pages/Groups';
+import { CreateTeam } from '@/pages/posts/CreateTeam';
+import PostsView from '@/pages/PostsView';
+import ChooseInterests from '@/pages/prehome/ChooseInterests';
+import ChooseMajor from '@/pages/prehome/ChooseMajor';
+import { PreHome } from '@/pages/prehome/PreHome';
+import SuggestGroups from '@/pages/prehome/SuggestGroups';
 import { Navigate, Outlet, useRoutes } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
 import { AuthLayout } from '../layouts/AuthLayout';
@@ -9,17 +17,9 @@ import { Home } from '../pages/Home';
 import { Profile } from '../pages/Profile';
 import { AccountSetting } from '../pages/profile/AccountSetting';
 import { UserProfile } from '../pages/UserProfile';
-import { ProtectedRoute } from './ProtectedRoute';
-import { CreateTeam } from '@/pages/posts/CreateTeam';
-import { Groups } from '@/pages/Groups';
-import { GroupDetail } from '@/pages/GroupDetail';
+import AdminRoute from './AdminRoute';
 import ModeratorRoutes from './ModeratorRoutes';
-import { PreHome } from '@/pages/prehome/PreHome';
-import ChooseMajor from '@/pages/prehome/ChooseMajor';
-import ChooseInterests from '@/pages/prehome/ChooseInterests';
-import SuggestGroups from '@/pages/prehome/SuggestGroups';
-import PostsView from '@/pages/PostsView';
-import MyGroupsTab from '@/components/groups/MyGroupsTab';
+import { ProtectedRoute } from './ProtectedRoute';
 
 export function AppRoutes() {
   const routing = useRoutes([
@@ -67,14 +67,11 @@ export function AppRoutes() {
         {
           path: '/groups',
           element: <Groups />,
-        },
-        {
-          path: '/groups/my',
-          element: <Groups />,
-        },
-        {
-          path: '/groups/request',
-          element: <Groups />,
+          children: [
+            { index: true, path: '/groups/my' },
+            { index: false, path: '/groups/all' },
+            { index: false, path: '/groups/request' },
+          ],
         },
         {
           path: '/groups/:groupId',
@@ -91,10 +88,6 @@ export function AppRoutes() {
             {
               index: true,
               element: <AccountSetting />,
-            },
-            {
-              path: ROUTES.PROFILE.GROUPS,
-              element: <MyGroupsTab />,
             },
           ],
         },
@@ -142,15 +135,9 @@ export function AppRoutes() {
       ],
     },
     // Admin Routes
-    {
-      path: ROUTES.ADMIN.ROOT.replace(/^\//, ''),
-      element: (
-        <ProtectedRoute userRole='ADMIN'>
-          <MainLayout />
-        </ProtectedRoute>
-      ),
-    },
-    // Moderator Routes (temporarily public for testing)
+    AdminRoute,
+
+    // Moderator Routes (with MainLayout and ProtectedRoute)
     {
       path: '/moderator/*',
       element: <ModeratorRoutes />,

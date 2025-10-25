@@ -25,8 +25,17 @@ export const ROUTES = {
   ADMIN: {
     ROOT: '/admin',
     DASHBOARD: '/admin/dashboard',
-    USERS: '/admin/users',
+    STUDENTS: '/admin/students',
+    LECTURERS: '/admin/lecturers',
+    MODERATOR: '/admin/moderator',
+    SEMESTERS: '/admin/semesters',
+    CLASSES: '/admin/classes',
     SETTINGS: '/admin/settings',
+  },
+
+  MODERATOR: {
+    ROOT: '/moderator',
+    DASHBOARD: '/moderator/dashboard',
   },
 
   // Auth Routes

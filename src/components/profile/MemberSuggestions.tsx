@@ -1,5 +1,5 @@
 import { User, Eye } from 'lucide-react';
-import { cn } from '../../utils/cn';
+import { cn } from '@/lib/utils';
 import {
   MOCK_MEMBERS,
   type MemberSuggestionsProps,
