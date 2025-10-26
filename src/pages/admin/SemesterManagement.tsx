@@ -256,25 +256,6 @@ export function SemesterManagement() {
                   </p>
                 )}
               </div>
-              <div>
-                <Label htmlFor='semesterName'>Tên kỳ học</Label>
-                <Input
-                  id='semesterName'
-                  value={formData.semesterName}
-                  onChange={e =>
-                    setFormData({ ...formData, semesterName: e.target.value })
-                  }
-                  placeholder='VD: Học kỳ Fall 2024'
-                  className={
-                    validationErrors.semesterName ? 'border-red-500' : ''
-                  }
-                />
-                {validationErrors.semesterName && (
-                  <p className='text-sm text-red-500 mt-1'>
-                    {validationErrors.semesterName}
-                  </p>
-                )}
-              </div>
               <div className='grid grid-cols-2 gap-4'>
                 <div>
                   <Label htmlFor='startDate'>Ngày bắt đầu</Label>

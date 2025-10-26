@@ -67,11 +67,11 @@ const menuData: Record<'ADMIN' | 'MODERATOR', MenuItem[]> = {
       url: ROUTES.ADMIN.STUDENTS,
       icon: IconUsers,
     },
-    {
-      title: 'Moderators',
-      url: ROUTES.ADMIN.MODERATOR,
-      icon: IconFolder,
-    },
+    // {
+    //   title: 'Moderators',
+    //   url: ROUTES.ADMIN.MODERATOR,
+    //   icon: IconFolder,
+    // },
   ],
   MODERATOR: [
     {
