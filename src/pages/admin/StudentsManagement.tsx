@@ -97,7 +97,6 @@ export function StudentsManagement() {
   const loadCourses = async () => {
     try {
       const response = await CourseService.getAllCourses();
-      // Extract unique course codes with courseId
       const uniqueCourses = Array.from(
         new Set(response.data.map(course => course.courseCode))
       ).map(code => {
@@ -114,7 +113,6 @@ export function StudentsManagement() {
     try {
       setLoading(true);
       const data = await StudentService.getAllStudents();
-      // Add default avatar for display
       const studentsWithAvatar = data.map(student => ({
         ...student,
         avatar: student.avatar || '/images/avatar.jpg',
@@ -133,7 +131,6 @@ export function StudentsManagement() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
       toast.error('Vui lòng chọn file Excel (.xlsx hoặc .xls)');
       return;
@@ -146,11 +143,10 @@ export function StudentsManagement() {
           ? await StudentService.uploadStudents(file)
           : await StudentService.uploadStudentsNotEligible(file);
 
-      // Add default info and refresh the list
       const newStudents: Student[] = uploadedStudents.map(student => ({
         ...student,
         courseId: 1,
-        accountId: student.userId, // Use userId as accountId for now
+        accountId: student.userId,
         majorId: 1,
         majorName: 'Software Engineering',
         phoneNumber: '0987654321',
@@ -172,32 +168,27 @@ export function StudentsManagement() {
       );
     } finally {
       setUploading(false);
-      // Reset file input
       event.target.value = '';
     }
   };
 
   const filteredStudents = students.filter(student => {
-    // Search filter
     const matchesSearch =
       student.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.majorName.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Course filter
     const matchesCourse =
       selectedCourse === 'all' ||
       student.courseId.toString() === selectedCourse;
 
-    // Status filter
     const matchesStatus =
       selectedStatus === 'all' || student.userStatus === selectedStatus;
 
     return matchesSearch && matchesCourse && matchesStatus;
   });
 
-  // Pagination logic
   const paginatedStudents = filteredStudents.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage

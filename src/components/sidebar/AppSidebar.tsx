@@ -7,7 +7,6 @@ import {
   IconLayoutDashboard,
   IconList,
   IconBarChart,
-  IconFolder,
   IconUsers,
   IconDatabase,
   IconClipboardList,
