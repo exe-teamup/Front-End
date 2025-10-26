@@ -27,8 +27,9 @@ export const ROUTES = {
     DASHBOARD: '/admin/dashboard',
     STUDENTS: '/admin/students',
     LECTURERS: '/admin/lecturers',
-    MODERATOR: '/admin/moderator',
-    COURSES: '/admin/courses',
+    // MODERATOR: '/admin/moderator',
+    SEMESTERS: '/admin/semesters',
+    CLASSES: '/admin/classes',
     SETTINGS: '/admin/settings',
   },
 
