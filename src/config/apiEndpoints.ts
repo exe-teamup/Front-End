@@ -17,6 +17,13 @@ export const API_ENDPOINTS = {
     BY_SEMESTER: (semesterId: number) => `/courses/semester/${semesterId}`,
     IMPORT: '/courses/import',
   },
+
+  STUDENTS: {
+    BASE: '/students',
+    BY_ID: (id: number) => `/students/${id}`,
+    IMPORT: '/students/import',
+    IMPORT_NOT_ELIGIBLE: '/students/import-not-eligible',
+  },
 } as const;
 
 export default API_ENDPOINTS;

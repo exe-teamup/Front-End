@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -103,31 +103,16 @@ export function ClassManagement() {
     ),
   });
 
-  useEffect(() => {
-    loadSemesters();
-  }, []);
-
-  useEffect(() => {
-    loadClasses();
-  }, [currentPage, debouncedSearchQuery, selectedSemester]);
-
-  // Reset to first page when search or filter changes
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    }
-  }, [debouncedSearchQuery, selectedSemester]);
-
-  const loadSemesters = async () => {
+  const loadSemesters = useCallback(async () => {
     try {
       const data = await SemesterService.getAllSemesters();
       setSemesters(data);
     } catch {
       toast.error('Lỗi khi tải danh sách học kỳ');
     }
-  };
+  }, []);
 
-  const loadClasses = async () => {
+  const loadClasses = useCallback(async () => {
     try {
       setLoading(true);
       setSearching(!!debouncedSearchQuery);
@@ -148,7 +133,22 @@ export function ClassManagement() {
       setLoading(false);
       setSearching(false);
     }
-  };
+  }, [currentPage, debouncedSearchQuery, selectedSemester]);
+
+  useEffect(() => {
+    loadSemesters();
+  }, [loadSemesters]);
+
+  useEffect(() => {
+    loadClasses();
+  }, [loadClasses]);
+
+  // Reset to first page when search or filter changes
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, debouncedSearchQuery, selectedSemester]);
 
   const handleCreate = async (data: CreateCourseFormData) => {
     try {
@@ -156,7 +156,6 @@ export function ClassManagement() {
       toast.success('Tạo lớp học thành công');
       setOpenDialog(false);
       reset();
-      loadClasses();
     } catch {
       toast.error('Lỗi khi tạo lớp học');
     }
@@ -171,7 +170,6 @@ export function ClassManagement() {
       setOpenDialog(false);
       setEditingClass(null);
       reset();
-      loadClasses();
     } catch {
       toast.error('Lỗi khi cập nhật lớp học');
     }
@@ -184,7 +182,6 @@ export function ClassManagement() {
       await CourseService.deleteCourse(showDeleteDialog.courseId!);
       toast.success('Xóa lớp học thành công');
       setShowDeleteDialog(null);
-      loadClasses();
     } catch {
       toast.error('Lỗi khi xóa lớp học');
     }
@@ -205,7 +202,6 @@ export function ClassManagement() {
       setUploading(true);
       const importedCourses = await CourseService.importCourses(file);
       toast.success(`Import thành công ${importedCourses.length} lớp học`);
-      loadClasses();
     } catch {
       toast.error('Lỗi khi import file');
     } finally {
