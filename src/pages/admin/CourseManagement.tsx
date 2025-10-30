@@ -436,14 +436,12 @@ export function ClassManagement() {
                 <TableCell>
                   <div className='flex items-center space-x-2'>
                     <Calendar className='w-4 h-4 text-gray-400' />
-                    <span className='text-sm'>
-                      {classItem.semester?.semesterCode}
-                    </span>
+                    <span className='text-sm'>{classItem.semesterCode}</span>
                   </div>
                 </TableCell>
                 <TableCell>
                   <span className='text-sm'>
-                    {classItem.lecturer?.lecturerName || 'Chưa phân công'}
+                    {classItem.lecturerName || 'Chưa phân công'}
                   </span>
                 </TableCell>
                 <TableCell>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import Spinner from '@/components/loading/Spinner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,22 +8,41 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { useMajors } from '@/hooks';
+import { usePostStore } from '@/store/post';
+import { useStudentProfileStore } from '@/store/studentProfile';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 export function CreateTeam() {
+  const navigate = useNavigate();
   const [openSubmitConfirm, setOpenSubmitConfirm] = useState(false);
+
+  const { profile } = useStudentProfileStore();
+  const { createGroupPost, createStatus, createError } = usePostStore();
+  const {
+    majors: availableMajors,
+    isLoading: isMajorsLoading,
+    error: majorsError,
+  } = useMajors();
 
   const schema = useMemo(
     () =>
       z.object({
-        name: z.string().min(3, 'Tên nhóm tối thiểu 3 ký tự').max(80),
-        desc: z.string().min(20, 'Mô tả tối thiểu 20 ký tự').max(1000),
-        requiredMajors: z.array(z.string()).min(1, 'Chọn ít nhất 1 ngành'),
-        tags: z.array(z.string()).max(5, 'Tối đa 5 tags'),
-        tagInput: z.string().optional(),
+        title: z.string().min(3, 'Tiêu đề tối thiểu 3 ký tự').max(80),
+        postDetail: z.string().min(20, 'Mô tả tối thiểu 20 ký tự').max(1000),
+        majors: z
+          .array(
+            z.object({
+              majorId: z.string(),
+              studentNum: z.number().min(1).max(10),
+            })
+          )
+          .min(1, 'Chọn ít nhất 1 ngành'),
       }),
     []
   );
@@ -35,56 +54,91 @@ export function CreateTeam() {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: '',
-      desc: '',
-      requiredMajors: [],
-      tags: [],
-      tagInput: '',
+      title: '',
+      postDetail: '',
+      majors: [],
     },
   });
 
-  const requiredMajors = watch('requiredMajors');
-  const tags = watch('tags');
-  const tagInput = watch('tagInput');
+  const majors = watch('majors');
 
-  const toggleMajor = (m: string) => {
-    const next = requiredMajors.includes(m)
-      ? requiredMajors.filter(x => x !== m)
-      : [...requiredMajors, m];
-    setValue('requiredMajors', next, { shouldValidate: true });
+  const toggleMajor = (majorId: string) => {
+    const exists = majors.find(m => m.majorId === majorId);
+    if (exists) {
+      // Remove major
+      setValue(
+        'majors',
+        majors.filter(m => m.majorId !== majorId),
+        { shouldValidate: true }
+      );
+    } else {
+      // Add major with default quantity of 1
+      setValue('majors', [...majors, { majorId, studentNum: 1 }], {
+        shouldValidate: true,
+      });
+    }
   };
 
-  const addTag = () => {
-    const v = (tagInput || '').trim();
-    if (!v) return;
-    if (tags.length >= 5) return toast.warning('Tối đa 5 tags');
-    if (tags.includes(v)) return;
-    setValue('tags', [...tags, v], { shouldValidate: true });
-    setValue('tagInput', '');
-  };
-
-  const removeTag = (t: string) => {
+  const updateMajorQuantity = (majorId: string, quantity: number) => {
     setValue(
-      'tags',
-      tags.filter(x => x !== t),
+      'majors',
+      majors.map(m =>
+        m.majorId === majorId ? { ...m, studentNum: quantity } : m
+      ),
       { shouldValidate: true }
     );
   };
 
-  const onSubmit = () => setOpenSubmitConfirm(true);
+  const onSubmit = () => {
+    // Validate user has required data
+    if (!profile?.userId) {
+      toast.error(
+        'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.'
+      );
+      return;
+    }
+    if (!profile?.groupId) {
+      toast.error('Bạn cần có nhóm để tạo bài tuyển thành viên.');
+      return;
+    }
+    setOpenSubmitConfirm(true);
+  };
 
-  const confirmSubmit = () => {
-    toast.success('Đã tạo bài tuyển thành viên!');
-    setOpenSubmitConfirm(false);
-    setValue('name', '');
-    setValue('desc', '');
-    setValue('requiredMajors', []);
-    setValue('tags', []);
-    setValue('tagInput', '');
+  const confirmSubmit = async () => {
+    if (!profile?.userId || !profile?.groupId) return;
+
+    const formData = watch();
+
+    try {
+      await createGroupPost({
+        userId: profile.userId,
+        groupId: profile.groupId,
+        title: formData.title,
+        postDetail: formData.postDetail,
+        postStatus: 'ACTIVE',
+        postMajorRequests: formData.majors.map(m => ({
+          majorId: m.majorId,
+          studentNum: m.studentNum,
+        })) as [{ majorId: string; studentNum: number }],
+      });
+
+      toast.success('Đã tạo bài tuyển thành viên!');
+      setOpenSubmitConfirm(false);
+      reset();
+
+      // Navigate to posts page after successful creation
+      setTimeout(() => {
+        navigate('/posts');
+      }, 1000);
+    } catch {
+      toast.error(createError || 'Không thể tạo bài đăng. Vui lòng thử lại.');
+      setOpenSubmitConfirm(false);
+    }
   };
 
   return (
@@ -97,160 +151,158 @@ export function CreateTeam() {
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
             <div>
               <label
-                htmlFor='team-name'
+                htmlFor='team-title'
                 className='block text-sm font-medium text-text-title mb-2'
               >
-                Tên nhóm
+                Tiêu đề bài tuyển
               </label>
               <input
-                id='team-name'
-                {...register('name')}
+                id='team-title'
+                {...register('title')}
                 placeholder='Nhập tiêu đề (tên nhóm, tên dự án,..)'
                 className='w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-primary'
               />
-              {errors.name && (
+              {errors.title && (
                 <p className='text-sm text-red-600 mt-1'>
-                  {errors.name.message}
+                  {errors.title.message}
                 </p>
               )}
             </div>
             <div>
               <label
-                htmlFor='team-desc'
+                htmlFor='team-detail'
                 className='block text-sm font-medium text-text-title mb-2'
               >
-                Mô tả nhóm
+                Mô tả chi tiết
               </label>
               <textarea
-                id='team-desc'
-                {...register('desc')}
+                id='team-detail'
+                {...register('postDetail')}
                 placeholder='Mô tả về dự án và mục tiêu của nhóm...'
                 rows={4}
                 className='w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-primary'
               />
-              {errors.desc && (
+              {errors.postDetail && (
                 <p className='text-sm text-red-600 mt-1'>
-                  {errors.desc.message}
+                  {errors.postDetail.message}
                 </p>
               )}
             </div>
 
             <div>
               <p className='text-sm font-medium text-text-title mb-2'>
-                Ngành yêu cầu
+                Ngành yêu cầu (chọn và nhập số lượng)
               </p>
-              <div className='space-y-3'>
-                {/* sẽ lấy danh sách ngành từ API khi triển khai thật */}
-                {[
-                  'Kỹ thuật phần mềm',
-                  'Marketing',
-                  'Ngôn ngữ',
-                  'Thiết kế đồ họa',
-                ].map((m, idx) => {
-                  const id = `major-${idx}`;
-                  return (
-                    <div key={m} className='flex items-center gap-3'>
-                      <input
-                        id={id}
-                        type='checkbox'
-                        checked={requiredMajors.includes(m)}
-                        onChange={() => toggleMajor(m)}
-                      />
-                      <label htmlFor={id} className='cursor-pointer'>
-                        {m}
-                      </label>
-                    </div>
-                  );
-                })}
-              </div>
-              {errors.requiredMajors && (
-                <p className='text-sm text-red-600 mt-2'>
-                  {errors.requiredMajors.message as string}
-                </p>
-              )}
-              {requiredMajors.length > 0 && (
-                <div className='flex flex-wrap gap-2 mt-3'>
-                  {requiredMajors.map(m => (
-                    <span
-                      key={m}
-                      className='px-3 py-1 bg-primary-green text-white rounded-full text-sm'
-                    >
-                      {m}
-                    </span>
-                  ))}
+
+              {/* Loading state */}
+              {isMajorsLoading && (
+                <div className='flex items-center justify-center py-8'>
+                  <Spinner />
+                  <span className='ml-2 text-gray-600'>
+                    Đang tải danh sách ngành...
+                  </span>
                 </div>
               )}
-            </div>
 
-            <div>
-              <p className='text-sm font-medium text-text-title mb-2'>
-                Tag (tuỳ chọn, tối đa 5)
-              </p>
-              <div className='space-y-3'>
-                {['Edutech', 'Healthcare', 'Môi trường'].map((t, idx) => {
-                  const id = `tagpreset-${idx}`;
-                  return (
-                    <div key={t} className='flex items-center gap-3'>
-                      <input
-                        id={id}
-                        type='checkbox'
-                        checked={tags.includes(t)}
-                        onChange={() =>
-                          setValue(
-                            'tags',
-                            tags.includes(t)
-                              ? tags.filter(x => x !== t)
-                              : [...tags, t],
-                            { shouldValidate: true }
-                          )
-                        }
-                      />
-                      <label htmlFor={id} className='cursor-pointer'>
-                        {t}
-                      </label>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className='mt-3 flex items-center gap-2'>
-                <label htmlFor='tag-input' className='sr-only'>
-                  Thêm tag
-                </label>
-                <input
-                  id='tag-input'
-                  {...register('tagInput')}
-                  placeholder='Thêm tag'
-                  className='flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:border-primary'
-                />
-                <button
-                  type='button'
-                  onClick={addTag}
-                  className='px-3 py-2 border rounded-lg cursor-pointer hover:border-primary'
-                >
-                  Thêm
-                </button>
-              </div>
-              {errors.tags && (
+              {/* Error state */}
+              {majorsError && (
+                <div className='p-4 bg-red-50 border border-red-200 rounded-lg'>
+                  <p className='text-sm text-red-600'>
+                    Không thể tải danh sách ngành. Vui lòng thử lại sau.
+                  </p>
+                </div>
+              )}
+
+              {/* Major list */}
+              {!isMajorsLoading && !majorsError && (
+                <div className='space-y-3'>
+                  {availableMajors.length === 0 ? (
+                    <p className='text-sm text-gray-500 py-4'>
+                      Không có ngành nào khả dụng.
+                    </p>
+                  ) : (
+                    availableMajors.map(major => {
+                      const id = `major-${major.majorId}`;
+                      const selectedMajor = watch('majors').find(
+                        m => m.majorId === major.majorId
+                      );
+                      const isChecked = !!selectedMajor;
+
+                      return (
+                        <div
+                          key={major.majorId}
+                          className='flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50'
+                        >
+                          <input
+                            id={id}
+                            type='checkbox'
+                            checked={isChecked}
+                            onChange={() => toggleMajor(major.majorId)}
+                            className='w-4 h-4 cursor-pointer'
+                          />
+                          <label htmlFor={id} className='flex-1 cursor-pointer'>
+                            <span className='font-medium'>
+                              {major.majorName}
+                            </span>
+                            {major.majorCode && (
+                              <span className='ml-2 text-xs text-gray-500'>
+                                ({major.majorCode})
+                              </span>
+                            )}
+                          </label>
+                          {isChecked && (
+                            <div className='flex items-center gap-2'>
+                              <label
+                                htmlFor={`qty-${major.majorId}`}
+                                className='text-sm text-gray-600'
+                              >
+                                Số lượng:
+                              </label>
+                              <input
+                                id={`qty-${major.majorId}`}
+                                type='number'
+                                min='1'
+                                max='10'
+                                value={selectedMajor.studentNum}
+                                onChange={e =>
+                                  updateMajorQuantity(
+                                    major.majorId,
+                                    Number.parseInt(e.target.value) || 1
+                                  )
+                                }
+                                className='w-16 px-2 py-1 border rounded focus:outline-none focus:border-primary'
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {errors.majors && (
                 <p className='text-sm text-red-600 mt-2'>
-                  {errors.tags.message as string}
+                  {errors.majors.message as string}
                 </p>
               )}
-              {tags.length > 0 && (
+
+              {/* Selected majors chips */}
+              {watch('majors').length > 0 && (
                 <div className='flex flex-wrap gap-2 mt-3'>
-                  {tags.map(t => (
-                    <div key={t} className='flex items-center'>
-                      <span className='px-3 py-1 bg-primary-blue/90 text-white rounded-full text-sm'>
-                        {t}
-                      </span>
-                      <button
-                        type='button'
-                        onClick={() => removeTag(t)}
-                        className='ml-2 text-sm text-gray-600 hover:text-red-600 hover:scale-110 cursor-pointer'
+                  {watch('majors').map(m => {
+                    const majorInfo = availableMajors.find(
+                      major => major.majorId === m.majorId
+                    );
+                    return (
+                      <span
+                        key={m.majorId}
+                        className='px-3 py-1 bg-primary-green text-white rounded-full text-sm'
                       >
-                        X
-                      </button>
-                    </div>
-                  ))}
+                        {majorInfo?.majorName} (x{m.studentNum})
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -258,15 +310,18 @@ export function CreateTeam() {
             <div className='flex flex-col-reverse sm:flex-row gap-3 pt-2'>
               <button
                 type='button'
+                onClick={() => navigate('/posts')}
                 className='flex-1 border py-2 rounded-lg text-lg cursor-pointer hover:border-primary'
               >
                 Hủy tạo
               </button>
               <button
                 type='submit'
-                className='flex-1 bg-primary text-white py-2 rounded-lg text-lg cursor-pointer hover:opacity-90'
+                disabled={createStatus === 'loading'}
+                className='flex-1 bg-primary text-white py-2 rounded-lg text-lg cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+                onClick={() => setOpenSubmitConfirm(true)}
               >
-                Đăng bài tuyển
+                {createStatus === 'loading' ? 'Đang đăng...' : 'Đăng bài tuyển'}
               </button>
             </div>
           </form>

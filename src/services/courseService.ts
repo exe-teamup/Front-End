@@ -18,16 +18,8 @@ export interface PaginatedResponse<T> {
 }
 
 export interface CourseWithDetails extends Course {
-  semester?: {
-    semesterId: number;
-    semesterCode: string;
-    semesterName: string;
-  };
-  lecturer?: {
-    lecturerId: number;
-    lecturerName: string;
-    email: string;
-  };
+  semesterCode: string;
+  lecturerName: string;
 }
 
 export class CourseService {

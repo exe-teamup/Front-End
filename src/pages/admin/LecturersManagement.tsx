@@ -122,8 +122,8 @@ export function LecturersManagement() {
       // Add default course info for display
       const lecturersWithCourse = data.map(lecturer => ({
         ...lecturer,
-        courseId: lecturer.courseId || 1,
-        courseCode: lecturer.courseCode || 'SE1902',
+        courseId: lecturer.course?.courseId || 1,
+        courseCode: lecturer.course?.courseCode || 'SE1902',
         email: lecturer.email || `lecturer${lecturer.lecturerId}@fpt.edu.vn`,
         avatar: lecturer.avatar || '/images/avatar.jpg',
       }));
@@ -154,8 +154,10 @@ export function LecturersManagement() {
       // Add default course info and refresh the list
       const newLecturers = uploadedLecturers.map(lecturer => ({
         ...lecturer,
-        courseId: 1,
-        courseCode: 'SE1902',
+        course: {
+          courseId: 1,
+          courseCode: 'SE1902',
+        },
         email: `lecturer${lecturer.lecturerId}@fpt.edu.vn`,
         avatar: '/images/avatar.jpg',
       }));
@@ -179,12 +181,15 @@ export function LecturersManagement() {
       lecturer.lecturerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (lecturer.email &&
         lecturer.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (lecturer.courseCode &&
-        lecturer.courseCode.toLowerCase().includes(searchQuery.toLowerCase()));
+      (lecturer.course?.courseCode &&
+        lecturer.course?.courseCode
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()));
 
     // Course filter
     const matchesCourse =
-      selectedCourse === 'all' || lecturer.courseCode === selectedCourse;
+      selectedCourse === 'all' ||
+      lecturer.course?.courseCode === selectedCourse;
 
     // Status filter
     const matchesStatus =
@@ -301,7 +306,9 @@ export function LecturersManagement() {
                 <TableCell>
                   <div className='flex items-center space-x-2'>
                     <GraduationCap className='w-4 h-4 text-gray-400' />
-                    <span className='text-sm'>{lecturer.courseCode}</span>
+                    <span className='text-sm'>
+                      {lecturer.course?.courseCode}
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell>

@@ -19,10 +19,10 @@ export const API_ENDPOINTS = {
   },
 
   STUDENTS: {
-    BASE: '/students',
-    BY_ID: (id: number) => `/students/${id}`,
-    IMPORT: '/students/import',
-    IMPORT_NOT_ELIGIBLE: '/students/import-not-eligible',
+    BASE: '/users',
+    BY_ID: (id: number) => `/users/${id}`,
+    IMPORT: '/users/import',
+    IMPORT_NOT_ELIGIBLE: '/users/import-not-eligible',
   },
 } as const;
 

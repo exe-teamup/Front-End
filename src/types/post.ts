@@ -6,6 +6,27 @@ type PostMajorInfo = {
   quantity: number;
 };
 
+export interface CreateGroupPostRequest {
+  userId: string;
+  groupId: string;
+  title: string;
+  postDetail?: string;
+  postStatus: PostStatus;
+  postMajorRequests?: [
+    {
+      majorId: string;
+      studentNum: number;
+    },
+  ];
+}
+
+export interface CreateUserPostRequest {
+  userId: string;
+  title: string;
+  postDetail?: string;
+  postStatus: PostStatus;
+}
+
 export interface GroupPost {
   postId: string;
   authorName: string;
