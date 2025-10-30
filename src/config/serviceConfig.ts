@@ -3,13 +3,14 @@ export const serviceConfig = {
   ENDPOINTS: {
     LOGIN_GOOGLE: '/authentication/login-google',
     LOGOUT: '/authentication/logout',
-    STUDENT_PROFILE: '/students/profile',
+    STUDENT_PROFILE: '/users/profile',
     UPDATE_STUDENT: (id: string) => `/students/${id}`,
     SEARCH_STUDENTS: '/students/search',
     GROUPS: '/groups',
     GROUP_BY_ID: (id: string) => `/groups/${id}`,
     POSTS: '/posts',
     GROUP_POSTS: '/posts/group-post',
+    MAJORS: '/majors',
   },
   TIMEOUT: 5000,
 };
