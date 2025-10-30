@@ -7,8 +7,10 @@ export interface Lecturer {
   lecturerStatus: 'ACTIVE' | 'INACTIVE';
   accountStatus: 'ACTIVE' | 'INACTIVE';
   accountId: number;
-  courseId?: number;
-  courseCode?: string;
+  course: {
+    courseId?: number;
+    courseCode?: string;
+  };
   email: string;
   avatar?: string;
 }

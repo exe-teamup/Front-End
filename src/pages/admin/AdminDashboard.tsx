@@ -5,28 +5,28 @@ export function AdminDashboard() {
   const stats = [
     {
       title: 'Tổng sinh viên',
-      value: '1,234',
+      value: '42',
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'Tổng giảng viên',
-      value: '45',
+      value: '6',
       icon: GraduationCap,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
     },
     {
       title: 'Kỳ học hiện tại',
-      value: '3',
+      value: 'FA25',
       icon: BookOpen,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
     },
     {
-      title: 'Moderators',
-      value: '12',
+      title: 'Số lớp học',
+      value: '18',
       icon: UserCheck,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
