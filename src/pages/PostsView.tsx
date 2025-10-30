@@ -1,14 +1,13 @@
+import { GroupPostCard } from '@/components/posts/GroupPostCard';
+import { usePosts } from '@/hooks/usePosts';
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import PostCard from '@/components/posts/PostCard';
-import Spinner from '@/components/loading/Spinner';
-import {
-  fetchPosts,
-  type PostItem,
-  type PostType,
-  type TimeFilter,
-  type MajorCode,
-} from '@/mock/posts.mockapi';
+
+// Tab type for navigation (not related to API PostType)
+type ViewTab = 'ALL' | 'RECRUIT' | 'LOOKING';
+
+// Time filter options (client-side filtering for now)
+type TimeFilter = '24H' | '3D' | '1W' | 'ALL';
 
 const TIME_OPTIONS: { label: string; value: TimeFilter }[] = [
   { label: 'Trước 24h', value: '24H' },
@@ -17,7 +16,8 @@ const TIME_OPTIONS: { label: string; value: TimeFilter }[] = [
   { label: 'Tất cả', value: 'ALL' },
 ];
 
-const MAJOR_OPTIONS: (MajorCode | 'ALL')[] = [
+// Major codes for filtering (client-side for now)
+const MAJOR_OPTIONS = [
   'ALL',
   'SE',
   'SS',
@@ -26,75 +26,79 @@ const MAJOR_OPTIONS: (MajorCode | 'ALL')[] = [
   'DS',
   'CS',
   'IT',
-];
+] as const;
 
 export default function PostsView() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const initialTab: PostType = React.useMemo(() => {
+  // Fetch posts from API using the custom hook
+  const { activePosts, isLoading, isError, error } = usePosts();
+
+  const initialTab: ViewTab = React.useMemo(() => {
     if (location.pathname.endsWith('/looking')) return 'LOOKING';
     if (location.pathname.endsWith('/recruit')) return 'RECRUIT';
-    return 'RECRUIT';
+    return 'ALL';
   }, [location.pathname]);
 
-  const [activeTab, setActiveTab] = React.useState<PostType>(initialTab);
+  const [activeTab, setActiveTab] = React.useState<ViewTab>(initialTab);
   const [time, setTime] = React.useState<TimeFilter>('ALL');
-  const [major, setMajor] = React.useState<MajorCode | 'ALL'>('ALL');
-
-  const [items, setItems] = React.useState<PostItem[]>([]);
-  const [offset, setOffset] = React.useState(0);
-  const [total, setTotal] = React.useState(0);
-
-  const [isLoading, setIsLoading] = React.useState(true); // global-like on mount/tab change
-  const [isLoadingMore, setIsLoadingMore] = React.useState(false); // incremental
+  const [major, setMajor] =
+    React.useState<(typeof MAJOR_OPTIONS)[number]>('ALL');
+  const [displayedCount, setDisplayedCount] = React.useState(10);
 
   const pageSize = 10;
 
-  const loadPosts = React.useCallback(
-    (reset: boolean) => {
-      if (reset) {
-        setIsLoading(true);
-        setOffset(0);
-      } else {
-        setIsLoadingMore(true);
-      }
+  // Client-side filtering logic
+  const filteredPosts = React.useMemo(() => {
+    let result = activePosts;
 
-      const { items: fetched, total } = fetchPosts({
-        type: activeTab,
-        time,
-        majorSort: major,
-        offset: reset ? 0 : offset,
-        limit: pageSize,
+    // Filter by time
+    if (time !== 'ALL') {
+      const now = Date.now();
+      const msPerHour = 60 * 60 * 1000;
+      const timeThresholds: Record<TimeFilter, number> = {
+        '24H': 24 * msPerHour,
+        '3D': 3 * 24 * msPerHour,
+        '1W': 7 * 24 * msPerHour,
+        ALL: Infinity,
+      };
+
+      result = result.filter(post => {
+        const postTime = new Date(post.createdAt).getTime();
+        return now - postTime <= timeThresholds[time];
       });
+    }
 
-      if (reset) {
-        setItems(fetched);
-        setTotal(total);
-        setIsLoading(false);
-      } else {
-        setItems(prev => [...prev, ...fetched]);
-        setIsLoadingMore(false);
-      }
-    },
-    [activeTab, time, major, offset]
-  );
+    // Filter by major
+    if (major !== 'ALL') {
+      result = result.filter(
+        post => post.postMajors?.some(m => m.majorCode === major) ?? false
+      );
+    }
 
+    return result;
+  }, [activePosts, time, major]);
+
+  // Paginated posts (for "load more" functionality)
+  const displayedPosts = React.useMemo(() => {
+    return filteredPosts.slice(0, displayedCount);
+  }, [filteredPosts, displayedCount]);
+
+  // Reset displayed count when filters change
   React.useEffect(() => {
-    // reload on tab/filter change
-    loadPosts(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setDisplayedCount(pageSize);
   }, [activeTab, time, major]);
 
-  // keep state in sync with URL changes
+  // Keep state in sync with URL changes
   React.useEffect(() => {
-    const fromPath: PostType = location.pathname.endsWith('/looking')
-      ? 'LOOKING'
-      : 'RECRUIT';
+    let fromPath: ViewTab = 'ALL';
+    if (location.pathname.endsWith('/looking')) fromPath = 'LOOKING';
+    else if (location.pathname.endsWith('/recruit')) fromPath = 'RECRUIT';
     setActiveTab(fromPath);
   }, [location.pathname]);
 
-  const canLoadMore = items.length < total;
+  const canLoadMore = displayedCount < filteredPosts.length;
 
   return (
     <div className='min-h-screen bg-gray-50'>
@@ -104,12 +108,17 @@ export default function PostsView() {
           <div className='flex gap-4 border-b border-gray-200'>
             {[
               {
-                id: 'RECRUIT' as PostType,
+                id: 'ALL' as ViewTab,
+                label: 'Tất cả',
+                path: '/posts',
+              },
+              {
+                id: 'RECRUIT' as ViewTab,
                 label: 'Tuyển người',
                 path: '/posts/recruit',
               },
               {
-                id: 'LOOKING' as PostType,
+                id: 'LOOKING' as ViewTab,
                 label: 'Tìm nhóm',
                 path: '/posts/looking',
               },
@@ -143,7 +152,9 @@ export default function PostsView() {
             </select>
             <select
               value={major}
-              onChange={e => setMajor(e.target.value as MajorCode | 'ALL')}
+              onChange={e =>
+                setMajor(e.target.value as (typeof MAJOR_OPTIONS)[number])
+              }
               className='border rounded-md px-3 py-2 text-sm bg-white'
               aria-label='Lọc theo chuyên ngành'
             >
@@ -162,11 +173,12 @@ export default function PostsView() {
           <div className='lg:col-span-2'>
             {/* Content: spaced cards */}
             <div className='space-y-4'>
-              {isLoading ? (
+              {/* Loading State */}
+              {isLoading && (
                 <div className='space-y-4'>
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div
-                      key={i}
+                      key={`skeleton-${i}`}
                       className='animate-pulse bg-white rounded-lg shadow-sm border border-gray-200 p-4'
                     >
                       <div className='h-4 bg-gray-200 rounded w-24 mb-2' />
@@ -175,37 +187,45 @@ export default function PostsView() {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <>
-                  {items.length === 0 ? (
-                    <div className='text-center text-gray-500 py-8'>
-                      Không có bài đăng
-                    </div>
-                  ) : (
-                    <div className='space-y-4'>
-                      {items.map(p => (
-                        <PostCard key={p.id} post={p} />
-                      ))}
-                    </div>
-                  )}
+              )}
 
-                  {/* Load more */}
+              {/* Error State */}
+              {!isLoading && isError && (
+                <div className='bg-red-50 border border-red-200 rounded-lg p-4 text-center'>
+                  <p className='text-red-600 font-medium'>
+                    Không thể tải bài đăng
+                  </p>
+                  <p className='text-red-500 text-sm mt-1'>{error}</p>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!isLoading && !isError && displayedPosts.length === 0 && (
+                <div className='text-center text-gray-500 py-8'>
+                  Không có bài đăng phù hợp
+                </div>
+              )}
+
+              {/* Posts List */}
+              {!isLoading && !isError && displayedPosts.length > 0 && (
+                <>
+                  <div className='space-y-4'>
+                    {displayedPosts.map(post => (
+                      <GroupPostCard key={post.postId} post={post} />
+                    ))}
+                  </div>
+
+                  {/* Load More Button */}
                   {canLoadMore && (
                     <div className='flex items-center justify-center pt-2'>
                       <button
                         onClick={() => {
-                          setOffset(prev => prev + pageSize);
-                          loadPosts(false);
+                          setDisplayedCount(prev => prev + pageSize);
                         }}
                         className='px-4 py-2 border rounded-md text-sm hover:bg-gray-50 cursor-pointer'
                       >
-                        {isLoadingMore ? (
-                          <span className='inline-flex items-center gap-2'>
-                            <Spinner size={16} /> Đang tải...
-                          </span>
-                        ) : (
-                          'Tải thêm'
-                        )}
+                        Tải thêm ({filteredPosts.length - displayedCount} còn
+                        lại)
                       </button>
                     </div>
                   )}
