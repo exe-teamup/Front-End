@@ -20,6 +20,13 @@ export interface CreateGroupPostRequest {
   ];
 }
 
+export interface CreateUserPostRequest {
+  userId: string;
+  title: string;
+  postDetail?: string;
+  postStatus: PostStatus;
+}
+
 export interface GroupPost {
   postId: string;
   authorName: string;

@@ -10,6 +10,7 @@ export const serviceConfig = {
     GROUP_BY_ID: (id: string) => `/groups/${id}`,
     POSTS: '/posts',
     GROUP_POSTS: '/posts/group-post',
+    USER_POSTS: '/posts/user-post',
     MAJORS: '/majors',
   },
   TIMEOUT: 5000,

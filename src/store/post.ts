@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import { serviceConfig } from '../config/serviceConfig';
 import { ApiClient } from '../lib/axios';
-import type { CreateGroupPostRequest, GroupPost } from '../types/post';
+import type {
+  CreateGroupPostRequest,
+  CreateUserPostRequest,
+  GroupPost,
+} from '../types/post';
 
 type LoadingStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -11,15 +15,21 @@ type PostState = {
   listStatus: LoadingStatus;
   listError?: string;
 
-  // Create post state
+  // Create group post state
   createStatus: LoadingStatus;
   createError?: string;
+
+  // Create user post state
+  createUserPostStatus: LoadingStatus;
+  createUserPostError?: string;
 
   // Actions
   fetchAllPosts: () => Promise<void>;
   createGroupPost: (data: CreateGroupPostRequest) => Promise<GroupPost>;
+  createUserPost: (data: CreateUserPostRequest) => Promise<GroupPost>;
   clearPosts: () => void;
   clearCreateStatus: () => void;
+  clearCreateUserPostStatus: () => void;
 
   // Future: Add more post-related actions here
   // fetchPostById: (id: string) => Promise<void>;
@@ -34,9 +44,13 @@ export const usePostStore = create<PostState>(set => ({
   listStatus: 'idle',
   listError: undefined,
 
-  // Create post state
+  // Create group post state
   createStatus: 'idle',
   createError: undefined,
+
+  // Create user post state
+  createUserPostStatus: 'idle',
+  createUserPostError: undefined,
 
   // Fetch all posts action
   fetchAllPosts: async () => {
@@ -94,6 +108,37 @@ export const usePostStore = create<PostState>(set => ({
     }
   },
 
+  // Create user post action
+  createUserPost: async (data: CreateUserPostRequest) => {
+    set({ createUserPostStatus: 'loading', createUserPostError: undefined });
+
+    try {
+      const response = await ApiClient.post<GroupPost>(
+        serviceConfig.ENDPOINTS.USER_POSTS,
+        data
+      );
+
+      const newPost = response.data;
+
+      // Add the new post to the list
+      set(state => ({
+        createUserPostStatus: 'success',
+        posts: [newPost, ...state.posts],
+        createUserPostError: undefined,
+      }));
+
+      return newPost;
+    } catch (e: unknown) {
+      const message =
+        e instanceof Error ? e.message : 'Failed to create user post';
+      set({
+        createUserPostStatus: 'error',
+        createUserPostError: message,
+      });
+      throw e;
+    }
+  },
+
   // Clear posts action
   clearPosts: () => {
     set({
@@ -108,6 +153,14 @@ export const usePostStore = create<PostState>(set => ({
     set({
       createStatus: 'idle',
       createError: undefined,
+    });
+  },
+
+  // Clear create user post status
+  clearCreateUserPostStatus: () => {
+    set({
+      createUserPostStatus: 'idle',
+      createUserPostError: undefined,
     });
   },
 }));

@@ -1,8 +1,3 @@
-import { Zap, Plus } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { MAJORS } from '../../mock/major.mockapi';
 import {
   Dialog,
   DialogContent,
@@ -10,10 +5,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { useMajors } from '@/hooks';
+import { cn } from '@/lib/utils';
+import { usePostStore } from '@/store/post';
+import { useStudentProfileStore } from '@/store/studentProfile';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Plus, Zap } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 interface BannerSectionProps {
   className?: string;
@@ -23,6 +25,11 @@ export function BannerSection({ className }: BannerSectionProps) {
   const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
   const navigate = useNavigate();
   const [openFindModal, setOpenFindModal] = useState(false);
+
+  const { profile } = useStudentProfileStore();
+  const { createUserPost, createUserPostStatus, createUserPostError } =
+    usePostStore();
+  const { majors: availableMajors } = useMajors();
 
   const schema = z.object({
     title: z.string().min(3, 'Tối thiểu 3 ký tự').max(80),
@@ -45,11 +52,42 @@ export function BannerSection({ className }: BannerSectionProps) {
   };
 
   const handleFindGroups = () => {
+    if (!profile?.userId) {
+      toast.error('Vui lòng đăng nhập để tạo bài đăng.');
+      return;
+    }
     setOpenFindModal(true);
   };
 
-  const handlePost = () => {
-    // TODO: This function is now handled in the form's onSubmit from api
+  const handleSubmitFindGroups = async (data: FormValues) => {
+    if (!profile?.userId) {
+      toast.error(
+        'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.'
+      );
+      return;
+    }
+
+    try {
+      await createUserPost({
+        userId: profile.userId,
+        title: data.title,
+        postDetail: data.desc,
+        postStatus: 'ACTIVE',
+      });
+
+      toast.success('Đăng bài tìm nhóm thành công!');
+      reset();
+      setOpenFindModal(false);
+
+      // Navigate to posts page after 1 second
+      setTimeout(() => {
+        navigate('/posts');
+      }, 1000);
+    } catch {
+      toast.error(
+        createUserPostError || 'Không thể tạo bài đăng. Vui lòng thử lại.'
+      );
+    }
   };
 
   const handleFindMember = () => {
@@ -78,18 +116,20 @@ export function BannerSection({ className }: BannerSectionProps) {
               </div>
 
               <nav className='space-y-1'>
-                {MAJORS.map(major => (
+                {availableMajors.map(major => (
                   <button
-                    key={major.id}
-                    onClick={() => handleMajorClick(major.id)}
+                    key={major.majorId}
+                    onClick={() => handleMajorClick(major.majorId)}
                     className={cn(
                       'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left group cursor-pointer',
-                      selectedMajor === major.id
+                      selectedMajor === major.majorId
                         ? 'bg-primary/10 text-primary'
                         : 'hover:bg-primary/10 hover:text-primary text-text-subtitle'
                     )}
                   >
-                    <span className='text-sm font-medium'>{major.name}</span>
+                    <span className='text-sm font-medium'>
+                      {major.majorName}
+                    </span>
                   </button>
                 ))}
               </nav>
@@ -176,11 +216,7 @@ export function BannerSection({ className }: BannerSectionProps) {
           </DialogHeader>
           <form
             className='space-y-4'
-            onSubmit={handleSubmit(() => {
-              toast.success('Đăng bài thành công!');
-              reset();
-              setOpenFindModal(false);
-            })}
+            onSubmit={handleSubmit(handleSubmitFindGroups)}
           >
             <div>
               <label
@@ -231,10 +267,12 @@ export function BannerSection({ className }: BannerSectionProps) {
               </button>
               <button
                 type='submit'
-                className='bg-primary text-white px-4 py-2 rounded-lg cursor-pointer hover:opacity-90'
-                onClick={handlePost}
+                disabled={createUserPostStatus === 'loading'}
+                className='bg-primary text-white px-4 py-2 rounded-lg cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                Đăng bài
+                {createUserPostStatus === 'loading'
+                  ? 'Đang đăng...'
+                  : 'Đăng bài'}
               </button>
             </DialogFooter>
           </form>
