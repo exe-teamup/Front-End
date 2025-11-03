@@ -1,6 +1,7 @@
 import { GroupDetail } from '@/pages/GroupDetail';
 import { Groups } from '@/pages/Groups';
 import { CreateTeam } from '@/pages/posts/CreateTeam';
+import { PostDetail } from '@/pages/posts/PostDetail';
 import PostsView from '@/pages/PostsView';
 import ChooseInterests from '@/pages/prehome/ChooseInterests';
 import ChooseMajor from '@/pages/prehome/ChooseMajor';
@@ -131,6 +132,10 @@ export function AppRoutes() {
         {
           path: 'looking',
           element: <PostsView />,
+        },
+        {
+          path: ':postId',
+          element: <PostDetail />,
         },
       ],
     },

@@ -14,6 +14,15 @@ export const ROUTES = {
     WALL: '/profile/wall',
   },
 
+  // Posts Routes
+  POSTS: {
+    ROOT: '/posts',
+    RECRUIT: '/posts/recruit',
+    LOOKING: '/posts/looking',
+    DETAIL: (id: string) => `/posts/${id}`,
+    CREATE: '/posts/create-post',
+  },
+
   // User Routes (Other Users)
   USER: {
     WALL: '/user/:username',

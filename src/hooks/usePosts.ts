@@ -1,6 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { usePostStore } from '../store/post';
 
+type PostViewTab = 'ALL' | 'RECRUIT' | 'LOOKING';
+
 /**
  * Custom hook to retrieve and manage post-related data
  *
@@ -14,12 +16,27 @@ import { usePostStore } from '../store/post';
  * - Posts listing pages
  * - Post search/filter functionality
  *
+ * @param tab - Optional tab filter to fetch specific post types
  * @returns Object containing posts data, filtered views, and loading states
  */
-export const usePosts = () => {
-  const { posts, listStatus, listError, fetchAllPosts } = usePostStore();
+export const usePosts = (tab?: PostViewTab) => {
+  const {
+    posts,
+    listStatus,
+    listError,
+    fetchAllPosts,
+    fetchPostById,
+    updatePost,
+    deletePost,
+    updateStatus,
+    updateError,
+    deleteStatus,
+    deleteError,
+    clearUpdateStatus,
+    clearDeleteStatus,
+  } = usePostStore();
 
-  // Fetch all posts on mount only if not already loading/loaded
+  // Fetch all posts once on mount only if not already loading/loaded
   useEffect(() => {
     if (listStatus === 'idle') {
       fetchAllPosts();
@@ -28,8 +45,17 @@ export const usePosts = () => {
 
   // Filter active posts only (exclude trashed/deleted)
   const activePosts = useMemo(() => {
-    return posts.filter(post => post.postStatus === 'ACTIVE');
-  }, [posts]);
+    let filtered = posts.filter(post => post.postStatus === 'ACTIVE');
+
+    // Filter by tab/postType if tab is specified
+    if (tab === 'RECRUIT') {
+      filtered = filtered.filter(post => post.postType === 'GROUP_POST');
+    } else if (tab === 'LOOKING') {
+      filtered = filtered.filter(post => post.postType === 'USER_POST');
+    }
+
+    return filtered;
+  }, [posts, tab]);
 
   // Get latest posts sorted by creation date (newest first)
   const latestPosts = useMemo(() => {
@@ -62,29 +88,9 @@ export const usePosts = () => {
   const isSuccess = listStatus === 'success';
   const isError = listStatus === 'error';
 
-  /* ============================================================
-   * FUTURE ACTIONS - UNDER DEVELOPMENT
-   * ============================================================
-   * When additional post APIs become available, add these methods:
-   *
-   * const createPost = async (data: CreatePostRequest) => {
-   *   await postStore.createPost(data);
-   * };
-   *
-   * const updatePost = async (id: string, data: Partial<GroupPost>) => {
-   *   await postStore.updatePost(id, data);
-   * };
-   *
-   * const deletePost = async (id: string) => {
-   *   await postStore.deletePost(id);
-   * };
-   *
-   * const fetchPostById = async (id: string) => {
-   *   await postStore.fetchPostById(id);
-   * };
-   *
-   * Then add these to the return object below
-   * ============================================================ */
+  // Update/Delete operation states
+  const isUpdating = updateStatus === 'loading';
+  const isDeleting = deleteStatus === 'loading';
 
   return {
     // All posts data
@@ -104,45 +110,24 @@ export const usePosts = () => {
     // Utility methods
     refetch: fetchAllPosts,
 
-    /* ============================================================
-     * FUTURE METHODS - UNDER DEVELOPMENT
-     * ============================================================
-     * Uncomment when APIs are ready:
-     *
-     * // CRUD operations
-     * createPost,
-     * updatePost,
-     * deletePost,
-     * fetchPostById,
-     * ============================================================ */
+    // CRUD operations
+    fetchPostById,
+    updatePost,
+    deletePost,
+
+    // Update/Delete states
+    isUpdating,
+    updateError,
+    clearUpdateStatus,
+    isDeleting,
+    deleteError,
+    clearDeleteStatus,
   };
 };
 
 /* ============================================================
- * TYPE DEFINITIONS FOR FUTURE USE
+ * FUTURE ENHANCEMENTS
  * ============================================================
- * Add these interfaces when create/update APIs are ready:
- *
- * export interface CreatePostRequest {
- *   title: string;
- *   postDetail?: string;
- *   groupId: string;
- *   postMajors?: {
- *     majorCode: string;
- *     quantity: number;
- *   }[];
- * }
- *
- * export interface UpdatePostRequest {
- *   title?: string;
- *   postDetail?: string;
- *   postStatus?: PostStatus;
- *   postMajors?: {
- *     majorCode: string;
- *     quantity: number;
- *   }[];
- * }
- *
  * Add requestCount to GroupPost interface when available:
  * export interface GroupPost {
  *   // ... existing fields

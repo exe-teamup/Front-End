@@ -27,6 +27,18 @@ export interface CreateUserPostRequest {
   postStatus: PostStatus;
 }
 
+export interface UpdatePostRequest {
+  title?: string;
+  postDetail?: string;
+  postStatus?: PostStatus;
+  postMajorRequests?: [
+    {
+      majorId: string;
+      studentNum: number;
+    },
+  ];
+}
+
 export interface GroupPost {
   postId: string;
   authorName: string;

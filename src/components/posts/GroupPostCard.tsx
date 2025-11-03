@@ -1,5 +1,7 @@
+import { ROUTES } from '@/constants/routes';
 import { cn } from '@/lib/utils';
 import { Clock, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { GroupPost } from '../../types/post';
 
@@ -16,14 +18,15 @@ export function GroupPostCard({
   post,
   showHotBadge = false,
 }: GroupPostCardProps) {
+  const navigate = useNavigate();
+
   const handleApply = () => {
     // TODO: Implement apply logic when API is ready
     toast.info('Chức năng ứng tuyển đang được phát triển!');
   };
 
   const handleViewDetails = () => {
-    // TODO: Implement navigation to post details when route is ready
-    toast.info('Trang xem chi tiết đang được phát triển!');
+    navigate(ROUTES.POSTS.DETAIL(post.postId));
   };
 
   const getStatusBadge = (status: string) => {

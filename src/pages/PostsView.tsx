@@ -32,9 +32,6 @@ export default function PostsView() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Fetch posts from API using the custom hook
-  const { activePosts, isLoading, isError, error } = usePosts();
-
   const initialTab: ViewTab = React.useMemo(() => {
     if (location.pathname.endsWith('/looking')) return 'LOOKING';
     if (location.pathname.endsWith('/recruit')) return 'RECRUIT';
@@ -46,6 +43,9 @@ export default function PostsView() {
   const [major, setMajor] =
     React.useState<(typeof MAJOR_OPTIONS)[number]>('ALL');
   const [displayedCount, setDisplayedCount] = React.useState(10);
+
+  // Fetch posts from API using the custom hook with tab filter
+  const { activePosts, isLoading, isError, error } = usePosts(activeTab);
 
   const pageSize = 10;
 
@@ -85,10 +85,10 @@ export default function PostsView() {
     return filteredPosts.slice(0, displayedCount);
   }, [filteredPosts, displayedCount]);
 
-  // Reset displayed count when filters change
+  // Reset displayed count when filters or tab change
   React.useEffect(() => {
     setDisplayedCount(pageSize);
-  }, [activeTab, time, major]);
+  }, [time, major]);
 
   // Keep state in sync with URL changes
   React.useEffect(() => {
