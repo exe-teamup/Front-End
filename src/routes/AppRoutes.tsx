@@ -18,7 +18,7 @@ import { Profile } from '../pages/Profile';
 import { AccountSetting } from '../pages/profile/AccountSetting';
 import { UserProfile } from '../pages/UserProfile';
 import AdminRoute from './AdminRoute';
-import ModeratorRoutes from './ModeratorRoutes';
+import ModeratorRoute from './ModeratorRoutes';
 import { ProtectedRoute } from './ProtectedRoute';
 
 export function AppRoutes() {
@@ -137,21 +137,9 @@ export function AppRoutes() {
     // Admin Routes
     AdminRoute,
 
-    // Moderator Routes (with MainLayout and ProtectedRoute)
-    {
-      path: '/moderator/*',
-      element: (
-        <ProtectedRoute userRole='MODERATOR'>
-          <MainLayout />
-        </ProtectedRoute>
-      ),
-      children: [
-        {
-          path: '*',
-          element: <ModeratorRoutes />,
-        },
-      ],
-    },
+    // Moderator Routes
+    ModeratorRoute,
+
     // Redirect unknown routes
     {
       path: '*',
