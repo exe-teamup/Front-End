@@ -40,7 +40,7 @@ export function NavDocuments({ items }: NavDocumentsProps) {
                     className={({ isActive }) =>
                       isActive
                         ? 'bg-primary/10 text-primary font-semibold'
-                        : 'hover:bg-accent hover:text-accent-foreground'
+                        : 'text-gray-900 hover:bg-accent hover:text-accent-foreground'
                     }
                   >
                     <Icon className='h-4 w-4' />

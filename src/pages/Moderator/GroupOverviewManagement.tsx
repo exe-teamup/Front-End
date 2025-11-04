@@ -26,8 +26,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, UserPlus, X } from 'lucide-react';
+import { Pagination } from '@/components/ui/pagination';
+import { Search, UserPlus, X, ArrowUpDown } from 'lucide-react';
 import { mockGroups, mockLecturers, type Group } from './mockData';
+import { useTableFeatures } from '@/hooks/useTableFeatures';
 
 export function GroupOverviewManagement() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,13 +37,34 @@ export function GroupOverviewManagement() {
   const [assigningGroup, setAssigningGroup] = useState<Group | null>(null);
   const [selectedLecturer, setSelectedLecturer] = useState('');
 
-  const filteredGroups = mockGroups.filter(group => {
+  // Filter by status first
+  const filteredByStatus = mockGroups.filter(group => {
     const matchesSearch =
       group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       group.leader.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus =
       statusFilter === 'all' || group.status === statusFilter;
     return matchesSearch && matchesStatus;
+  });
+
+  // Use table features hook for pagination and sorting
+  const {
+    paginatedData,
+    totalItems,
+    sortBy,
+    sortOrder,
+    handleSort,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    itemsPerPage,
+    handlePageChange,
+  } = useTableFeatures({
+    data: filteredByStatus,
+    itemsPerPage: 10,
+    searchFields: [],
+    sortField: 'name',
   });
 
   const handleAssignLecturer = () => {
@@ -96,7 +119,7 @@ export function GroupOverviewManagement() {
       <Card className='shadow-lg border border-gray-200'>
         <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
           <CardTitle className='text-white'>
-            Danh sách Nhóm ({filteredGroups.length})
+            Danh sách Nhóm ({totalItems})
           </CardTitle>
         </CardHeader>
         <CardContent className='pt-6'>
@@ -145,8 +168,7 @@ export function GroupOverviewManagement() {
 
           {/* Results count */}
           <div className='mb-4 text-sm text-text-body'>
-            Hiển thị{' '}
-            <span className='font-semibold'>{filteredGroups.length}</span> /{' '}
+            Hiển thị <span className='font-semibold'>{totalItems}</span> /{' '}
             {mockGroups.length} nhóm
           </div>
 
@@ -155,8 +177,34 @@ export function GroupOverviewManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nhóm</TableHead>
-                  <TableHead>Leader</TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Nhóm
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'name' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('leader')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Leader
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'leader' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead>Số SV</TableHead>
                   <TableHead>Giảng viên</TableHead>
                   <TableHead>Trạng thái</TableHead>
@@ -164,7 +212,7 @@ export function GroupOverviewManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredGroups.length === 0 ? (
+                {paginatedData.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={6}
@@ -174,7 +222,7 @@ export function GroupOverviewManagement() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredGroups.map(group => {
+                  paginatedData.map(group => {
                     const statusInfo = getStatusBadge(group.status);
                     return (
                       <TableRow
@@ -226,6 +274,17 @@ export function GroupOverviewManagement() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            itemsPerPage={itemsPerPage}
+          />
         </CardContent>
       </Card>
 

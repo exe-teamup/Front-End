@@ -9,6 +9,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -29,18 +36,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Eye } from 'lucide-react';
+import { Pagination } from '@/components/ui/pagination';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  Search,
+  X,
+  ArrowUpDown,
+} from 'lucide-react';
 import {
   mockStudentsWithGroup,
   mockStudentsWithoutGroup,
   type Student,
 } from './mockData';
+import { useTableFeatures } from '@/hooks/useTableFeatures';
 
 export function StudentManagement() {
   const [students, setStudents] = useState([
     ...mockStudentsWithGroup,
     ...mockStudentsWithoutGroup,
   ]);
+  const [groupFilter, setGroupFilter] = useState<string>('all');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -52,6 +70,35 @@ export function StudentManagement() {
     class: '',
     major: '',
     group: '',
+  });
+
+  const filteredData =
+    groupFilter === 'all'
+      ? students
+      : groupFilter === 'hasGroup'
+        ? students.filter(s => s.group)
+        : students.filter(s => !s.group);
+
+  const {
+    paginatedData,
+    totalItems,
+    searchQuery,
+    handleSearch,
+    clearSearch,
+    sortBy,
+    sortOrder,
+    handleSort,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    itemsPerPage,
+    handlePageChange,
+  } = useTableFeatures({
+    data: filteredData,
+    itemsPerPage: 10,
+    searchFields: ['name', 'mssv', 'class', 'major'],
+    sortField: 'name',
   });
 
   const handleCreate = () => {
@@ -114,24 +161,95 @@ export function StudentManagement() {
       <Card className='shadow-lg border border-gray-200'>
         <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
           <CardTitle className='text-white'>
-            Danh sách Sinh viên ({students.length})
+            Danh sách Sinh viên ({totalItems})
           </CardTitle>
         </CardHeader>
         <CardContent className='pt-6'>
+          {/* Search & Filter Bar */}
+          <div className='flex gap-4 mb-6'>
+            <div className='flex-1 relative'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+              <Input
+                placeholder='Tìm kiếm theo MSSV, tên, lớp, ngành...'
+                value={searchQuery}
+                onChange={e => handleSearch(e.target.value)}
+                className='pl-10 pr-10'
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
+                >
+                  <X className='w-4 h-4' />
+                </button>
+              )}
+            </div>
+
+            <Select value={groupFilter} onValueChange={setGroupFilter}>
+              <SelectTrigger className='w-[200px]'>
+                <SelectValue placeholder='Lọc theo nhóm' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Tất cả</SelectItem>
+                <SelectItem value='hasGroup'>Đã có nhóm</SelectItem>
+                <SelectItem value='noGroup'>Chưa có nhóm</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className='rounded-md border'>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>MSSV</TableHead>
-                  <TableHead>Họ tên</TableHead>
-                  <TableHead>Lớp</TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('mssv')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      MSSV
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'mssv' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Họ tên
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'name' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('class')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Lớp
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'class' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead>Ngành</TableHead>
                   <TableHead>Nhóm</TableHead>
                   <TableHead className='text-right'>Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map(s => (
+                {paginatedData.map(s => (
                   <TableRow key={s.id} className='hover:bg-gray-50'>
                     <TableCell className='font-medium'>{s.mssv}</TableCell>
                     <TableCell>{s.name}</TableCell>
@@ -180,6 +298,17 @@ export function StudentManagement() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            itemsPerPage={itemsPerPage}
+          />
         </CardContent>
       </Card>
 

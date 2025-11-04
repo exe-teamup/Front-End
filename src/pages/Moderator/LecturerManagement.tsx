@@ -28,11 +28,29 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, Eye } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Pagination } from '@/components/ui/pagination';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  Search,
+  X,
+  ArrowUpDown,
+} from 'lucide-react';
 import { mockLecturers, type Lecturer } from './mockData';
+import { useTableFeatures } from '@/hooks/useTableFeatures';
 
 export function LecturerManagement() {
   const [lecturers, setLecturers] = useState(mockLecturers);
+  const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -45,6 +63,36 @@ export function LecturerManagement() {
     email: '',
     quota: 0,
     currentGroups: 0,
+  });
+
+  // Filter by availability
+  const filteredData =
+    availabilityFilter === 'all'
+      ? lecturers
+      : availabilityFilter === 'available'
+        ? lecturers.filter(l => l.currentGroups < l.quota)
+        : lecturers.filter(l => l.currentGroups >= l.quota);
+
+  const {
+    paginatedData,
+    totalItems,
+    searchQuery,
+    handleSearch,
+    clearSearch,
+    sortBy,
+    sortOrder,
+    handleSort,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    itemsPerPage,
+    handlePageChange,
+  } = useTableFeatures({
+    data: filteredData,
+    itemsPerPage: 10,
+    searchFields: ['name', 'email'],
+    sortField: 'name',
   });
 
   const handleCreate = () => {
@@ -110,23 +158,97 @@ export function LecturerManagement() {
       <Card className='shadow-lg border border-gray-200'>
         <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
           <CardTitle className='text-white'>
-            Danh sách Giảng viên ({lecturers.length})
+            Danh sách Giảng viên ({totalItems})
           </CardTitle>
         </CardHeader>
         <CardContent className='pt-6'>
+          {/* Search & Filter Bar */}
+          <div className='flex gap-4 mb-6'>
+            <div className='flex-1 relative'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+              <Input
+                placeholder='Tìm kiếm theo tên, email...'
+                value={searchQuery}
+                onChange={e => handleSearch(e.target.value)}
+                className='pl-10 pr-10'
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
+                >
+                  <X className='w-4 h-4' />
+                </button>
+              )}
+            </div>
+
+            <Select
+              value={availabilityFilter}
+              onValueChange={setAvailabilityFilter}
+            >
+              <SelectTrigger className='w-[200px]'>
+                <SelectValue placeholder='Khả dụng' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Tất cả</SelectItem>
+                <SelectItem value='available'>Còn slot</SelectItem>
+                <SelectItem value='full'>Đã đủ</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className='rounded-md border'>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tên giảng viên</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Định mức</TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Tên giảng viên
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'name' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('email')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Email
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'email' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('quota')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Định mức
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'quota' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead>Nhóm hiện tại</TableHead>
                   <TableHead className='text-right'>Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lecturers.map(l => (
+                {paginatedData.map(l => (
                   <TableRow key={l.id} className='hover:bg-gray-50'>
                     <TableCell className='font-medium'>{l.name}</TableCell>
                     <TableCell>{l.email}</TableCell>
@@ -168,6 +290,17 @@ export function LecturerManagement() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            itemsPerPage={itemsPerPage}
+          />
         </CardContent>
       </Card>
 

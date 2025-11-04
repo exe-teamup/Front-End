@@ -35,15 +35,26 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, Eye } from 'lucide-react';
+import { Pagination } from '@/components/ui/pagination';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  Search,
+  X,
+  ArrowUpDown,
+} from 'lucide-react';
 import {
   mockGroupTemplates,
   mockSemesters,
   type GroupTemplate,
 } from './mockData';
+import { useTableFeatures } from '@/hooks/useTableFeatures';
 
 export function TemplateManagement() {
   const [templates, setTemplates] = useState(mockGroupTemplates);
+  const [semesterFilter, setSemesterFilter] = useState<string>('all');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -56,6 +67,34 @@ export function TemplateManagement() {
     maxMembers: 0,
     minMajors: 0,
     maxLecturers: 0,
+  });
+
+  // Filter by semester
+  const filteredData =
+    semesterFilter === 'all'
+      ? templates
+      : templates.filter(t => t.semester === semesterFilter);
+
+  const {
+    paginatedData,
+    totalItems,
+    searchQuery,
+    handleSearch,
+    clearSearch,
+    sortBy,
+    sortOrder,
+    handleSort,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    itemsPerPage,
+    handlePageChange,
+  } = useTableFeatures({
+    data: filteredData,
+    itemsPerPage: 10,
+    searchFields: ['semester'],
+    sortField: 'semester',
   });
 
   const handleCreate = () => {
@@ -128,15 +167,63 @@ export function TemplateManagement() {
       <Card className='shadow-lg border border-gray-200'>
         <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
           <CardTitle className='text-white'>
-            Danh sách Template ({templates.length})
+            Danh sách Template ({totalItems})
           </CardTitle>
         </CardHeader>
         <CardContent className='pt-6'>
+          {/* Search & Filter Bar */}
+          <div className='flex gap-4 mb-6'>
+            <div className='flex-1 relative'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+              <Input
+                placeholder='Tìm kiếm theo kỳ học...'
+                value={searchQuery}
+                onChange={e => handleSearch(e.target.value)}
+                className='pl-10 pr-10'
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
+                >
+                  <X className='w-4 h-4' />
+                </button>
+              )}
+            </div>
+
+            <Select value={semesterFilter} onValueChange={setSemesterFilter}>
+              <SelectTrigger className='w-[200px]'>
+                <SelectValue placeholder='Kỳ học' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Tất cả kỳ</SelectItem>
+                {mockSemesters.map(s => (
+                  <SelectItem key={s.id} value={s.name}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className='rounded-md border'>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Kỳ học</TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('semester')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Kỳ học
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'semester' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead>Số thành viên</TableHead>
                   <TableHead>Số ngành tối thiểu</TableHead>
                   <TableHead>Số GV tối đa</TableHead>
@@ -144,7 +231,7 @@ export function TemplateManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {templates.map(t => (
+                {paginatedData.map(t => (
                   <TableRow key={t.id} className='hover:bg-gray-50'>
                     <TableCell className='font-medium'>{t.semester}</TableCell>
                     <TableCell>
@@ -188,6 +275,17 @@ export function TemplateManagement() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            itemsPerPage={itemsPerPage}
+          />
         </CardContent>
       </Card>
 

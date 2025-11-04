@@ -35,8 +35,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, Eye } from 'lucide-react';
+import { Pagination } from '@/components/ui/pagination';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  Search,
+  X,
+  ArrowUpDown,
+} from 'lucide-react';
 import { mockCourses, mockSemesters, type Course } from './mockData';
+import { useTableFeatures } from '@/hooks/useTableFeatures';
 
 export function CourseManagement() {
   const [courses, setCourses] = useState(mockCourses);
@@ -53,10 +63,32 @@ export function CourseManagement() {
     studentCount: 0,
   });
 
-  const filteredCourses =
+  const filteredData =
     selectedSemester === 'all'
       ? courses
       : courses.filter(c => c.semester === selectedSemester);
+
+  const {
+    paginatedData,
+    totalItems,
+    searchQuery,
+    handleSearch,
+    clearSearch,
+    sortBy,
+    sortOrder,
+    handleSort,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    itemsPerPage,
+    handlePageChange,
+  } = useTableFeatures({
+    data: filteredData,
+    itemsPerPage: 10,
+    searchFields: ['name', 'semester', 'lecturer'],
+    sortField: 'name',
+  });
 
   const handleCreate = () => {
     const newCourse: Course = {
@@ -118,7 +150,7 @@ export function CourseManagement() {
         <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
           <div className='flex justify-between items-center'>
             <CardTitle className='text-white'>
-              Danh sách Lớp học ({filteredCourses.length})
+              Danh sách Lớp học ({totalItems})
             </CardTitle>
             <Select
               value={selectedSemester}
@@ -139,19 +171,79 @@ export function CourseManagement() {
           </div>
         </CardHeader>
         <CardContent className='pt-6'>
+          {/* Search Bar */}
+          <div className='mb-6'>
+            <div className='relative'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+              <Input
+                placeholder='Tìm kiếm theo tên lớp, kỳ học, giảng viên...'
+                value={searchQuery}
+                onChange={e => handleSearch(e.target.value)}
+                className='pl-10 pr-10'
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
+                >
+                  <X className='w-4 h-4' />
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className='rounded-md border'>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tên lớp</TableHead>
-                  <TableHead>Kỳ học</TableHead>
-                  <TableHead>Giảng viên</TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Tên lớp
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'name' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('semester')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Kỳ học
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'semester' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('lecturer')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Giảng viên
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'lecturer' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead>Sĩ số</TableHead>
                   <TableHead className='text-right'>Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCourses.map(c => (
+                {paginatedData.map(c => (
                   <TableRow key={c.id} className='hover:bg-gray-50'>
                     <TableCell className='font-medium'>{c.name}</TableCell>
                     <TableCell>{c.semester}</TableCell>
@@ -193,6 +285,17 @@ export function CourseManagement() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            itemsPerPage={itemsPerPage}
+          />
         </CardContent>
       </Card>
 
