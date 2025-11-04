@@ -35,7 +35,14 @@ export function NavDocuments({ items }: NavDocumentsProps) {
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild tooltip={item.title}>
-                  <NavLink to={item.url}>
+                  <NavLink
+                    to={item.url}
+                    className={({ isActive }) =>
+                      isActive
+                        ? 'bg-primary/10 text-primary font-semibold'
+                        : 'hover:bg-accent hover:text-accent-foreground'
+                    }
+                  >
                     <Icon className='h-4 w-4' />
                     <span>{item.title}</span>
                   </NavLink>
