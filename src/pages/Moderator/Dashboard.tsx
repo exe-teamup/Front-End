@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Clock, CheckCircle, GraduationCap } from 'lucide-react';
 
-export default function Dashboard() {
+export function Dashboard() {
   const stats = [
     {
       title: 'Tổng số nhóm',

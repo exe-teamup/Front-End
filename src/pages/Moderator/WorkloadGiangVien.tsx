@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockLecturerWorkload } from './mockData';
 
-export default function WorkloadGiangVien() {
+export function WorkloadGiangVien() {
   const totalLecturers = mockLecturerWorkload.length;
   const available = mockLecturerWorkload.filter(
     l => l.status === 'available'

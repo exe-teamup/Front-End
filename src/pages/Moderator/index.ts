@@ -5,12 +5,12 @@ export { default as LecturerWorkload } from './LecturerWorkload';
 export { default as AcademicSettings } from './AcademicSettings';
 export { default as AuditLog } from './AuditLog';
 
-// New Ant Design pages
-export { default as Dashboard } from './Dashboard';
-export { default as WorkloadGiangVien } from './WorkloadGiangVien';
-export { default as GroupOverviewManagement } from './GroupOverviewManagement';
-export { default as SemesterManagement } from './SemesterManagement';
-export { default as TemplateManagement } from './TemplateManagement';
-export { default as LecturerManagement } from './LecturerManagement';
-export { default as StudentManagement } from './StudentManagement';
-export { default as CourseManagement } from './CourseManagement';
+// New shadcn/ui pages with named exports
+export { Dashboard } from './Dashboard';
+export { WorkloadGiangVien } from './WorkloadGiangVien';
+export { GroupOverviewManagement } from './GroupOverviewManagement';
+export { SemesterManagement } from './SemesterManagement';
+export { TemplateManagement } from './TemplateManagement';
+export { LecturerManagement } from './LecturerManagement';
+export { StudentManagement } from './StudentManagement';
+export { CourseManagement } from './CourseManagement';
