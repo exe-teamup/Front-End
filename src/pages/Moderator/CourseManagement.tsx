@@ -44,23 +44,26 @@ import {
   Search,
   X,
   ArrowUpDown,
+  Download,
 } from 'lucide-react';
 import { mockCourses, mockSemesters, type Course } from './mockData';
 import { useTableFeatures } from '@/hooks/useTableFeatures';
+import { Badge } from '@/components/ui/badge';
 
 export function CourseManagement() {
   const [courses, setCourses] = useState(mockCourses);
   const [selectedSemester, setSelectedSemester] = useState('all');
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [formData, setFormData] = useState({
     name: '',
+    courseCode: '',
     semester: '',
     lecturer: '',
     studentCount: 0,
+    groupCount: 0,
   });
 
   const filteredData =
@@ -90,16 +93,6 @@ export function CourseManagement() {
     sortField: 'name',
   });
 
-  const handleCreate = () => {
-    const newCourse: Course = {
-      id: (courses.length + 1).toString(),
-      ...formData,
-    };
-    setCourses([...courses, newCourse]);
-    setIsCreateOpen(false);
-    setFormData({ name: '', semester: '', lecturer: '', studentCount: 0 });
-  };
-
   const handleEdit = () => {
     if (selectedCourse) {
       setCourses(
@@ -124,11 +117,23 @@ export function CourseManagement() {
     setSelectedCourse(course);
     setFormData({
       name: course.name,
+      courseCode: course.courseCode || '',
       semester: course.semester,
       lecturer: course.lecturer,
       studentCount: course.studentCount,
+      groupCount: course.groupCount || 0,
     });
     setIsEditOpen(true);
+  };
+
+  const handleExport = () => {
+    console.log('Export courses to Excel');
+    // TODO: Implement Excel export
+  };
+
+  const handleImport = () => {
+    console.log('Import courses from Excel');
+    // TODO: Implement Excel import
   };
 
   return (
@@ -138,45 +143,35 @@ export function CourseManagement() {
           <h1 className='text-3xl font-bold text-text-title'>
             Quản lý Lớp học
           </h1>
-          <p className='text-text-body mt-2'>Danh sách lớp học theo kỳ học</p>
+          <p className='text-text-body mt-2'>
+            Danh sách lớp học theo kỳ học ({totalItems} lớp học)
+          </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className='w-4 h-4 mr-2' />
-          Thêm Lớp học
-        </Button>
+        <div className='flex gap-3'>
+          <Button variant='outline' onClick={handleExport}>
+            <Download className='w-4 h-4 mr-2' />
+            Tải file
+          </Button>
+          <Button onClick={handleImport}>
+            <Plus className='w-4 h-4 mr-2' />
+            Thêm lớp học (.xlsx)
+          </Button>
+        </div>
       </div>
 
       <Card className='shadow-lg border border-gray-200'>
         <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
-          <div className='flex justify-between items-center'>
-            <CardTitle className='text-white'>
-              Danh sách Lớp học ({totalItems})
-            </CardTitle>
-            <Select
-              value={selectedSemester}
-              onValueChange={setSelectedSemester}
-            >
-              <SelectTrigger className='w-[200px] bg-white'>
-                <SelectValue placeholder='Chọn kỳ học' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='all'>Tất cả</SelectItem>
-                {mockSemesters.map(s => (
-                  <SelectItem key={s.id} value={s.name}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <CardTitle className='text-white'>
+            Danh sách Lớp học ({totalItems})
+          </CardTitle>
         </CardHeader>
         <CardContent className='pt-6'>
-          {/* Search Bar */}
-          <div className='mb-6'>
-            <div className='relative'>
+          {/* Search & Filter Bar */}
+          <div className='flex gap-4 mb-6'>
+            <div className='flex-1 relative'>
               <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
               <Input
-                placeholder='Tìm kiếm theo tên lớp, kỳ học, giảng viên...'
+                placeholder='Tìm kiếm theo tên lớp, mã lớp, kỳ học, giảng viên...'
                 value={searchQuery}
                 onChange={e => handleSearch(e.target.value)}
                 className='pl-10 pr-10'
@@ -190,6 +185,23 @@ export function CourseManagement() {
                 </button>
               )}
             </div>
+
+            <Select
+              value={selectedSemester}
+              onValueChange={setSelectedSemester}
+            >
+              <SelectTrigger className='w-[200px]'>
+                <SelectValue placeholder='Chọn kỳ học' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Tất cả kỳ học</SelectItem>
+                {mockSemesters.map(s => (
+                  <SelectItem key={s.id} value={s.name}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className='rounded-md border'>
@@ -198,12 +210,12 @@ export function CourseManagement() {
                 <TableRow>
                   <TableHead
                     className='cursor-pointer'
-                    onClick={() => handleSort('name')}
+                    onClick={() => handleSort('courseCode')}
                   >
                     <div className='flex items-center gap-2'>
-                      Tên lớp
+                      Mã lớp
                       <ArrowUpDown className='w-4 h-4' />
-                      {sortBy === 'name' && (
+                      {sortBy === 'courseCode' && (
                         <span className='text-xs'>
                           {sortOrder === 'asc' ? '↑' : '↓'}
                         </span>
@@ -238,17 +250,25 @@ export function CourseManagement() {
                       )}
                     </div>
                   </TableHead>
-                  <TableHead>Sĩ số</TableHead>
+                  <TableHead>Nhóm</TableHead>
                   <TableHead className='text-right'>Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedData.map(c => (
                   <TableRow key={c.id} className='hover:bg-gray-50'>
-                    <TableCell className='font-medium'>{c.name}</TableCell>
+                    <TableCell>
+                      {c.courseCode && (
+                        <Badge className='bg-green-100 text-green-800'>
+                          {c.courseCode}
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell>{c.semester}</TableCell>
                     <TableCell>{c.lecturer}</TableCell>
-                    <TableCell>{c.studentCount}</TableCell>
+                    <TableCell>
+                      <span className='text-sm'>{c.groupCount || 0} nhóm</span>
+                    </TableCell>
                     <TableCell className='text-right'>
                       <div className='flex justify-end gap-2'>
                         <Button
@@ -299,74 +319,6 @@ export function CourseManagement() {
         </CardContent>
       </Card>
 
-      {/* Create Dialog */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Thêm Lớp học mới</DialogTitle>
-          </DialogHeader>
-          <div className='space-y-4 py-4'>
-            <div>
-              <Label>Tên lớp</Label>
-              <Input
-                placeholder='VD: EXE101_Fall2025_C1'
-                value={formData.name}
-                onChange={e =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>Kỳ học</Label>
-              <Select
-                value={formData.semester}
-                onValueChange={v => setFormData({ ...formData, semester: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Chọn kỳ học' />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockSemesters.map(s => (
-                    <SelectItem key={s.id} value={s.name}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Giảng viên</Label>
-              <Input
-                placeholder='Tên giảng viên'
-                value={formData.lecturer}
-                onChange={e =>
-                  setFormData({ ...formData, lecturer: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>Sĩ số</Label>
-              <Input
-                type='number'
-                value={formData.studentCount}
-                onChange={e =>
-                  setFormData({
-                    ...formData,
-                    studentCount: parseInt(e.target.value) || 0,
-                  })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant='outline' onClick={() => setIsCreateOpen(false)}>
-              Hủy
-            </Button>
-            <Button onClick={handleCreate}>Tạo mới</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
@@ -383,23 +335,35 @@ export function CourseManagement() {
                 }
               />
             </div>
-            <div>
-              <Label>Kỳ học</Label>
-              <Select
-                value={formData.semester}
-                onValueChange={v => setFormData({ ...formData, semester: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockSemesters.map(s => (
-                    <SelectItem key={s.id} value={s.name}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className='grid grid-cols-2 gap-4'>
+              <div>
+                <Label>Mã lớp</Label>
+                <Input
+                  placeholder='VD: SE102'
+                  value={formData.courseCode}
+                  onChange={e =>
+                    setFormData({ ...formData, courseCode: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Kỳ học</Label>
+                <Select
+                  value={formData.semester}
+                  onValueChange={v => setFormData({ ...formData, semester: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockSemesters.map(s => (
+                      <SelectItem key={s.id} value={s.name}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <Label>Giảng viên</Label>
@@ -410,18 +374,33 @@ export function CourseManagement() {
                 }
               />
             </div>
-            <div>
-              <Label>Sĩ số</Label>
-              <Input
-                type='number'
-                value={formData.studentCount}
-                onChange={e =>
-                  setFormData({
-                    ...formData,
-                    studentCount: parseInt(e.target.value) || 0,
-                  })
-                }
-              />
+            <div className='grid grid-cols-2 gap-4'>
+              <div>
+                <Label>Sĩ số</Label>
+                <Input
+                  type='number'
+                  value={formData.studentCount}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      studentCount: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Số nhóm</Label>
+                <Input
+                  type='number'
+                  value={formData.groupCount}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      groupCount: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -472,15 +451,21 @@ export function CourseManagement() {
               </div>
               <div className='grid grid-cols-2 gap-4'>
                 <div>
+                  <Label className='text-text-secondary'>Mã lớp</Label>
+                  <div className='mt-1'>
+                    {selectedCourse.courseCode ? (
+                      <Badge className='bg-green-100 text-green-800'>
+                        {selectedCourse.courseCode}
+                      </Badge>
+                    ) : (
+                      <p className='text-text-secondary text-sm'>Chưa có</p>
+                    )}
+                  </div>
+                </div>
+                <div>
                   <Label className='text-text-secondary'>Kỳ học</Label>
                   <p className='text-text-title font-medium mt-1'>
                     {selectedCourse.semester}
-                  </p>
-                </div>
-                <div>
-                  <Label className='text-text-secondary'>Sĩ số</Label>
-                  <p className='text-text-title font-medium mt-1'>
-                    {selectedCourse.studentCount}
                   </p>
                 </div>
               </div>
@@ -489,6 +474,20 @@ export function CourseManagement() {
                 <p className='text-text-title font-medium mt-1'>
                   {selectedCourse.lecturer}
                 </p>
+              </div>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label className='text-text-secondary'>Sĩ số</Label>
+                  <p className='text-text-title font-medium mt-1'>
+                    {selectedCourse.studentCount} sinh viên
+                  </p>
+                </div>
+                <div>
+                  <Label className='text-text-secondary'>Số nhóm</Label>
+                  <p className='text-text-title font-medium mt-1'>
+                    {selectedCourse.groupCount || 0} nhóm
+                  </p>
+                </div>
               </div>
             </div>
           )}

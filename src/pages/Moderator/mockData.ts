@@ -127,16 +127,22 @@ export interface Lecturer {
   email: string;
   quota: number;
   currentGroups: number;
+  classCode?: string; // Mã lớp phụ trách
+  status?: 'ACTIVE' | 'INACTIVE'; // Trạng thái
+  avatar?: string; // URL avatar
 }
 
 const generateLecturers = (count: number = 50): Lecturer[] => {
   const lecturers: Lecturer[] = [];
+  const classCodes = ['SE102', 'SE103', 'AI101', 'IS102', 'IA103', 'GD101'];
 
   for (let i = 1; i <= count; i++) {
     const name = `GV ${generateRandomName()}`;
     const email = `gv${i}@fpt.edu.vn`;
     const quota = 4 + Math.floor(Math.random() * 8); // 4-11
     const currentGroups = Math.floor(Math.random() * (quota + 2)); // 0 đến quota+1 (có thể vượt quota)
+    const classCode = randomFromArray(classCodes);
+    const status = Math.random() > 0.1 ? 'ACTIVE' : 'INACTIVE'; // 90% ACTIVE
 
     lecturers.push({
       id: String(i),
@@ -144,6 +150,8 @@ const generateLecturers = (count: number = 50): Lecturer[] => {
       email,
       quota,
       currentGroups,
+      classCode,
+      status,
     });
   }
 
@@ -157,9 +165,12 @@ export interface Student {
   id: string;
   name: string;
   mssv: string;
+  email: string;
   class: string;
   major: string;
   group?: string;
+  isEligibleForEXE?: boolean; // Đủ điều kiện làm EXE
+  isDisabled?: boolean; // Vô hiệu hóa
 }
 
 const generateStudents = (count: number = 100): Student[] => {
@@ -188,16 +199,22 @@ const generateStudents = (count: number = 100): Student[] => {
   for (let i = 1; i <= count; i++) {
     const name = generateRandomName();
     const mssv = `SE${String(184000 + i).padStart(6, '0')}`;
+    const email = `${mssv.toLowerCase()}@fpt.edu.vn`;
     const classCode = randomFromArray(classes);
     const major = randomFromArray(majors);
     const hasGroup = Math.random() > 0.3; // 70% có nhóm
+    const isEligibleForEXE = Math.random() > 0.4; // 60% đủ điều kiện
+    const isDisabled = Math.random() > 0.9; // 10% bị vô hiệu hóa
 
     students.push({
       id: String(i),
       name,
       mssv,
+      email,
       class: classCode,
       major,
+      isEligibleForEXE,
+      isDisabled,
       group: hasGroup ? randomFromArray(groups) : undefined,
     });
   }
@@ -213,9 +230,11 @@ export const mockStudentsWithoutGroup = allStudents.filter(s => !s.group);
 export interface Course {
   id: string;
   name: string;
+  courseCode?: string; // Mã lớp (e.g., SE102, AI101)
   semester: string;
   lecturer: string;
   studentCount: number;
+  groupCount?: number; // Số lượng nhóm
 }
 
 const generateCourses = (count: number = 60): Course[] => {
@@ -228,6 +247,7 @@ const generateCourses = (count: number = 60): Course[] => {
     'PRN231',
     'IOT102',
   ];
+  const courseCodes = ['SE102', 'SE103', 'AI101', 'IS102', 'IA103', 'GD101'];
 
   for (let i = 1; i <= count; i++) {
     const courseName = randomFromArray(courseNames);
@@ -235,13 +255,17 @@ const generateCourses = (count: number = 60): Course[] => {
     const classNum = Math.floor(i / 10) + 1;
     const lecturer = randomFromArray(mockLecturers).name;
     const studentCount = 20 + Math.floor(Math.random() * 15); // 20-34
+    const courseCode = randomFromArray(courseCodes);
+    const groupCount = Math.floor(Math.random() * 8); // 0-7 nhóm
 
     courses.push({
       id: String(i),
       name: `${courseName}_${semester.replace(' ', '')}_C${classNum}`,
+      courseCode,
       semester,
       lecturer,
       studentCount,
+      groupCount,
     });
   }
 

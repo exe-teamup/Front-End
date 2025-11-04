@@ -42,7 +42,6 @@ import { useTableFeatures } from '@/hooks/useTableFeatures';
 
 export function SemesterManagement() {
   const [semesters, setSemesters] = useState<Semester[]>(mockSemesters);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
@@ -110,16 +109,6 @@ export function SemesterManagement() {
     return variants[status];
   };
 
-  const handleCreate = () => {
-    const newSemester: Semester = {
-      id: (semesters.length + 1).toString(),
-      ...formData,
-    };
-    setSemesters([...semesters, newSemester]);
-    setIsCreateOpen(false);
-    setFormData({ name: '', startDate: '', endDate: '', status: 'upcoming' });
-  };
-
   const handleEdit = () => {
     if (selectedSemester) {
       setSemesters(
@@ -158,19 +147,26 @@ export function SemesterManagement() {
     setIsViewOpen(true);
   };
 
+  const handleImport = () => {
+    console.log('Import semesters from Excel');
+    // TODO: Implement Excel import
+  };
+
   return (
     <div className='space-y-6'>
       <div className='flex justify-between items-center'>
         <div>
           <h1 className='text-3xl font-bold text-text-title'>Quản lý Kỳ học</h1>
           <p className='text-text-body mt-2'>
-            Quản lý thông tin các kỳ học trong hệ thống
+            Quản lý thông tin các kỳ học trong hệ thống ({totalItems} kỳ học)
           </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className='w-4 h-4 mr-2' />
-          Thêm Kỳ học
-        </Button>
+        <div className='flex gap-3'>
+          <Button onClick={handleImport}>
+            <Plus className='w-4 h-4 mr-2' />
+            Thêm kỳ học (.xlsx)
+          </Button>
+        </div>
       </div>
       <Card className='shadow-lg border border-gray-200'>
         <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
@@ -235,9 +231,23 @@ export function SemesterManagement() {
                     onClick={() => handleSort('startDate')}
                   >
                     <div className='flex items-center gap-2'>
-                      Thời gian
+                      Ngày bắt đầu
                       <ArrowUpDown className='w-4 h-4' />
                       {sortBy === 'startDate' && (
+                        <span className='text-xs'>
+                          {sortOrder === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className='cursor-pointer'
+                    onClick={() => handleSort('endDate')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Ngày kết thúc
+                      <ArrowUpDown className='w-4 h-4' />
+                      {sortBy === 'endDate' && (
                         <span className='text-xs'>
                           {sortOrder === 'asc' ? '↑' : '↓'}
                         </span>
@@ -257,13 +267,17 @@ export function SemesterManagement() {
                     <TableCell>
                       <div className='flex items-center gap-2'>
                         <Calendar className='w-4 h-4 text-gray-400' />
-                        <span>
-                          {semester.startDate} - {semester.endDate}
-                        </span>
+                        <span>{semester.startDate}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadge(semester.status).variant}>
+                      <div className='flex items-center gap-2'>
+                        <Calendar className='w-4 h-4 text-gray-400' />
+                        <span>{semester.endDate}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusBadge(semester.status).color}>
                         {getStatusBadge(semester.status).label}
                       </Badge>
                     </TableCell>
@@ -313,71 +327,6 @@ export function SemesterManagement() {
           />
         </CardContent>
       </Card>
-
-      {/* Create Dialog */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Thêm Kỳ học mới</DialogTitle>
-          </DialogHeader>
-          <div className='space-y-4 py-4'>
-            <div>
-              <Label>Tên kỳ học</Label>
-              <Input
-                placeholder='VD: Fall 2025'
-                value={formData.name}
-                onChange={e =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>Ngày bắt đầu</Label>
-              <Input
-                type='date'
-                value={formData.startDate}
-                onChange={e =>
-                  setFormData({ ...formData, startDate: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>Ngày kết thúc</Label>
-              <Input
-                type='date'
-                value={formData.endDate}
-                onChange={e =>
-                  setFormData({ ...formData, endDate: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>Trạng thái</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: Semester['status']) =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='upcoming'>Sắp diễn ra</SelectItem>
-                  <SelectItem value='active'>Đang diễn ra</SelectItem>
-                  <SelectItem value='finished'>Đã kết thúc</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant='outline' onClick={() => setIsCreateOpen(false)}>
-              Hủy
-            </Button>
-            <Button onClick={handleCreate}>Tạo mới</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>

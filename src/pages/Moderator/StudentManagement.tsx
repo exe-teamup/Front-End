@@ -38,13 +38,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pagination } from '@/components/ui/pagination';
 import {
-  Plus,
   Pencil,
   Trash2,
   Eye,
   Search,
   X,
   ArrowUpDown,
+  Upload,
 } from 'lucide-react';
 import {
   mockStudentsWithGroup,
@@ -58,7 +58,9 @@ export function StudentManagement() {
     ...mockStudentsWithGroup,
     ...mockStudentsWithoutGroup,
   ]);
-  const [groupFilter, setGroupFilter] = useState<string>('all');
+  const [exeFilter, setExeFilter] = useState<string>('all');
+  const [classFilter, setClassFilter] = useState<string>('all'); // Filter theo lớp
+  const [statusFilter, setStatusFilter] = useState<string>('all'); // Filter theo trạng thái
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -67,17 +69,36 @@ export function StudentManagement() {
   const [formData, setFormData] = useState({
     name: '',
     mssv: '',
+    email: '',
     class: '',
     major: '',
     group: '',
+    isEligibleForEXE: false,
+    isDisabled: false,
   });
 
-  const filteredData =
-    groupFilter === 'all'
-      ? students
-      : groupFilter === 'hasGroup'
-        ? students.filter(s => s.group)
-        : students.filter(s => !s.group);
+  // Get unique classes for filter
+  const uniqueClasses = Array.from(new Set(students.map(s => s.class))).sort();
+
+  // Multi-level filtering
+  let filteredData = students;
+
+  // Filter by class
+  if (classFilter !== 'all') {
+    filteredData = filteredData.filter(s => s.class === classFilter);
+  }
+
+  // Filter by status (điều kiện EXE)
+  if (statusFilter !== 'all') {
+    if (statusFilter === 'disabled') {
+      filteredData = filteredData.filter(s => s.isDisabled);
+    } else {
+      filteredData = filteredData.filter(
+        s =>
+          !s.isDisabled && s.isEligibleForEXE === (statusFilter === 'eligible')
+      );
+    }
+  }
 
   const {
     paginatedData,
@@ -97,7 +118,7 @@ export function StudentManagement() {
   } = useTableFeatures({
     data: filteredData,
     itemsPerPage: 10,
-    searchFields: ['name', 'mssv', 'class', 'major'],
+    searchFields: ['name', 'mssv', 'email', 'major'], // Thêm email vào search
     sortField: 'name',
   });
 
@@ -108,7 +129,16 @@ export function StudentManagement() {
     };
     setStudents([...students, newStudent]);
     setIsCreateOpen(false);
-    setFormData({ name: '', mssv: '', class: '', major: '', group: '' });
+    setFormData({
+      name: '',
+      mssv: '',
+      email: '',
+      class: '',
+      major: '',
+      group: '',
+      isEligibleForEXE: false,
+      isDisabled: false,
+    });
   };
 
   const handleEdit = () => {
@@ -136,11 +166,34 @@ export function StudentManagement() {
     setFormData({
       name: student.name,
       mssv: student.mssv,
+      email: student.email,
       class: student.class,
       major: student.major,
       group: student.group || '',
+      isEligibleForEXE: student.isEligibleForEXE || false,
+      isDisabled: student.isDisabled || false,
     });
     setIsEditOpen(true);
+  };
+
+  const handleImportExcel = () => {
+    const importType =
+      exeFilter === 'eligible'
+        ? 'đủ điều kiện'
+        : exeFilter === 'notEligible'
+          ? 'không đủ điều kiện'
+          : '';
+    console.log(`Import sinh viên ${importType} từ .xlsx`);
+    // TODO: Implement Excel import
+  };
+
+  const getImportButtonText = () => {
+    if (exeFilter === 'eligible') {
+      return 'Thêm sinh viên đủ điều kiện (.xlsx)';
+    } else if (exeFilter === 'notEligible') {
+      return 'Thêm sinh viên không đủ điều kiện (.xlsx)';
+    }
+    return 'Thêm sinh viên đủ điều kiện (.xlsx)';
   };
 
   return (
@@ -150,12 +203,32 @@ export function StudentManagement() {
           <h1 className='text-3xl font-bold text-text-title'>
             Quản lý Sinh viên
           </h1>
-          <p className='text-text-body mt-2'>Danh sách sinh viên và nhóm</p>
+          <p className='text-text-body mt-2'>
+            Quản lý thông tin sinh viên trong hệ thống ({totalItems} sinh viên)
+          </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className='w-4 h-4 mr-2' />
-          Thêm Sinh viên
-        </Button>
+        <div className='flex gap-3'>
+          <Button
+            variant={exeFilter === 'eligible' ? 'default' : 'outline'}
+            onClick={() =>
+              setExeFilter(exeFilter === 'eligible' ? 'all' : 'eligible')
+            }
+          >
+            Đủ điều kiện
+          </Button>
+          <Button
+            variant={exeFilter === 'notEligible' ? 'default' : 'outline'}
+            onClick={() =>
+              setExeFilter(exeFilter === 'notEligible' ? 'all' : 'notEligible')
+            }
+          >
+            Không đủ điều kiện
+          </Button>
+          <Button variant='outline' onClick={handleImportExcel}>
+            <Upload className='w-4 h-4 mr-2' />
+            {getImportButtonText()}
+          </Button>
+        </div>
       </div>
 
       <Card className='shadow-lg border border-gray-200'>
@@ -170,7 +243,7 @@ export function StudentManagement() {
             <div className='flex-1 relative'>
               <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
               <Input
-                placeholder='Tìm kiếm theo MSSV, tên, lớp, ngành...'
+                placeholder='Tìm kiếm sinh viên theo tên, email, mã sinh viên hoặc chuyên ngành...'
                 value={searchQuery}
                 onChange={e => handleSearch(e.target.value)}
                 className='pl-10 pr-10'
@@ -185,14 +258,29 @@ export function StudentManagement() {
               )}
             </div>
 
-            <Select value={groupFilter} onValueChange={setGroupFilter}>
+            <Select value={classFilter} onValueChange={setClassFilter}>
+              <SelectTrigger className='w-[180px]'>
+                <SelectValue placeholder='Lớp' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Tất cả lớp</SelectItem>
+                {uniqueClasses.map(cls => (
+                  <SelectItem key={cls} value={cls}>
+                    {cls}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className='w-[200px]'>
-                <SelectValue placeholder='Lọc theo nhóm' />
+                <SelectValue placeholder='Điều kiện' />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value='all'>Tất cả</SelectItem>
-                <SelectItem value='hasGroup'>Đã có nhóm</SelectItem>
-                <SelectItem value='noGroup'>Chưa có nhóm</SelectItem>
+                <SelectItem value='eligible'>Đủ điều kiện</SelectItem>
+                <SelectItem value='notEligible'>Không đủ điều kiện</SelectItem>
+                <SelectItem value='disabled'>Vô hiệu hóa</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -206,7 +294,7 @@ export function StudentManagement() {
                     onClick={() => handleSort('mssv')}
                   >
                     <div className='flex items-center gap-2'>
-                      MSSV
+                      Mã số sinh viên
                       <ArrowUpDown className='w-4 h-4' />
                       {sortBy === 'mssv' && (
                         <span className='text-xs'>
@@ -220,7 +308,7 @@ export function StudentManagement() {
                     onClick={() => handleSort('name')}
                   >
                     <div className='flex items-center gap-2'>
-                      Họ tên
+                      Thông tin
                       <ArrowUpDown className='w-4 h-4' />
                       {sortBy === 'name' && (
                         <span className='text-xs'>
@@ -229,12 +317,13 @@ export function StudentManagement() {
                       )}
                     </div>
                   </TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead
                     className='cursor-pointer'
                     onClick={() => handleSort('class')}
                   >
                     <div className='flex items-center gap-2'>
-                      Lớp
+                      Mã lớp
                       <ArrowUpDown className='w-4 h-4' />
                       {sortBy === 'class' && (
                         <span className='text-xs'>
@@ -243,8 +332,7 @@ export function StudentManagement() {
                       )}
                     </div>
                   </TableHead>
-                  <TableHead>Ngành</TableHead>
-                  <TableHead>Nhóm</TableHead>
+                  <TableHead>Trạng thái</TableHead>
                   <TableHead className='text-right'>Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
@@ -252,14 +340,26 @@ export function StudentManagement() {
                 {paginatedData.map(s => (
                   <TableRow key={s.id} className='hover:bg-gray-50'>
                     <TableCell className='font-medium'>{s.mssv}</TableCell>
-                    <TableCell>{s.name}</TableCell>
-                    <TableCell>{s.class}</TableCell>
-                    <TableCell>{s.major}</TableCell>
                     <TableCell>
-                      {s.group ? (
-                        <Badge variant='default'>{s.group}</Badge>
+                      <div className='font-medium'>{s.name}</div>
+                    </TableCell>
+                    <TableCell className='text-sm'>{s.email}</TableCell>
+                    <TableCell>{s.class}</TableCell>
+                    <TableCell>
+                      {s.isEligibleForEXE ? (
+                        <Badge
+                          variant='default'
+                          className='bg-green-100 text-green-800'
+                        >
+                          Đủ điều kiện
+                        </Badge>
                       ) : (
-                        <Badge variant='outline'>Chưa có nhóm</Badge>
+                        <Badge
+                          variant='secondary'
+                          className='bg-red-100 text-red-800'
+                        >
+                          Không đủ điều kiện
+                        </Badge>
                       )}
                     </TableCell>
                     <TableCell className='text-right'>
@@ -371,6 +471,40 @@ export function StudentManagement() {
                 }
               />
             </div>
+            <div className='flex items-center space-x-2'>
+              <input
+                type='checkbox'
+                id='isEligibleForEXE'
+                checked={formData.isEligibleForEXE}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    isEligibleForEXE: e.target.checked,
+                  })
+                }
+                className='w-4 h-4'
+              />
+              <Label htmlFor='isEligibleForEXE' className='cursor-pointer'>
+                Đủ điều kiện làm EXE
+              </Label>
+            </div>
+            <div className='flex items-center space-x-2'>
+              <input
+                type='checkbox'
+                id='isDisabled'
+                checked={formData.isDisabled}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    isDisabled: e.target.checked,
+                  })
+                }
+                className='w-4 h-4'
+              />
+              <Label htmlFor='isDisabled' className='cursor-pointer'>
+                Vô hiệu hóa
+              </Label>
+            </div>
           </div>
           <DialogFooter>
             <Button variant='outline' onClick={() => setIsCreateOpen(false)}>
@@ -406,6 +540,16 @@ export function StudentManagement() {
                 }
               />
             </div>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type='email'
+                value={formData.email}
+                onChange={e =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+              />
+            </div>
             <div className='grid grid-cols-2 gap-4'>
               <div>
                 <Label>Lớp</Label>
@@ -434,6 +578,40 @@ export function StudentManagement() {
                   setFormData({ ...formData, group: e.target.value })
                 }
               />
+            </div>
+            <div className='flex items-center space-x-2'>
+              <input
+                type='checkbox'
+                id='isEligibleForEXE-edit'
+                checked={formData.isEligibleForEXE}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    isEligibleForEXE: e.target.checked,
+                  })
+                }
+                className='w-4 h-4'
+              />
+              <Label htmlFor='isEligibleForEXE-edit' className='cursor-pointer'>
+                Đủ điều kiện làm EXE
+              </Label>
+            </div>
+            <div className='flex items-center space-x-2'>
+              <input
+                type='checkbox'
+                id='isDisabled-edit'
+                checked={formData.isDisabled}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    isDisabled: e.target.checked,
+                  })
+                }
+                className='w-4 h-4'
+              />
+              <Label htmlFor='isDisabled-edit' className='cursor-pointer'>
+                Vô hiệu hóa
+              </Label>
             </div>
           </div>
           <DialogFooter>
@@ -490,6 +668,12 @@ export function StudentManagement() {
                   </p>
                 </div>
               </div>
+              <div>
+                <Label className='text-text-secondary'>Email</Label>
+                <p className='text-text-title font-medium mt-1'>
+                  {selectedStudent.email}
+                </p>
+              </div>
               <div className='grid grid-cols-2 gap-4'>
                 <div>
                   <Label className='text-text-secondary'>Lớp</Label>
@@ -509,6 +693,33 @@ export function StudentManagement() {
                 <p className='text-text-title font-medium mt-1'>
                   {selectedStudent.group || 'Chưa có nhóm'}
                 </p>
+              </div>
+              <div>
+                <Label className='text-text-secondary'>Điều kiện EXE</Label>
+                <div className='mt-2'>
+                  {selectedStudent.isDisabled ? (
+                    <Badge
+                      variant='outline'
+                      className='bg-gray-100 text-gray-600'
+                    >
+                      Vô hiệu hóa
+                    </Badge>
+                  ) : selectedStudent.isEligibleForEXE ? (
+                    <Badge
+                      variant='default'
+                      className='bg-green-100 text-green-800'
+                    >
+                      Đủ điều kiện
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant='secondary'
+                      className='bg-red-100 text-red-800'
+                    >
+                      Không đủ điều kiện
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
           )}

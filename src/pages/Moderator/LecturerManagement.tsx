@@ -44,14 +44,17 @@ import {
   Search,
   X,
   ArrowUpDown,
+  Download,
+  User,
 } from 'lucide-react';
 import { mockLecturers, type Lecturer } from './mockData';
 import { useTableFeatures } from '@/hooks/useTableFeatures';
+import { Badge } from '@/components/ui/badge';
 
 export function LecturerManagement() {
   const [lecturers, setLecturers] = useState(mockLecturers);
-  const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [classFilter, setClassFilter] = useState<string>('all'); // Filter theo lớp
+  const [statusFilter, setStatusFilter] = useState<string>('all'); // Filter theo trạng thái
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
@@ -63,15 +66,27 @@ export function LecturerManagement() {
     email: '',
     quota: 0,
     currentGroups: 0,
+    classCode: '',
+    status: 'ACTIVE' as Lecturer['status'],
   });
 
-  // Filter by availability
-  const filteredData =
-    availabilityFilter === 'all'
-      ? lecturers
-      : availabilityFilter === 'available'
-        ? lecturers.filter(l => l.currentGroups < l.quota)
-        : lecturers.filter(l => l.currentGroups >= l.quota);
+  // Get unique classes for filter
+  const uniqueClasses = Array.from(
+    new Set(lecturers.map(l => l.classCode).filter(Boolean))
+  ).sort();
+
+  // Multi-level filtering
+  let filteredData = lecturers;
+
+  // Filter by class
+  if (classFilter !== 'all') {
+    filteredData = filteredData.filter(l => l.classCode === classFilter);
+  }
+
+  // Filter by status
+  if (statusFilter !== 'all') {
+    filteredData = filteredData.filter(l => l.status === statusFilter);
+  }
 
   const {
     paginatedData,
@@ -94,16 +109,6 @@ export function LecturerManagement() {
     searchFields: ['name', 'email'],
     sortField: 'name',
   });
-
-  const handleCreate = () => {
-    const newLecturer: Lecturer = {
-      id: (lecturers.length + 1).toString(),
-      ...formData,
-    };
-    setLecturers([...lecturers, newLecturer]);
-    setIsCreateOpen(false);
-    setFormData({ name: '', email: '', quota: 0, currentGroups: 0 });
-  };
 
   const handleEdit = () => {
     if (selectedLecturer) {
@@ -134,8 +139,20 @@ export function LecturerManagement() {
       email: lecturer.email,
       quota: lecturer.quota,
       currentGroups: lecturer.currentGroups,
+      classCode: lecturer.classCode || '',
+      status: lecturer.status || 'ACTIVE',
     });
     setIsEditOpen(true);
+  };
+
+  const handleExport = () => {
+    console.log('Export lecturers to Excel');
+    // TODO: Implement Excel export
+  };
+
+  const handleImport = () => {
+    console.log('Import lecturers from Excel');
+    // TODO: Implement Excel import
   };
 
   return (
@@ -146,13 +163,19 @@ export function LecturerManagement() {
             Quản lý Giảng viên
           </h1>
           <p className='text-text-body mt-2'>
-            Danh sách giảng viên và định mức nhóm
+            Quản lý giảng viên thông tin ({totalItems} giảng viên)
           </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className='w-4 h-4 mr-2' />
-          Thêm Giảng viên
-        </Button>
+        <div className='flex gap-3'>
+          <Button variant='outline' onClick={handleExport}>
+            <Download className='w-4 h-4 mr-2' />
+            Tải file
+          </Button>
+          <Button onClick={handleImport}>
+            <Plus className='w-4 h-4 mr-2' />
+            Thêm giảng viên (.xlsx)
+          </Button>
+        </div>
       </div>
 
       <Card className='shadow-lg border border-gray-200'>
@@ -167,7 +190,7 @@ export function LecturerManagement() {
             <div className='flex-1 relative'>
               <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
               <Input
-                placeholder='Tìm kiếm theo tên, email...'
+                placeholder='Tìm kiếm giảng viên theo tên, email hoặc mã lớp...'
                 value={searchQuery}
                 onChange={e => handleSearch(e.target.value)}
                 className='pl-10 pr-10'
@@ -182,17 +205,28 @@ export function LecturerManagement() {
               )}
             </div>
 
-            <Select
-              value={availabilityFilter}
-              onValueChange={setAvailabilityFilter}
-            >
-              <SelectTrigger className='w-[200px]'>
-                <SelectValue placeholder='Khả dụng' />
+            <Select value={classFilter} onValueChange={setClassFilter}>
+              <SelectTrigger className='w-[180px]'>
+                <SelectValue placeholder='Tất cả lớp' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Tất cả lớp</SelectItem>
+                {uniqueClasses.map(cls => (
+                  <SelectItem key={cls} value={cls || ''}>
+                    {cls}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className='w-[180px]'>
+                <SelectValue placeholder='Tất cả trạng thái' />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value='all'>Tất cả</SelectItem>
-                <SelectItem value='available'>Còn slot</SelectItem>
-                <SelectItem value='full'>Đã đủ</SelectItem>
+                <SelectItem value='ACTIVE'>ACTIVE</SelectItem>
+                <SelectItem value='INACTIVE'>INACTIVE</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -201,12 +235,13 @@ export function LecturerManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className='w-[60px]'>Avatar</TableHead>
                   <TableHead
                     className='cursor-pointer'
                     onClick={() => handleSort('name')}
                   >
                     <div className='flex items-center gap-2'>
-                      Tên giảng viên
+                      Thông tin giảng viên
                       <ArrowUpDown className='w-4 h-4' />
                       {sortBy === 'name' && (
                         <span className='text-xs'>
@@ -229,31 +264,47 @@ export function LecturerManagement() {
                       )}
                     </div>
                   </TableHead>
-                  <TableHead
-                    className='cursor-pointer'
-                    onClick={() => handleSort('quota')}
-                  >
-                    <div className='flex items-center gap-2'>
-                      Định mức
-                      <ArrowUpDown className='w-4 h-4' />
-                      {sortBy === 'quota' && (
-                        <span className='text-xs'>
-                          {sortOrder === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead>Nhóm hiện tại</TableHead>
+                  <TableHead>Mã lớp</TableHead>
+                  <TableHead>Trạng thái</TableHead>
                   <TableHead className='text-right'>Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedData.map(l => (
                   <TableRow key={l.id} className='hover:bg-gray-50'>
-                    <TableCell className='font-medium'>{l.name}</TableCell>
-                    <TableCell>{l.email}</TableCell>
-                    <TableCell>{l.quota} nhóm</TableCell>
-                    <TableCell>{l.currentGroups} nhóm</TableCell>
+                    <TableCell>
+                      <div className='w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center'>
+                        <User className='w-5 h-5 text-gray-600' />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className='font-medium'>{l.name}</div>
+                        <div className='text-sm text-gray-500'>ID: {l.id}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className='text-sm'>{l.email}</TableCell>
+                    <TableCell>
+                      {l.classCode && (
+                        <Badge className='bg-green-100 text-green-800'>
+                          {l.classCode}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {l.status === 'ACTIVE' ? (
+                        <Badge className='bg-green-100 text-green-800'>
+                          ACTIVE
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant='secondary'
+                          className='bg-gray-100 text-gray-600'
+                        >
+                          INACTIVE
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell className='text-right'>
                       <div className='flex justify-end gap-2'>
                         <Button
@@ -303,72 +354,6 @@ export function LecturerManagement() {
           />
         </CardContent>
       </Card>
-
-      {/* Create Dialog */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Thêm Giảng viên mới</DialogTitle>
-          </DialogHeader>
-          <div className='space-y-4 py-4'>
-            <div>
-              <Label>Tên giảng viên</Label>
-              <Input
-                placeholder='Họ và tên'
-                value={formData.name}
-                onChange={e =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>Email</Label>
-              <Input
-                type='email'
-                placeholder='email@fpt.edu.vn'
-                value={formData.email}
-                onChange={e =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-            </div>
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <Label>Định mức (nhóm)</Label>
-                <Input
-                  type='number'
-                  value={formData.quota}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      quota: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Nhóm hiện tại</Label>
-                <Input
-                  type='number'
-                  value={formData.currentGroups}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      currentGroups: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant='outline' onClick={() => setIsCreateOpen(false)}>
-              Hủy
-            </Button>
-            <Button onClick={handleCreate}>Tạo mới</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
@@ -422,6 +407,35 @@ export function LecturerManagement() {
                     })
                   }
                 />
+              </div>
+            </div>
+            <div className='grid grid-cols-2 gap-4'>
+              <div>
+                <Label>Mã lớp</Label>
+                <Input
+                  placeholder='VD: SE102'
+                  value={formData.classCode || ''}
+                  onChange={e =>
+                    setFormData({ ...formData, classCode: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Trạng thái</Label>
+                <Select
+                  value={formData.status || 'ACTIVE'}
+                  onValueChange={(value: 'ACTIVE' | 'INACTIVE') =>
+                    setFormData({ ...formData, status: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='ACTIVE'>ACTIVE</SelectItem>
+                    <SelectItem value='INACTIVE'>INACTIVE</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -491,8 +505,36 @@ export function LecturerManagement() {
                   </p>
                 </div>
               </div>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label className='text-text-secondary'>Mã lớp</Label>
+                  <div className='mt-1'>
+                    {selectedLecturer.classCode ? (
+                      <Badge className='bg-green-100 text-green-800'>
+                        {selectedLecturer.classCode}
+                      </Badge>
+                    ) : (
+                      <p className='text-text-secondary text-sm'>Chưa có</p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <Label className='text-text-secondary'>Trạng thái</Label>
+                  <div className='mt-1'>
+                    <Badge
+                      className={
+                        selectedLecturer.status === 'ACTIVE'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }
+                    >
+                      {selectedLecturer.status || 'ACTIVE'}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
               <div>
-                <Label className='text-text-secondary'>Trạng thái</Label>
+                <Label className='text-text-secondary'>Tình trạng slot</Label>
                 <p className='text-text-title font-medium mt-1'>
                   {selectedLecturer.currentGroups >= selectedLecturer.quota
                     ? '🔴 Đã đủ định mức'
