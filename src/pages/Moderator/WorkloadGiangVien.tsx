@@ -1,185 +1,146 @@
-import React from 'react';
-import { Card, Table, Tag, Progress, Row, Col, Statistic } from 'antd';
-import {
-  TeamOutlined,
-  UserAddOutlined,
-  UserDeleteOutlined,
-  SolutionOutlined,
-} from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import { mockLecturerWorkload, type LecturerWorkload } from './mockData';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { mockLecturerWorkload } from './mockData';
 
-const WorkloadGiangVien: React.FC = () => {
+export default function WorkloadGiangVien() {
   const totalLecturers = mockLecturerWorkload.length;
-  const teamQuinled = mockLecturerWorkload.filter(
+  const available = mockLecturerWorkload.filter(
     l => l.status === 'available'
   ).length;
-  const conSlot = mockLecturerWorkload.filter(
+  const limited = mockLecturerWorkload.filter(
     l => l.status === 'limited'
   ).length;
-  const userQuinled = mockLecturerWorkload.filter(
-    l => l.current === l.quota
-  ).length;
-
-  const columns: ColumnsType<LecturerWorkload> = [
-    {
-      title: 'Giảng viên',
-      dataIndex: 'name',
-      key: 'name',
-      render: text => <span style={{ fontWeight: 'bold' }}>{text}</span>,
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-    },
-    {
-      title: 'Quota (Hạn ngạch)',
-      dataIndex: 'quota',
-      key: 'quota',
-      align: 'center',
-    },
-    {
-      title: 'Hiện tại',
-      dataIndex: 'current',
-      key: 'current',
-      align: 'center',
-    },
-    {
-      title: 'Còn trống',
-      dataIndex: 'available',
-      key: 'available',
-      align: 'center',
-      render: available => (
-        <span
-          style={{
-            fontWeight: 'bold',
-            color: available > 0 ? '#52c41a' : '#ff4d4f',
-          }}
-        >
-          {available}
-        </span>
-      ),
-    },
-    {
-      title: 'Tiến độ',
-      key: 'progress',
-      render: (_, record) => {
-        const percent = (record.current / record.quota) * 100;
-        let status: 'normal' | 'active' | 'success' | 'exception' = 'normal';
-        if (percent >= 100) status = 'exception';
-        else if (percent >= 75) status = 'active';
-        else if (percent >= 50) status = 'normal';
-        else status = 'success';
-
-        return (
-          <Progress
-            percent={Math.round(percent)}
-            status={status}
-            strokeColor={
-              percent >= 100
-                ? '#ff4d4f'
-                : percent >= 75
-                  ? '#fa8c16'
-                  : percent >= 50
-                    ? '#1890ff'
-                    : '#52c41a'
-            }
-          />
-        );
-      },
-      width: 200,
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => {
-        const config = {
-          available: { color: 'green', text: 'Còn slot' },
-          limited: { color: 'orange', text: 'Gần đầy' },
-          full: { color: 'red', text: 'Đã đầy' },
-        };
-        const { color, text } =
-          config[status as keyof typeof config] || config.available;
-        return <Tag color={color}>{text}</Tag>;
-      },
-    },
-  ];
+  const full = mockLecturerWorkload.filter(l => l.current === l.quota).length;
 
   return (
-    <div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>
+    <div className='space-y-6'>
+      <div>
+        <h1 className='text-2xl font-bold text-gray-900'>
           Workload Giảng viên
         </h1>
-        <p style={{ color: '#666', marginTop: '8px' }}>
+        <p className='text-gray-600'>
           Phân tích và theo dõi tải hạn ngạch của giảng viên
         </p>
       </div>
 
-      {/* Statistics Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title='Tổng số GV'
-              value={totalLecturers}
-              prefix={<TeamOutlined style={{ color: '#1890ff' }} />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title='GV đã đầy'
-              value={teamQuinled}
-              prefix={<UserAddOutlined style={{ color: '#fa8c16' }} />}
-              valueStyle={{ color: '#fa8c16' }}
-              suffix='còn slot'
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title='GV còn slot'
-              value={conSlot}
-              prefix={<SolutionOutlined style={{ color: '#52c41a' }} />}
-              valueStyle={{ color: '#52c41a' }}
-              suffix='SolutionInited'
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title='Tổng wận đăng dạy'
-              value={userQuinled}
-              prefix={<UserDeleteOutlined style={{ color: '#722ed1' }} />}
-              valueStyle={{ color: '#722ed1' }}
-              suffix='UserQuinled'
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+        <Card>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-sm font-medium text-gray-600'>
+              Tổng số GV
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold text-blue-600'>
+              {totalLecturers}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Main Table */}
-      <Card style={{ borderRadius: '12px' }}>
-        <Table
-          columns={columns}
-          dataSource={mockLecturerWorkload}
-          rowKey='id'
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: total => `Tổng ${total} giảng viên`,
-          }}
-        />
+        <Card>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-sm font-medium text-gray-600'>
+              GV còn slot
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold text-green-600'>{available}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-sm font-medium text-gray-600'>
+              GV gần đầy
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold text-orange-600'>{limited}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-sm font-medium text-gray-600'>
+              GV đã đầy
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold text-red-600'>{full}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Danh sách Giảng viên</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className='space-y-4'>
+            {mockLecturerWorkload.map(lecturer => {
+              const percent = (lecturer.current / lecturer.quota) * 100;
+              return (
+                <div
+                  key={lecturer.id}
+                  className='flex items-center justify-between p-4 border rounded-lg'
+                >
+                  <div className='flex-1'>
+                    <div className='font-semibold'>{lecturer.name}</div>
+                    <div className='text-sm text-gray-500'>
+                      {lecturer.email}
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <div className='text-center'>
+                      <div className='text-xs text-gray-500'>Hiện tại</div>
+                      <div className='font-semibold'>{lecturer.current}</div>
+                    </div>
+                    <div className='text-center'>
+                      <div className='text-xs text-gray-500'>Quota</div>
+                      <div className='font-semibold'>{lecturer.quota}</div>
+                    </div>
+                    <div className='w-32'>
+                      <div className='text-xs text-gray-500 mb-1'>
+                        {Math.round(percent)}%
+                      </div>
+                      <div className='w-full bg-gray-200 rounded-full h-2'>
+                        <div
+                          className={`h-2 rounded-full ${
+                            percent >= 100
+                              ? 'bg-red-500'
+                              : percent >= 75
+                                ? 'bg-orange-500'
+                                : percent >= 50
+                                  ? 'bg-blue-500'
+                                  : 'bg-green-500'
+                          }`}
+                          style={{ width: `${Math.min(percent, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          lecturer.status === 'available'
+                            ? 'bg-green-100 text-green-800'
+                            : lecturer.status === 'limited'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {lecturer.status === 'available'
+                          ? 'Còn slot'
+                          : lecturer.status === 'limited'
+                            ? 'Gần đầy'
+                            : 'Đã đầy'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
       </Card>
     </div>
   );
-};
-
-export default WorkloadGiangVien;
+}

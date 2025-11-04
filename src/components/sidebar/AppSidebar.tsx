@@ -76,28 +76,43 @@ const menuData: Record<'ADMIN' | 'MODERATOR', MenuItem[]> = {
   MODERATOR: [
     {
       title: 'Dashboard',
-      url: '/moderator/dashboard',
+      url: ROUTES.MODERATOR.DASHBOARD,
       icon: IconLayoutDashboard,
     },
     {
-      title: 'Nhóm sinh viên',
-      url: '/moderator/groups',
+      title: 'Workload Giảng viên',
+      url: ROUTES.MODERATOR.WORKLOAD,
+      icon: IconBarChart,
+    },
+    {
+      title: 'Tổng quan Nhóm',
+      url: ROUTES.MODERATOR.GROUPS,
       icon: IconUsers,
     },
     {
-      title: 'Diễn đàn',
-      url: '/moderator/forums',
-      icon: IconList,
-    },
-    {
-      title: 'Danh sách sinh viên',
-      url: '/moderator/students',
+      title: 'Quản lý Kỳ học',
+      url: ROUTES.MODERATOR.SEMESTERS,
       icon: IconDatabase,
     },
     {
-      title: 'Danh sách giảng viên',
-      url: '/moderator/lecturers',
+      title: 'Template Nhóm',
+      url: ROUTES.MODERATOR.TEMPLATES,
+      icon: IconList,
+    },
+    {
+      title: 'Giảng viên',
+      url: ROUTES.MODERATOR.LECTURERS,
       icon: IconClipboardList,
+    },
+    {
+      title: 'Sinh viên',
+      url: ROUTES.MODERATOR.STUDENTS,
+      icon: IconUsers,
+    },
+    {
+      title: 'Lớp học',
+      url: ROUTES.MODERATOR.COURSES,
+      icon: IconDatabase,
     },
   ],
 };
@@ -133,7 +148,7 @@ export function AppSidebar({
                 to={
                   userRole === 'ADMIN'
                     ? ROUTES.ADMIN.ROOT
-                    : '/moderator/dashboard'
+                    : ROUTES.MODERATOR.ROOT
                 }
               >
                 <span className='flex items-end justify-center gap-2'>
