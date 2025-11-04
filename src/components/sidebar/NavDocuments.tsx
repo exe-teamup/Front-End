@@ -19,12 +19,18 @@ interface NavDocumentsProps {
 }
 
 export function NavDocuments({ items }: NavDocumentsProps) {
+  // Tách Dashboard ra khỏi danh sách clickable items
+  const dashboardItem = items.find(item => item.title === 'Dashboard');
+  const menuItems = items.filter(item => item.title !== 'Dashboard');
+
   return (
     <SidebarGroup className='group-data-[collapsible=icon]:hidden'>
-      <SidebarGroupLabel>Quản lý</SidebarGroupLabel>
+      <SidebarGroupLabel>
+        {dashboardItem ? dashboardItem.title : 'Quản lý'}
+      </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map(item => {
+          {menuItems.map(item => {
             const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.title}>
