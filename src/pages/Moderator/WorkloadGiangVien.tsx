@@ -1,139 +1,226 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Users,
+  UserCheck,
+  AlertTriangle,
+  XCircle,
+  Edit,
+  ArrowUpDown,
+} from 'lucide-react';
 import { mockLecturerWorkload } from './mockData';
 
 export function WorkloadGiangVien() {
-  const totalLecturers = mockLecturerWorkload.length;
-  const available = mockLecturerWorkload.filter(
-    l => l.status === 'available'
-  ).length;
-  const limited = mockLecturerWorkload.filter(
-    l => l.status === 'limited'
-  ).length;
-  const full = mockLecturerWorkload.filter(l => l.current === l.quota).length;
+  const [lecturers, setLecturers] = useState(mockLecturerWorkload);
+  const [editingLecturer, setEditingLecturer] = useState<
+    (typeof mockLecturerWorkload)[0] | null
+  >(null);
+  const [newQuota, setNewQuota] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'quota'>('name');
+
+  const totalLecturers = lecturers.length;
+  const available = lecturers.filter(l => l.status === 'available').length;
+  const limited = lecturers.filter(l => l.status === 'limited').length;
+  const full = lecturers.filter(l => l.current === l.quota).length;
+
+  const handleEditQuota = (lecturer: (typeof mockLecturerWorkload)[0]) => {
+    setEditingLecturer(lecturer);
+    setNewQuota(lecturer.quota.toString());
+  };
+
+  const handleSaveQuota = () => {
+    if (editingLecturer && newQuota) {
+      const updatedLecturers = lecturers.map(l =>
+        l.id === editingLecturer.id ? { ...l, quota: parseInt(newQuota) } : l
+      );
+      setLecturers(updatedLecturers);
+      setEditingLecturer(null);
+      setNewQuota('');
+    }
+  };
+
+  const handleSort = () => {
+    setSortBy(sortBy === 'name' ? 'quota' : 'name');
+  };
+
+  const sortedLecturers = [...lecturers].sort((a, b) => {
+    if (sortBy === 'name') {
+      return a.name.localeCompare(b.name);
+    }
+    return b.quota - a.quota;
+  });
+
+  const statCards = [
+    {
+      title: 'Tổng số GV',
+      value: totalLecturers,
+      icon: Users,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      gradient: 'from-blue-500 to-blue-600',
+    },
+    {
+      title: 'GV còn slot',
+      value: available,
+      icon: UserCheck,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      gradient: 'from-green-500 to-green-600',
+    },
+    {
+      title: 'GV gần đầy',
+      value: limited,
+      icon: AlertTriangle,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      gradient: 'from-orange-500 to-orange-600',
+    },
+    {
+      title: 'GV đã đầy',
+      value: full,
+      icon: XCircle,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+      gradient: 'from-red-500 to-red-600',
+    },
+  ];
 
   return (
     <div className='space-y-6'>
       <div>
-        <h1 className='text-2xl font-bold text-gray-900'>
+        <h1 className='text-3xl font-bold text-text-title'>
           Workload Giảng viên
         </h1>
-        <p className='text-gray-600'>
+        <p className='text-text-body mt-2'>
           Phân tích và theo dõi tải hạn ngạch của giảng viên
         </p>
       </div>
 
+      {/* Stats Grid */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-        <Card>
-          <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-600'>
-              Tổng số GV
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-blue-600'>
-              {totalLecturers}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-600'>
-              GV còn slot
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-green-600'>{available}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-600'>
-              GV gần đầy
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-orange-600'>{limited}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-600'>
-              GV đã đầy
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-red-600'>{full}</div>
-          </CardContent>
-        </Card>
+        {statCards.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <Card
+              key={index}
+              className='relative overflow-hidden shadow-lg border-0 hover:shadow-xl transition-all duration-300'
+            >
+              <div
+                className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`}
+              />
+              <CardHeader className='pb-3'>
+                <div className='flex items-center justify-between'>
+                  <CardTitle className='text-sm font-medium text-text-body'>
+                    {stat.title}
+                  </CardTitle>
+                  <div className={`${stat.bgColor} p-2 rounded-lg`}>
+                    <Icon className={`h-5 w-5 ${stat.color}`} />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='text-3xl font-bold text-text-title'>
+                  {stat.value}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách Giảng viên</CardTitle>
+      {/* Lecturers List */}
+      <Card className='shadow-lg border border-gray-200'>
+        <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
+          <div className='flex justify-between items-center'>
+            <CardTitle className='text-white'>Danh sách Giảng viên</CardTitle>
+            <Button
+              variant='secondary'
+              size='sm'
+              onClick={handleSort}
+              className='bg-white text-primary hover:bg-gray-100'
+            >
+              <ArrowUpDown className='w-4 h-4 mr-2' />
+              Sắp xếp: {sortBy === 'name' ? 'Tên' : 'Quota'}
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className='pt-6'>
           <div className='space-y-4'>
-            {mockLecturerWorkload.map(lecturer => {
+            {sortedLecturers.map(lecturer => {
               const percent = (lecturer.current / lecturer.quota) * 100;
+              const isOverload = percent >= 100;
+
               return (
                 <div
                   key={lecturer.id}
-                  className='flex items-center justify-between p-4 border rounded-lg'
+                  className='flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors'
                 >
                   <div className='flex-1'>
-                    <div className='font-semibold'>{lecturer.name}</div>
-                    <div className='text-sm text-gray-500'>
+                    <div className='font-semibold text-text-title'>
+                      {lecturer.name}
+                    </div>
+                    <div className='text-sm text-text-body'>
                       {lecturer.email}
                     </div>
                   </div>
-                  <div className='flex items-center gap-4'>
-                    <div className='text-center'>
-                      <div className='text-xs text-gray-500'>Hiện tại</div>
-                      <div className='font-semibold'>{lecturer.current}</div>
-                    </div>
-                    <div className='text-center'>
-                      <div className='text-xs text-gray-500'>Quota</div>
-                      <div className='font-semibold'>{lecturer.quota}</div>
-                    </div>
-                    <div className='w-32'>
-                      <div className='text-xs text-gray-500 mb-1'>
-                        {Math.round(percent)}%
+
+                  <div className='flex items-center gap-6'>
+                    <div className='text-center min-w-[60px]'>
+                      <div className='text-xs text-text-body'>Hiện tại</div>
+                      <div className='font-semibold text-text-title'>
+                        {lecturer.current}
                       </div>
-                      <div className='w-full bg-gray-200 rounded-full h-2'>
+                    </div>
+
+                    <div className='text-center min-w-[60px]'>
+                      <div className='text-xs text-text-body'>Quota</div>
+                      <div className='font-semibold text-text-title'>
+                        {lecturer.quota}
+                      </div>
+                    </div>
+
+                    <div className='min-w-[150px]'>
+                      <div className='flex justify-between items-center mb-1'>
+                        <span className='text-xs text-text-body'>Tỷ lệ</span>
+                        <span
+                          className={`text-xs font-semibold ${
+                            isOverload ? 'text-red-600' : 'text-green-600'
+                          }`}
+                        >
+                          {Math.round(percent)}%
+                        </span>
+                      </div>
+                      <div className='w-full bg-gray-200 rounded-full h-3'>
                         <div
-                          className={`h-2 rounded-full ${
-                            percent >= 100
-                              ? 'bg-red-500'
-                              : percent >= 75
-                                ? 'bg-orange-500'
-                                : percent >= 50
-                                  ? 'bg-blue-500'
-                                  : 'bg-green-500'
+                          className={`h-3 rounded-full transition-all duration-500 ${
+                            isOverload
+                              ? 'bg-gradient-to-r from-red-500 to-red-600'
+                              : 'bg-gradient-to-r from-green-500 to-green-600'
                           }`}
                           style={{ width: `${Math.min(percent, 100)}%` }}
-                        ></div>
+                        />
                       </div>
                     </div>
-                    <div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          lecturer.status === 'available'
-                            ? 'bg-green-100 text-green-800'
-                            : lecturer.status === 'limited'
-                              ? 'bg-orange-100 text-orange-800'
-                              : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {lecturer.status === 'available'
-                          ? 'Còn slot'
-                          : lecturer.status === 'limited'
-                            ? 'Gần đầy'
-                            : 'Đã đầy'}
-                      </span>
-                    </div>
+
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleEditQuota(lecturer)}
+                      className='min-w-[100px]'
+                    >
+                      <Edit className='w-4 h-4 mr-2' />
+                      Sửa quota
+                    </Button>
                   </div>
                 </div>
               );
@@ -141,6 +228,40 @@ export function WorkloadGiangVien() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Quota Dialog */}
+      <Dialog
+        open={!!editingLecturer}
+        onOpenChange={() => setEditingLecturer(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chỉnh sửa Quota</DialogTitle>
+          </DialogHeader>
+          <div className='space-y-4 py-4'>
+            <div className='space-y-2'>
+              <Label>Giảng viên</Label>
+              <Input value={editingLecturer?.name || ''} disabled />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='quota'>Quota mới</Label>
+              <Input
+                id='quota'
+                type='number'
+                value={newQuota}
+                onChange={e => setNewQuota(e.target.value)}
+                placeholder='Nhập quota mới'
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setEditingLecturer(null)}>
+              Hủy
+            </Button>
+            <Button onClick={handleSaveQuota}>Lưu thay đổi</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
