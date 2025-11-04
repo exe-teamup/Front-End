@@ -1,17 +1,19 @@
 export type StudentStatus = 'ELIGIBLE' | 'NOT_ELIGIBLE';
 
 export interface Student {
-  studentId: string;
+  courseId: string;
+  userId: string;
+  accountId: string;
   fullName: string;
   email: string;
-  studentCode: string;
+  userCode: string;
   phoneNumber?: string;
   bio?: string;
-  createdAt: string;
+  createdAt?: string;
+  isLeader?: boolean;
+  userStatus: StudentStatus;
   groupId?: string;
   groupName?: string;
   majorId?: string;
   majorName?: string;
-  isLeader?: boolean;
-  studentStatus?: StudentStatus;
 }

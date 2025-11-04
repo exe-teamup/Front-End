@@ -5,18 +5,27 @@ import { ROUTES } from '../../constants/routes';
 import { useAuthStore } from '../../store/auth';
 
 export function Login() {
-  const { signInWithGoogle, status, user, error } = useAuthStore();
+  const { signInWithGoogle, status, user, error, account } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as { from?: string } | null;
 
   useEffect(() => {
-    if (status === 'authenticated' && user) {
-      const from =
-        state?.from && state.from !== ROUTES.LOGIN ? state.from : ROUTES.HOME;
-      navigate(from, { replace: true });
+    if (status === 'authenticated' && user && account) {
+      // check role then navigate to their page
+      if (state?.from) {
+        navigate(state.from, { replace: true });
+      } else {
+        if (account.role === 'ADMIN') {
+          navigate(ROUTES.ADMIN.ROOT, { replace: true });
+        } else if (account.role === 'MODERATOR') {
+          navigate('', { replace: true });
+        } else {
+          navigate(ROUTES.HOME, { replace: true });
+        }
+      }
     }
-  }, [status, user, navigate, state]);
+  }, [status, user, navigate, state, account]);
 
   return (
     <div

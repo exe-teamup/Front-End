@@ -1,24 +1,31 @@
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import { getNewestPosts } from '../../mock/post.mockapi';
-import { PostCard } from '../ui/PostCard';
-import { cn } from '../../utils/cn';
+import type { GroupPost } from '../../types/post';
+import { GroupPostCard } from '../posts/GroupPostCard';
 
 interface LatestPostSectionProps {
   className?: string;
+  posts: GroupPost[];
+  isLoading?: boolean;
+  isError?: boolean;
+  error?: string;
 }
 
-export function LatestPostSection({ className }: LatestPostSectionProps) {
+export function LatestPostSection({
+  className,
+  posts: allPosts,
+  isLoading = false,
+  isError = false,
+  error,
+}: LatestPostSectionProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 6;
 
-  // Get 15 latest posts
-  const recentPosts = getNewestPosts(15);
-
-  // Paginate the recent posts
+  // Paginate the latest posts
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
-  const posts = recentPosts.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(recentPosts.length / postsPerPage);
+  const posts = allPosts.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(allPosts.length / postsPerPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -36,12 +43,36 @@ export function LatestPostSection({ className }: LatestPostSectionProps) {
           </p>
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className='flex justify-center items-center py-12'>
+            <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {isError && (
+          <div className='bg-red-50 border border-red-200 rounded-lg p-4 text-center'>
+            <p className='text-red-600 font-medium'>Không thể tải bài đăng</p>
+            <p className='text-red-500 text-sm mt-1'>{error}</p>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !isError && posts.length === 0 && (
+          <div className='bg-white border border-gray-200 rounded-lg p-8 text-center'>
+            <p className='text-gray-500'>Chưa có bài đăng nào</p>
+          </div>
+        )}
+
         {/* Posts Grid */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8'>
-          {posts.map(post => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
+        {!isLoading && !isError && posts.length > 0 && (
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8'>
+            {posts.map(post => (
+              <GroupPostCard key={post.postId} post={post} />
+            ))}
+          </div>
+        )}
 
         {totalPages > 1 && (
           <div className='flex justify-center items-center gap-2'>
