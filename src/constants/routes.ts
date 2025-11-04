@@ -33,9 +33,17 @@ export const ROUTES = {
     SETTINGS: '/admin/settings',
   },
 
+  // Moderator Routes
   MODERATOR: {
     ROOT: '/moderator',
     DASHBOARD: '/moderator/dashboard',
+    WORKLOAD: '/moderator/workload',
+    GROUPS: '/moderator/groups',
+    SEMESTERS: '/moderator/semesters',
+    TEMPLATES: '/moderator/templates',
+    LECTURERS: '/moderator/lecturers',
+    STUDENTS: '/moderator/students',
+    COURSES: '/moderator/courses',
   },
 
   // Auth Routes
