@@ -1,5 +1,5 @@
-import { ApiClient } from '@/lib/axios';
 import { API_ENDPOINTS } from '@/config/apiEndpoints';
+import { ApiClient } from '@/lib/axios';
 import type { Semester } from '@/types/semester';
 
 export interface CreateSemesterRequest {
@@ -11,8 +11,12 @@ export interface CreateSemesterRequest {
   semesterStatus: 'INACTIVE';
 }
 
-export interface UpdateSemesterRequest extends Partial<CreateSemesterRequest> {
-  semesterId: number;
+export interface UpdateSemesterRequest {
+  semesterCode?: string;
+  semesterName?: string;
+  startDate?: string;
+  endDate?: string;
+  semesterStatus?: 'ACTIVE' | 'INACTIVE' | 'COMPLETED';
 }
 
 export interface SemesterResponse {
