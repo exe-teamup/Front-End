@@ -1,5 +1,32 @@
-﻿import { useState } from 'react';
+﻿import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Pagination } from '@/components/ui/pagination';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -8,52 +35,35 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Pagination } from '@/components/ui/pagination';
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Eye,
-  Search,
-  X,
-  ArrowUpDown,
-} from 'lucide-react';
-import {
-  mockGroupTemplates,
-  mockSemesters,
-  type GroupTemplate,
-} from './mockData';
+import { useGroupTemplates, useSemesters } from '@/hooks';
 import { useTableFeatures } from '@/hooks/useTableFeatures';
+import type { GroupTemplate } from '@/types/groupTemplate';
+import {
+  AlertCircle,
+  ArrowUpDown,
+  Eye,
+  Loader2,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 export function TemplateManagement() {
-  const [templates, setTemplates] = useState(mockGroupTemplates);
+  // Fetch real data using hooks
+  const {
+    templates: apiTemplates,
+    loading,
+    error,
+    createTemplate,
+    updateTemplate,
+    deleteTemplate,
+  } = useGroupTemplates();
+
+  const { semesters } = useSemesters();
+
   const [semesterFilter, setSemesterFilter] = useState<string>('all');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -62,18 +72,18 @@ export function TemplateManagement() {
   const [selectedTemplate, setSelectedTemplate] =
     useState<GroupTemplate | null>(null);
   const [formData, setFormData] = useState({
-    semester: '',
-    minMembers: 0,
-    maxMembers: 0,
-    minMajors: 0,
-    maxLecturers: 0,
+    template: '',
+    minMember: 0,
+    maxMember: 0,
+    minMajor: 0,
   });
 
-  // Filter by semester
-  const filteredData =
-    semesterFilter === 'all'
-      ? templates
-      : templates.filter(t => t.semester === semesterFilter);
+  // Filter by semester/template name
+  const filteredData = useMemo(() => {
+    return semesterFilter === 'all'
+      ? apiTemplates
+      : apiTemplates.filter(t => t.template === semesterFilter);
+  }, [apiTemplates, semesterFilter]);
 
   const {
     paginatedData,
@@ -93,56 +103,56 @@ export function TemplateManagement() {
   } = useTableFeatures({
     data: filteredData,
     itemsPerPage: 10,
-    searchFields: ['semester'],
-    sortField: 'semester',
+    searchFields: ['template'],
+    sortField: 'template',
   });
 
-  const handleCreate = () => {
-    const newTemplate: GroupTemplate = {
-      id: (templates.length + 1).toString(),
-      ...formData,
-    };
-    setTemplates([...templates, newTemplate]);
-    setIsCreateOpen(false);
-    setFormData({
-      semester: '',
-      minMembers: 0,
-      maxMembers: 0,
-      minMajors: 0,
-      maxLecturers: 0,
-    });
-  };
-
-  const handleEdit = () => {
-    if (selectedTemplate) {
-      setTemplates(
-        templates.map(t =>
-          t.id === selectedTemplate.id
-            ? { ...selectedTemplate, ...formData }
-            : t
-        )
-      );
-      setIsEditOpen(false);
-      setSelectedTemplate(null);
+  const handleCreate = async () => {
+    try {
+      await createTemplate(formData);
+      setIsCreateOpen(false);
+      setFormData({
+        template: '',
+        minMember: 0,
+        maxMember: 0,
+        minMajor: 0,
+      });
+    } catch {
+      // Error is handled by the hook with toast
     }
   };
 
-  const handleDelete = () => {
+  const handleEdit = async () => {
     if (selectedTemplate) {
-      setTemplates(templates.filter(t => t.id !== selectedTemplate.id));
-      setIsDeleteOpen(false);
-      setSelectedTemplate(null);
+      try {
+        await updateTemplate(selectedTemplate.id, formData);
+        setIsEditOpen(false);
+        setSelectedTemplate(null);
+      } catch {
+        // Error is handled by the hook with toast
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    if (selectedTemplate) {
+      try {
+        await deleteTemplate(selectedTemplate.id);
+        setIsDeleteOpen(false);
+        setSelectedTemplate(null);
+      } catch {
+        // Error is handled by the hook with toast
+      }
     }
   };
 
   const openEdit = (template: GroupTemplate) => {
     setSelectedTemplate(template);
     setFormData({
-      semester: template.semester,
-      minMembers: template.minMembers,
-      maxMembers: template.maxMembers,
-      minMajors: template.minMajors,
-      maxLecturers: template.maxLecturers,
+      template: template.template || '',
+      minMember: template.minMember,
+      maxMember: template.maxMember,
+      minMajor: template.minMajor,
     });
     setIsEditOpen(true);
   };
@@ -163,6 +173,20 @@ export function TemplateManagement() {
           Thêm Template
         </Button>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <Card className='border-red-200 bg-red-50'>
+          <CardContent className='pt-6'>
+            <div className='flex items-center gap-2 text-red-800'>
+              <AlertCircle className='h-5 w-5' />
+              <p className='font-medium'>
+                {error || 'Có lỗi xảy ra khi tải dữ liệu'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className='shadow-lg border border-gray-200'>
         <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
@@ -197,84 +221,97 @@ export function TemplateManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value='all'>Tất cả kỳ</SelectItem>
-                {mockSemesters.map(s => (
-                  <SelectItem key={s.id} value={s.name}>
-                    {s.name}
+                {semesters.map(s => (
+                  <SelectItem
+                    key={s.semesterId}
+                    value={s.semesterName || s.semesterCode}
+                  >
+                    {s.semesterName || s.semesterCode}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className='rounded-md border'>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead
-                    className='cursor-pointer'
-                    onClick={() => handleSort('semester')}
-                  >
-                    <div className='flex items-center gap-2'>
-                      Kỳ học
-                      <ArrowUpDown className='w-4 h-4' />
-                      {sortBy === 'semester' && (
-                        <span className='text-xs'>
-                          {sortOrder === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead>Số thành viên</TableHead>
-                  <TableHead>Số ngành tối thiểu</TableHead>
-                  <TableHead>Số GV tối đa</TableHead>
-                  <TableHead className='text-right'>Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedData.map(t => (
-                  <TableRow key={t.id} className='hover:bg-gray-50'>
-                    <TableCell className='font-medium'>{t.semester}</TableCell>
-                    <TableCell>
-                      {t.minMembers} - {t.maxMembers} thành viên
-                    </TableCell>
-                    <TableCell>{t.minMajors} ngành</TableCell>
-                    <TableCell>{t.maxLecturers} GV</TableCell>
-                    <TableCell className='text-right'>
-                      <div className='flex justify-end gap-2'>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => {
-                            setSelectedTemplate(t);
-                            setIsViewOpen(true);
-                          }}
-                        >
-                          <Eye className='w-4 h-4' />
-                        </Button>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => openEdit(t)}
-                        >
-                          <Pencil className='w-4 h-4' />
-                        </Button>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => {
-                            setSelectedTemplate(t);
-                            setIsDeleteOpen(true);
-                          }}
-                        >
-                          <Trash2 className='w-4 h-4 text-red-600' />
-                        </Button>
+          {/* Loading State */}
+          {loading && (
+            <div className='flex justify-center items-center py-8 mb-6'>
+              <Loader2 className='w-8 h-8 animate-spin text-primary' />
+              <span className='ml-2 text-text-body'>Đang tải dữ liệu...</span>
+            </div>
+          )}
+
+          {!loading && (
+            <div className='rounded-md border'>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead
+                      className='cursor-pointer'
+                      onClick={() => handleSort('template')}
+                    >
+                      <div className='flex items-center gap-2'>
+                        Kỳ học / Template
+                        <ArrowUpDown className='w-4 h-4' />
+                        {sortBy === 'template' && (
+                          <span className='text-xs'>
+                            {sortOrder === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
                       </div>
-                    </TableCell>
+                    </TableHead>
+                    <TableHead>Số thành viên</TableHead>
+                    <TableHead>Số ngành tối thiểu</TableHead>
+                    <TableHead className='text-right'>Thao tác</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData.map(t => (
+                    <TableRow key={t.id} className='hover:bg-gray-50'>
+                      <TableCell className='font-medium'>
+                        {t.template || 'Chưa đặt tên'}
+                      </TableCell>
+                      <TableCell>
+                        {t.minMember} - {t.maxMember} thành viên
+                      </TableCell>
+                      <TableCell>{t.minMajor} ngành</TableCell>
+                      <TableCell className='text-right'>
+                        <div className='flex justify-end gap-2'>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => {
+                              setSelectedTemplate(t);
+                              setIsViewOpen(true);
+                            }}
+                          >
+                            <Eye className='w-4 h-4' />
+                          </Button>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => openEdit(t)}
+                          >
+                            <Pencil className='w-4 h-4' />
+                          </Button>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => {
+                              setSelectedTemplate(t);
+                              setIsDeleteOpen(true);
+                            }}
+                          >
+                            <Trash2 className='w-4 h-4 text-red-600' />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
           {/* Pagination */}
           <Pagination
@@ -297,33 +334,25 @@ export function TemplateManagement() {
           </DialogHeader>
           <div className='space-y-4 py-4'>
             <div>
-              <Label>Kỳ học</Label>
-              <Select
-                value={formData.semester}
-                onValueChange={v => setFormData({ ...formData, semester: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Chọn kỳ học' />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockSemesters.map(s => (
-                    <SelectItem key={s.id} value={s.name}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Tên Template (Kỳ học)</Label>
+              <Input
+                value={formData.template}
+                onChange={e =>
+                  setFormData({ ...formData, template: e.target.value })
+                }
+                placeholder='Ví dụ: Y Tế, Fall 2024'
+              />
             </div>
             <div className='grid grid-cols-2 gap-4'>
               <div>
                 <Label>Số thành viên tối thiểu</Label>
                 <Input
                   type='number'
-                  value={formData.minMembers}
+                  value={formData.minMember}
                   onChange={e =>
                     setFormData({
                       ...formData,
-                      minMembers: parseInt(e.target.value) || 0,
+                      minMember: Number.parseInt(e.target.value) || 0,
                     })
                   }
                 />
@@ -332,43 +361,28 @@ export function TemplateManagement() {
                 <Label>Số thành viên tối đa</Label>
                 <Input
                   type='number'
-                  value={formData.maxMembers}
+                  value={formData.maxMember}
                   onChange={e =>
                     setFormData({
                       ...formData,
-                      maxMembers: parseInt(e.target.value) || 0,
+                      maxMember: Number.parseInt(e.target.value) || 0,
                     })
                   }
                 />
               </div>
             </div>
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <Label>Số ngành tối thiểu</Label>
-                <Input
-                  type='number'
-                  value={formData.minMajors}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      minMajors: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Số GV tối đa</Label>
-                <Input
-                  type='number'
-                  value={formData.maxLecturers}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      maxLecturers: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
+            <div>
+              <Label>Số ngành tối thiểu</Label>
+              <Input
+                type='number'
+                value={formData.minMajor}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    minMajor: Number.parseInt(e.target.value) || 0,
+                  })
+                }
+              />
             </div>
           </div>
           <DialogFooter>
@@ -388,33 +402,25 @@ export function TemplateManagement() {
           </DialogHeader>
           <div className='space-y-4 py-4'>
             <div>
-              <Label>Kỳ học</Label>
-              <Select
-                value={formData.semester}
-                onValueChange={v => setFormData({ ...formData, semester: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockSemesters.map(s => (
-                    <SelectItem key={s.id} value={s.name}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Tên Template (Kỳ học)</Label>
+              <Input
+                value={formData.template}
+                onChange={e =>
+                  setFormData({ ...formData, template: e.target.value })
+                }
+                placeholder='Ví dụ: Y Tế, Fall 2024'
+              />
             </div>
             <div className='grid grid-cols-2 gap-4'>
               <div>
                 <Label>Số thành viên tối thiểu</Label>
                 <Input
                   type='number'
-                  value={formData.minMembers}
+                  value={formData.minMember}
                   onChange={e =>
                     setFormData({
                       ...formData,
-                      minMembers: parseInt(e.target.value) || 0,
+                      minMember: Number.parseInt(e.target.value) || 0,
                     })
                   }
                 />
@@ -423,43 +429,28 @@ export function TemplateManagement() {
                 <Label>Số thành viên tối đa</Label>
                 <Input
                   type='number'
-                  value={formData.maxMembers}
+                  value={formData.maxMember}
                   onChange={e =>
                     setFormData({
                       ...formData,
-                      maxMembers: parseInt(e.target.value) || 0,
+                      maxMember: Number.parseInt(e.target.value) || 0,
                     })
                   }
                 />
               </div>
             </div>
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <Label>Số ngành tối thiểu</Label>
-                <Input
-                  type='number'
-                  value={formData.minMajors}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      minMajors: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Số GV tối đa</Label>
-                <Input
-                  type='number'
-                  value={formData.maxLecturers}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      maxLecturers: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
+            <div>
+              <Label>Số ngành tối thiểu</Label>
+              <Input
+                type='number'
+                value={formData.minMajor}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    minMajor: Number.parseInt(e.target.value) || 0,
+                  })
+                }
+              />
             </div>
           </div>
           <DialogFooter>
@@ -477,8 +468,8 @@ export function TemplateManagement() {
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa template của kỳ{' '}
-              <strong>{selectedTemplate?.semester}</strong>? Hành động này không
+              Bạn có chắc chắn muốn xóa template{' '}
+              <strong>{selectedTemplate?.template}</strong>? Hành động này không
               thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -503,9 +494,9 @@ export function TemplateManagement() {
           {selectedTemplate && (
             <div className='space-y-4 py-4'>
               <div>
-                <Label className='text-text-secondary'>Kỳ học</Label>
+                <Label className='text-text-secondary'>Tên Template</Label>
                 <p className='text-text-title font-medium mt-1'>
-                  {selectedTemplate.semester}
+                  {selectedTemplate.template}
                 </p>
               </div>
               <div className='grid grid-cols-2 gap-4'>
@@ -514,7 +505,7 @@ export function TemplateManagement() {
                     Số thành viên tối thiểu
                   </Label>
                   <p className='text-text-title font-medium mt-1'>
-                    {selectedTemplate.minMembers} thành viên
+                    {selectedTemplate.minMember} thành viên
                   </p>
                 </div>
                 <div>
@@ -522,23 +513,17 @@ export function TemplateManagement() {
                     Số thành viên tối đa
                   </Label>
                   <p className='text-text-title font-medium mt-1'>
-                    {selectedTemplate.maxMembers} thành viên
+                    {selectedTemplate.maxMember} thành viên
                   </p>
                 </div>
               </div>
-              <div className='grid grid-cols-2 gap-4'>
+              <div>
                 <div>
                   <Label className='text-text-secondary'>
                     Số ngành tối thiểu
                   </Label>
                   <p className='text-text-title font-medium mt-1'>
-                    {selectedTemplate.minMajors} ngành
-                  </p>
-                </div>
-                <div>
-                  <Label className='text-text-secondary'>Số GV tối đa</Label>
-                  <p className='text-text-title font-medium mt-1'>
-                    {selectedTemplate.maxLecturers} giảng viên
+                    {selectedTemplate.minMajor} ngành
                   </p>
                 </div>
               </div>
