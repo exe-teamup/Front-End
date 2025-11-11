@@ -1,21 +1,3 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +7,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -34,43 +25,47 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  CourseService,
-  type CourseWithDetails,
-} from '@/services/courseService';
-import { SemesterService } from '@/services/semesterService';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   courseSchema,
   type CreateCourseFormData,
 } from '@/schemas/course.schema';
-import { toast } from 'sonner';
+import { CourseService } from '@/services/courseService';
+import { SemesterService } from '@/services/semesterService';
+import type { Course } from '@/types/course';
+import type { Semester } from '@/types/semester';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Plus,
-  Edit,
-  Trash2,
-  FileUp,
   BookOpen,
-  Users,
   Calendar,
-  Search,
   ChevronLeft,
   ChevronRight,
+  Edit,
+  FileUp,
+  Plus,
+  Search,
+  Trash2,
+  Users,
 } from 'lucide-react';
-import type { Semester } from '@/types/semester';
+import { useCallback, useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 export function ClassManagement() {
-  const [classes, setClasses] = useState<CourseWithDetails[]>([]);
+  const [classes, setClasses] = useState<Course[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingClass, setEditingClass] = useState<CourseWithDetails | null>(
-    null
-  );
-  const [showDeleteDialog, setShowDeleteDialog] =
-    useState<CourseWithDetails | null>(null);
+  const [editingClass, setEditingClass] = useState<Course | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState<Course | null>(null);
 
   // Pagination and filters
   const [currentPage, setCurrentPage] = useState(1);
@@ -156,6 +151,7 @@ export function ClassManagement() {
       toast.success('Tạo lớp học thành công');
       setOpenDialog(false);
       reset();
+      await loadClasses();
     } catch {
       toast.error('Lỗi khi tạo lớp học');
     }
@@ -165,11 +161,12 @@ export function ClassManagement() {
     if (!editingClass) return;
 
     try {
-      await CourseService.updateCourse(editingClass.courseId!, data);
+      await CourseService.updateCourse(editingClass.courseId, data);
       toast.success('Cập nhật lớp học thành công');
       setOpenDialog(false);
       setEditingClass(null);
       reset();
+      await loadClasses();
     } catch {
       toast.error('Lỗi khi cập nhật lớp học');
     }
@@ -179,9 +176,10 @@ export function ClassManagement() {
     if (!showDeleteDialog) return;
 
     try {
-      await CourseService.deleteCourse(showDeleteDialog.courseId!);
+      await CourseService.deleteCourse(showDeleteDialog.courseId);
       toast.success('Xóa lớp học thành công');
       setShowDeleteDialog(null);
+      await loadClasses();
     } catch {
       toast.error('Lỗi khi xóa lớp học');
     }
@@ -202,6 +200,7 @@ export function ClassManagement() {
       setUploading(true);
       const importedCourses = await CourseService.importCourses(file);
       toast.success(`Import thành công ${importedCourses.length} lớp học`);
+      await loadClasses();
     } catch {
       toast.error('Lỗi khi import file');
     } finally {
@@ -210,12 +209,12 @@ export function ClassManagement() {
     }
   };
 
-  const openEditDialog = (classItem: CourseWithDetails) => {
+  const openEditDialog = (classItem: Course) => {
     setEditingClass(classItem);
     setValue('semesterId', classItem.semesterId);
-    setValue('lecturerId', classItem.lecturerId || undefined);
+    setValue('lecturerId', classItem.lecturerId);
     setValue('courseCode', classItem.courseCode);
-    setValue('courseName', classItem.courseName || '');
+    setValue('courseName', classItem.courseName);
     setValue('maxGroup', classItem.maxGroup);
     setOpenDialog(true);
   };
@@ -284,7 +283,7 @@ export function ClassManagement() {
                     <Select
                       value={selectedSemester?.toString()}
                       onValueChange={value =>
-                        setValue('semesterId', parseInt(value))
+                        setValue('semesterId', Number.parseInt(value))
                       }
                     >
                       <SelectTrigger>
@@ -392,7 +391,9 @@ export function ClassManagement() {
         <Select
           value={selectedSemester?.toString() || 'all'}
           onValueChange={value =>
-            setSelectedSemester(value === 'all' ? undefined : parseInt(value))
+            setSelectedSemester(
+              value === 'all' ? undefined : Number.parseInt(value)
+            )
           }
         >
           <SelectTrigger className='w-48'>

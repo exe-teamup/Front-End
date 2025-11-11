@@ -1,9 +1,13 @@
 export interface Course {
-  courseId: string;
-  semesterId: string;
-  lecturerId?: string;
-  courseName?: string;
-  courseCode?: string;
-  maxGroup?: number;
-  groupCount?: number;
+  courseId: number;
+  semesterId: number;
+  lecturerId: number;
+  lecturerName: string;
+  courseCode: string;
+  courseName: string;
+  semesterCode: string;
+  maxGroup: number;
+  maxStudents: number;
+  groupCount: number;
+  status: 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'COMPLETED';
 }
