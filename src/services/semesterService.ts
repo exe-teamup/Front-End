@@ -8,7 +8,7 @@ export interface CreateSemesterRequest {
   startDate: string;
   endDate: string;
   // create new semesters as INACTIVE by default
-  semesterStatus: 'INACTIVE';
+  semesterStatus: 'ACTIVE' | 'INACTIVE' | 'COMPLETED';
 }
 
 export interface UpdateSemesterRequest {
