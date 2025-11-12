@@ -32,11 +32,22 @@ export interface GroupRequest {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
+export interface IncomingRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  majorName: string;
+  requestedAt: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
 export interface UserGroupStatus {
   isLeader: boolean;
   hasGroup: boolean;
   currentGroup?: Group;
   pendingRequests: GroupRequest[];
+  incomingRequests: IncomingRequest[];
 }
 
 export const MOCK_GROUPS: Group[] = [
@@ -496,12 +507,61 @@ export const MOCK_GROUP_REQUESTS: GroupRequest[] = [
   },
 ];
 
+export const MOCK_INCOMING_REQUESTS: IncomingRequest[] = [
+  {
+    id: 'incoming-1',
+    studentId: 'student-101',
+    studentName: 'Nguyễn Văn Hoàng',
+    studentEmail: 'nguyenvanhoang@fpt.edu.vn',
+    majorName: 'Công nghệ phần mềm',
+    requestedAt: '2024-03-05T10:30:00Z',
+    status: 'PENDING',
+  },
+  {
+    id: 'incoming-2',
+    studentId: 'student-102',
+    studentName: 'Trần Thị Linh',
+    studentEmail: 'tranthilinh@fpt.edu.vn',
+    majorName: 'Khoa học máy tính',
+    requestedAt: '2024-03-06T14:20:00Z',
+    status: 'PENDING',
+  },
+  {
+    id: 'incoming-3',
+    studentId: 'student-103',
+    studentName: 'Lê Minh Quân',
+    studentEmail: 'leminhquan@fpt.edu.vn',
+    majorName: 'Trí tuệ nhân tạo',
+    requestedAt: '2024-03-07T09:15:00Z',
+    status: 'PENDING',
+  },
+  {
+    id: 'incoming-4',
+    studentId: 'student-104',
+    studentName: 'Phạm Thị Hằng',
+    studentEmail: 'phamthihang@fpt.edu.vn',
+    majorName: 'Khoa học dữ liệu',
+    requestedAt: '2024-03-08T16:45:00Z',
+    status: 'PENDING',
+  },
+  {
+    id: 'incoming-5',
+    studentId: 'student-105',
+    studentName: 'Hoàng Văn Tú',
+    studentEmail: 'hoangvantu@fpt.edu.vn',
+    majorName: 'An toàn thông tin',
+    requestedAt: '2024-03-09T11:30:00Z',
+    status: 'PENDING',
+  },
+];
+
 // Mock current user status
 export const MOCK_USER_GROUP_STATUS: UserGroupStatus = {
-  isLeader: false,
+  isLeader: true,
   hasGroup: true,
   currentGroup: MOCK_GROUPS[0],
   pendingRequests: MOCK_GROUP_REQUESTS,
+  incomingRequests: MOCK_INCOMING_REQUESTS,
 };
 
 // API functions
@@ -537,5 +597,17 @@ export const searchGroups = (query: string, memberFilter?: number): Group[] => {
 export const cancelGroupRequest = (_requestId: string): boolean => {
   // Mock API call - in real app, this would make an API request
   // console.log('Cancelling group request:', requestId);
+  return true;
+};
+
+export const approveJoinRequest = (_requestId: string): boolean => {
+  // Mock API call - in real app, this would make an API request
+  // console.log('Approving join request:', requestId);
+  return true;
+};
+
+export const rejectJoinRequest = (_requestId: string): boolean => {
+  // Mock API call - in real app, this would make an API request
+  // console.log('Rejecting join request:', requestId);
   return true;
 };

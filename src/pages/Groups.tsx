@@ -6,22 +6,31 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import GroupsListTab from '../components/groups/GroupsListTab';
 import MyGroupsTab from '../components/groups/MyGroupsTab';
 import RequestsTab from '../components/groups/RequestsTab';
+import IncomingRequestsTab from '../components/groups/IncomingRequestsTab';
 import { useGroups } from '../hooks/useGroups';
 
-type TabType = 'my-groups' | 'all-groups' | 'requests';
+type TabType = 'my-groups' | 'all-groups' | 'requests' | 'incoming-requests';
 
 export function Groups() {
   const location = useLocation();
   const navigate = useNavigate();
   const [openCreateGroup, setOpenCreateGroup] = useState(false);
 
-  const { isLoading, myGroup, hasGroup, allGroups, pendingRequestsCount } =
-    useGroups();
+  const {
+    isLoading,
+    myGroup,
+    hasGroup,
+    isLeader,
+    allGroups,
+    pendingRequestsCount,
+    incomingRequestsCount,
+  } = useGroups();
 
   const getActiveTabFromPath = useCallback((): TabType => {
     const path = location.pathname;
     if (path === '/groups/my') return 'my-groups';
     if (path === '/groups/request') return 'requests';
+    if (path === '/groups/my/requests') return 'incoming-requests';
     return 'all-groups';
   }, [location.pathname]);
 
@@ -39,6 +48,9 @@ export function Groups() {
         break;
       case 'requests':
         navigate('/groups/request');
+        break;
+      case 'incoming-requests':
+        navigate('/groups/my/requests');
         break;
       case 'all-groups':
       default:
@@ -58,11 +70,26 @@ export function Groups() {
       label: 'Danh sách nhóm',
       count: allGroups.length,
     },
-    {
-      id: 'requests' as TabType,
-      label: 'Yêu cầu tham gia',
-      count: pendingRequestsCount,
-    },
+    // Tab "Yêu cầu tham gia" chỉ hiển thị khi chưa có nhóm
+    ...(!hasGroup
+      ? [
+          {
+            id: 'requests' as TabType,
+            label: 'Yêu cầu tham gia',
+            count: pendingRequestsCount,
+          },
+        ]
+      : []),
+    // Tab "Yêu cầu vào nhóm" chỉ hiển thị khi đã có nhóm
+    ...(hasGroup
+      ? [
+          {
+            id: 'incoming-requests' as TabType,
+            label: 'Yêu cầu vào nhóm',
+            count: incomingRequestsCount,
+          },
+        ]
+      : []),
   ];
   if (isLoading) {
     return (
@@ -117,11 +144,14 @@ export function Groups() {
         </div>
 
         <div className='bg-white rounded-lg shadow-sm'>
-          {activeTab === 'my-groups' && <MyGroupsTab currentGroup={myGroup} />}
+          {activeTab === 'my-groups' && (
+            <MyGroupsTab currentGroup={myGroup} isLeader={isLeader} />
+          )}
           {activeTab === 'all-groups' && (
             <GroupsListTab groups={allGroups} hasGroup={hasGroup} />
           )}
           {activeTab === 'requests' && <RequestsTab />}
+          {activeTab === 'incoming-requests' && <IncomingRequestsTab />}
         </div>
       </div>
 

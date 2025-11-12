@@ -38,7 +38,7 @@ export function CreateTeam() {
         majors: z
           .array(
             z.object({
-              majorId: z.string(),
+              majorId: z.union([z.string(), z.number()]),
               studentNum: z.number().min(1).max(10),
             })
           )
@@ -78,7 +78,8 @@ export function CreateTeam() {
       );
     } else {
       // Add major with default quantity of 1
-      setValue('majors', [...majors, { majorId, studentNum: 1 }], {
+      const newMajors = [...majors, { majorId, studentNum: 1 }];
+      setValue('majors', newMajors, {
         shouldValidate: true,
       });
     }
@@ -135,11 +136,12 @@ export function CreateTeam() {
       setTimeout(() => {
         navigate('/posts');
       }, 1000);
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Không thể tạo bài đăng. Vui lòng thử lại.';
+        error?.response?.data?.message ||
+        error?.message ||
+        'Không thể tạo bài đăng. Vui lòng thử lại.';
       toast.error(message);
       setOpenSubmitConfirm(false);
     }
@@ -323,7 +325,6 @@ export function CreateTeam() {
                 type='submit'
                 disabled={isPending}
                 className='flex-1 bg-primary text-white py-2 rounded-lg text-lg cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
-                onClick={() => setOpenSubmitConfirm(true)}
               >
                 {isPending ? 'Đang đăng...' : 'Đăng bài tuyển'}
               </button>

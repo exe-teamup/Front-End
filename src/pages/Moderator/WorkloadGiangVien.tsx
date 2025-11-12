@@ -153,7 +153,7 @@ export function WorkloadGiangVien() {
               className='relative overflow-hidden shadow-lg border-0 hover:shadow-xl transition-all duration-300'
             >
               <div
-                className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`}
+                className={`absolute top-0 left-0 right-0 h-1 bg-linear-to-r ${stat.gradient}`}
               />
               <CardHeader className='pb-3'>
                 <div className='flex items-center justify-between'>
@@ -177,7 +177,7 @@ export function WorkloadGiangVien() {
 
       {/* Lecturers List */}
       <Card className='shadow-lg border border-gray-200'>
-        <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
+        <CardHeader className='bg-linear-to-r from-primary to-gray-100'>
           <div className='flex justify-between items-center'>
             <CardTitle className='text-white'>
               Danh sách Giảng viên ({totalItems})
@@ -276,8 +276,8 @@ export function WorkloadGiangVien() {
                         <div
                           className={`h-3 rounded-full transition-all duration-500 ${
                             isOverload
-                              ? 'bg-gradient-to-r from-red-500 to-red-600'
-                              : 'bg-gradient-to-r from-green-500 to-green-600'
+                              ? 'bg-linear-to-r from-red-500 to-red-600'
+                              : 'bg-linear-to-r from-green-500 to-green-600'
                           }`}
                           style={{ width: `${Math.min(percent, 100)}%` }}
                         />

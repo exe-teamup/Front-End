@@ -71,6 +71,7 @@ export function AppRoutes() {
             { index: true, path: '/groups/my' },
             { index: false, path: '/groups/all' },
             { index: false, path: '/groups/request' },
+            { index: false, path: '/groups/my/requests' },
           ],
         },
         {
