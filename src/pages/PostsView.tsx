@@ -1,16 +1,6 @@
 import { GroupPostCard } from '@/components/posts/GroupPostCard';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { usePosts } from '@/hooks/usePosts';
-import { usePostStore } from '@/store/post';
-import { useStudentProfileStore } from '@/store/studentProfile';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Users, Zap } from 'lucide-react';
+import { usePostsQuery } from '@/hooks/usePostsQuery';
+import type { PostType } from '@/types/post';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -46,35 +36,7 @@ export default function PostsView() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Fetch posts from API using the custom hook
-  const { activePosts, isLoading, isError, error } = usePosts();
-
-  // Modal states
-  const [openCreateModal, setOpenCreateModal] = React.useState(false);
-  const [openUserPostModal, setOpenUserPostModal] = React.useState(false);
-
-  // Store hooks
-  const { profile } = useStudentProfileStore();
-  const { createUserPost, createUserPostStatus, createUserPostError } =
-    usePostStore();
-
-  // Form schema for user post
-  const userPostSchema = z.object({
-    title: z.string().min(3, 'Tối thiểu 3 ký tự').max(80),
-    desc: z.string().min(10, 'Tối thiểu 10 ký tự').max(500),
-  });
-  type UserPostFormValues = z.infer<typeof userPostSchema>;
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<UserPostFormValues>({
-    resolver: zodResolver(userPostSchema),
-    defaultValues: { title: '', desc: '' },
-  });
-
+  // Determine active tab and postType filter based on route
   const initialTab: ViewTab = React.useMemo(() => {
     if (location.pathname.endsWith('/looking')) return 'LOOKING';
     if (location.pathname.endsWith('/recruit')) return 'RECRUIT';
@@ -82,6 +44,27 @@ export default function PostsView() {
   }, [location.pathname]);
 
   const [activeTab, setActiveTab] = React.useState<ViewTab>(initialTab);
+
+  // Map route to postType filter for API
+  const postTypeFilter: PostType | undefined = React.useMemo(() => {
+    if (activeTab === 'RECRUIT') return 'GROUP_POST';
+    if (activeTab === 'LOOKING') return 'USER_POST';
+    return undefined; // ALL - no filter
+  }, [activeTab]);
+
+  // Fetch posts from API using TanStack Query
+  // Updates automatically after create/update/delete mutations
+  const {
+    data: posts = [],
+    isLoading,
+    isError,
+    error,
+  } = usePostsQuery(postTypeFilter);
+
+  // Filter only active posts (exclude trashed/deleted)
+  const activePosts = React.useMemo(() => {
+    return posts.filter(post => post.postStatus === 'ACTIVE');
+  }, [posts]);
   const [time, setTime] = React.useState<TimeFilter>('ALL');
   const [major, setMajor] =
     React.useState<(typeof MAJOR_OPTIONS)[number]>('ALL');
@@ -298,7 +281,9 @@ export default function PostsView() {
                   <p className='text-red-600 font-medium'>
                     Không thể tải bài đăng
                   </p>
-                  <p className='text-red-500 text-sm mt-1'>{error}</p>
+                  <p className='text-red-500 text-sm mt-1'>
+                    {error instanceof Error ? error.message : 'Đã xảy ra lỗi'}
+                  </p>
                 </div>
               )}
 
