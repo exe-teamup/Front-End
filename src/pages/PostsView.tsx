@@ -1,4 +1,16 @@
 import { GroupPostCard } from '@/components/posts/GroupPostCard';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { usePosts } from '@/hooks/usePosts';
+import { usePostStore } from '@/store/post';
+import { useStudentProfileStore } from '@/store/studentProfile';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Plus, Users, Zap } from 'lucide-react';
 import { usePostsQuery } from '@/hooks/usePostsQuery';
 import type { PostType } from '@/types/post';
 import React from 'react';
@@ -35,6 +47,35 @@ const MAJOR_OPTIONS = [
 export default function PostsView() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Fetch posts from API using the custom hook
+  const { activePosts, isLoading, isError, error } = usePosts();
+
+  // Modal states
+  const [openCreateModal, setOpenCreateModal] = React.useState(false);
+  const [openUserPostModal, setOpenUserPostModal] = React.useState(false);
+
+  // Store hooks
+  const { profile } = useStudentProfileStore();
+  const { createUserPost, createUserPostStatus, createUserPostError } =
+    usePostStore();
+
+  // Form schema for user post
+  const userPostSchema = z.object({
+    title: z.string().min(3, 'Tối thiểu 3 ký tự').max(80),
+    desc: z.string().min(10, 'Tối thiểu 10 ký tự').max(500),
+  });
+  type UserPostFormValues = z.infer<typeof userPostSchema>;
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<UserPostFormValues>({
+    resolver: zodResolver(userPostSchema),
+    defaultValues: { title: '', desc: '' },
+  });
 
   // Determine active tab and postType filter based on route
   const initialTab: ViewTab = React.useMemo(() => {

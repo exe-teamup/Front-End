@@ -55,7 +55,7 @@ export const useAuthStore = create<AuthState>()(
               };
               set({ status: 'authenticated', user, error: undefined });
             } catch (error) {
-              console.error('Error fetching ID token:', error);
+              // console.error('Error fetching ID token:', error);
               AuthTokenManager.clearTokens();
               set({
                 status: 'unauthenticated',
