@@ -76,6 +76,18 @@ export const getRandomCoverImage = (userId: string): string => {
   return coverImages[index];
 };
 
+export const getRandomAvatar = (userId: string): string => {
+  const avatars = ['/images/avatar.jpg', '/images/avatar_rcm.jpg'];
+
+  const hash = userId.split('').reduce((a, b) => {
+    a = (a << 5) - a + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+
+  const index = Math.abs(hash) % avatars.length;
+  return avatars[index];
+};
+
 export const MOCK_USER_PROFILE: UserProfile = {
   id: 'user-1',
   fullName: 'Nguyễn Văn An',
