@@ -12,10 +12,11 @@ import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import RelatedGroupsList from '../components/groups/RelatedGroupsList';
-import { getStatusInfo, joinGroup } from '../mock/groupDetail.mockapi';
+import { getStatusInfo } from '../mock/groupDetail.mockapi';
 import { useGroupStore } from '../store/group';
 import { useStudentProfileStore } from '../store/studentProfile';
 import type { Group } from '../types/group';
+import { useJoinRequest } from '@/hooks/usePostsQuery';
 
 export function GroupDetail() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -25,6 +26,7 @@ export function GroupDetail() {
   const navigate = useNavigate();
   const { fetchGroupById, currentGroup } = useGroupStore();
   const { profile } = useStudentProfileStore();
+  const { mutateAsync: sendJoinRequest, isPending } = useJoinRequest();
 
   useEffect(() => {
     if (groupId) {
@@ -69,13 +71,27 @@ export function GroupDetail() {
     setShowCancelDialog(group.groupId);
   };
 
-  const handleConfirmJoinRequest = () => {
-    if (showCancelDialog) {
-      joinGroup(showCancelDialog);
+  const handleConfirmJoinRequest = async () => {
+    if (!showCancelDialog || !profile?.userId) return;
+
+    try {
+      await sendJoinRequest({
+        studentId: Number(profile.userId),
+        groupId: Number(showCancelDialog),
+        requestType: 'STUDENT_REQUEST',
+      });
+
       toast.success(
         'Đã gửi yêu cầu tham gia nhóm. Vui lòng chờ trưởng nhóm phê duyệt.'
       );
       setShowCancelDialog(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Không thể gửi yêu cầu. Vui lòng thử lại.';
+      toast.error(message);
     }
   };
 
@@ -151,9 +167,10 @@ export function GroupDetail() {
                     {!profile?.groupId && (
                       <button
                         onClick={handleJoinRequest}
-                        className='bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 cursor-pointer transition-colors'
+                        disabled={isPending}
+                        className='bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                       >
-                        Tham gia
+                        {isPending ? 'Đang gửi...' : 'Tham gia'}
                       </button>
                     )}
                   </div>

@@ -7,6 +7,7 @@ export interface CreateGroupRequest {
   courseId: string;
   groupName: string;
   studentId: string;
+  groupTemplateId: number;
   memberEmails: string[];
 }
 

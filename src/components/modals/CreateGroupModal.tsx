@@ -16,6 +16,7 @@ import {
 import { useGroupStore } from '@/store/group';
 import { useStudentStore } from '@/store/student';
 import { useStudentProfileStore } from '@/store/studentProfile';
+import { useGroupTemplates } from '@/hooks/useGroupTemplates';
 import type { Student } from '@/types/student';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Search, UserPlus, Users, X } from 'lucide-react';
@@ -31,10 +32,7 @@ interface CreateGroupModalProps {
 
 const schema = z.object({
   groupName: z.string().min(3, 'Tên nhóm phải có ít nhất 3 ký tự').max(50),
-  maxMembers: z
-    .number()
-    .min(4, 'Tối thiểu 4 thành viên')
-    .max(6, 'Tối đa 6 thành viên'),
+  groupTemplateId: z.string().min(1, 'Vui lòng chọn mẫu nhóm'),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -55,6 +53,7 @@ export function CreateGroupModal({
     useStudentStore();
   const { createGroup, createStatus, clearCreateStatus } = useGroupStore();
   const { profile, fetchProfile } = useStudentProfileStore();
+  const { templates, loading: templatesLoading } = useGroupTemplates();
 
   const {
     register,
@@ -66,11 +65,13 @@ export function CreateGroupModal({
     resolver: zodResolver(schema),
     defaultValues: {
       groupName: '',
-      maxMembers: 6,
+      groupTemplateId: '',
     },
   });
 
-  const maxMembers = watch('maxMembers');
+  const selectedTemplateId = watch('groupTemplateId');
+  const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+  const maxMembers = selectedTemplate?.maxMember || 6;
 
   // Debounced search effect
   useEffect(() => {
@@ -209,12 +210,14 @@ export function CreateGroupModal({
     }
 
     const courseId = profile.courseId;
+    const groupTemplateId = watch('groupTemplateId');
 
     try {
       await createGroup({
         courseId,
         groupName: watch('groupName'),
         studentId: profile.userId,
+        groupTemplateId: Number(groupTemplateId),
         memberEmails: selectedMembers.map(m => m.email),
       });
 
@@ -231,12 +234,14 @@ export function CreateGroupModal({
       setAvatarPreview('/images/logo.svg');
       setShowConfirmDialog(false);
       onOpenChange(false);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Có lỗi xảy ra khi tạo nhóm. Vui lòng thử lại.'
-      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      // Extract error message from API
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Có lỗi xảy ra khi tạo nhóm. Vui lòng thử lại.';
+      toast.error(errorMessage);
     }
   };
 
@@ -304,26 +309,39 @@ export function CreateGroupModal({
             )}
           </div>
 
-          {/* Max Members */}
           <div>
             <label
-              htmlFor='max-members'
+              htmlFor='group-template'
               className='block text-sm font-medium text-gray-700 mb-2'
             >
-              Số thành viên tối đa *
+              Chọn mẫu nhóm *
             </label>
             <select
-              id='max-members'
-              {...register('maxMembers', { valueAsNumber: true })}
+              id='group-template'
+              {...register('groupTemplateId')}
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary'
+              disabled={templatesLoading}
             >
-              <option value={4}>4 thành viên</option>
-              <option value={5}>5 thành viên</option>
-              <option value={6}>6 thành viên</option>
+              <option value=''>
+                {templatesLoading ? 'Đang tải...' : 'Chọn mẫu nhóm...'}
+              </option>
+              {templates.map(template => (
+                <option key={template.id} value={template.id}>
+                  ({template.minMember}-{template.maxMember} thành viên, tối
+                  thiểu {template.minMajor} ngành)
+                </option>
+              ))}
             </select>
-            {errors.maxMembers && (
+            {errors.groupTemplateId && (
               <p className='text-sm text-red-600 mt-1'>
-                {errors.maxMembers.message}
+                {errors.groupTemplateId.message}
+              </p>
+            )}
+            {selectedTemplate && (
+              <p className='text-sm text-gray-500 mt-1'>
+                Nhóm này yêu cầu {selectedTemplate.minMember}-
+                {selectedTemplate.maxMember} thành viên và tối thiểu{' '}
+                {selectedTemplate.minMajor} ngành khác nhau
               </p>
             )}
           </div>
@@ -335,7 +353,7 @@ export function CreateGroupModal({
               className='block text-sm font-medium text-gray-700 mb-2'
             >
               Mời thành viên *{' '}
-              <span className='text-red-600'>(ít nhất 1 người)</span>
+              <span className='text-red-600'>(ít nhất 2 người)</span>
             </label>
 
             {/* Selected Members */}

@@ -13,6 +13,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '../Button';
+import { useJoinRequest } from '@/hooks/usePostsQuery';
+import { useStudentProfileStore } from '@/store/studentProfile';
 
 interface GroupCardProps {
   group: Group;
@@ -27,6 +29,8 @@ function GroupCard({
 }: GroupCardProps) {
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState<string | null>(null);
+  const { profile } = useStudentProfileStore();
+  const { mutateAsync: sendJoinRequest } = useJoinRequest();
 
   const handleCopyLink = () => {
     const groupUrl = `${window.location.origin}/groups/${group.groupId}`;
@@ -45,13 +49,27 @@ function GroupCard({
     setShowCancelDialog(groupId);
   };
 
-  const confirmCancelRequest = () => {
-    if (showCancelDialog) {
-      // Call API to cancel request
+  const confirmCancelRequest = async () => {
+    if (!showCancelDialog || !profile?.userId) return;
+
+    try {
+      await sendJoinRequest({
+        studentId: Number(profile.userId),
+        groupId: Number(showCancelDialog),
+        requestType: 'STUDENT_REQUEST',
+      });
+
       toast.success(
-        'Đã gửi yêu cầu tham gia nhóm. Vui long chờ trưởng nhóm phê duyệt.'
+        'Đã gửi yêu cầu tham gia nhóm. Vui lòng chờ trưởng nhóm phê duyệt.'
       );
       setShowCancelDialog(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Không thể gửi yêu cầu. Vui lòng thử lại.';
+      toast.error(message);
     }
   };
 
@@ -81,7 +99,7 @@ function GroupCard({
   };
 
   return (
-    <div className='relative p-6 border-b-1 border-gray-200 transition-shadow'>
+    <div className='relative p-6 border-b border-gray-200 transition-shadow'>
       <div className='flex items-start justify-between'>
         <div className='flex items-start gap-4 flex-1'>
           <img
@@ -111,10 +129,7 @@ function GroupCard({
               </div>
               <div className='flex items-center gap-1'>
                 <User className='w-4 h-4' />
-                <span>
-                  Trưởng nhóm:{' '}
-                  {group.leader.studentName + ' -- Currently leader name'}
-                </span>
+                <span>Trưởng nhóm: {group.leader.studentName}</span>
               </div>
             </div>
           </div>

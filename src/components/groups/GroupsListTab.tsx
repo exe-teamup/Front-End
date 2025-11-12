@@ -1,6 +1,7 @@
 import GroupCard from '@/components/groups/GroupCard';
 import { ChevronLeft, ChevronRight, Filter, Search, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { Group } from '../../types/group';
 
 interface GroupListProps {
@@ -9,18 +10,45 @@ interface GroupListProps {
 }
 
 function GroupsListTab({ groups: allGroups = [], hasGroup }: GroupListProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const urlSearchQuery = searchParams.get('search') || '';
+
+  const [searchQuery, setSearchQuery] = useState(urlSearchQuery);
   const [memberFilter, setMemberFilter] = useState<number | undefined>(
     undefined
   );
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  useEffect(() => {
+    setSearchQuery(urlSearchQuery);
+    setCurrentPage(1);
+  }, [urlSearchQuery]);
+
   const itemsPerPage = 6;
 
-  const totalPages = Math.ceil(allGroups.length / itemsPerPage);
+  const filteredGroups = useMemo(() => {
+    let result = allGroups;
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(group =>
+        group.groupName?.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by member count
+    if (memberFilter !== undefined) {
+      result = result.filter(group => (group.memberCount || 0) < memberFilter);
+    }
+
+    return result;
+  }, [allGroups, searchQuery, memberFilter]);
+
+  const totalPages = Math.ceil(filteredGroups.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const groups = allGroups.slice(startIndex, startIndex + itemsPerPage);
+  const groups = filteredGroups.slice(startIndex, startIndex + itemsPerPage);
 
   const memberFilterOptions = [
     { value: undefined, label: 'Tất cả' },
