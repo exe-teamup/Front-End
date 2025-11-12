@@ -4,11 +4,29 @@ import {
   LatestPostSection,
   PostSection,
 } from '../components/home';
-import { usePosts } from '../hooks/usePosts';
+import { usePostsQuery } from '../hooks/usePostsQuery';
+import { useMemo } from 'react';
 
 export function Home() {
-  // Centralized post fetching - fetch once and pass to children
-  const { latestPosts, hotPosts, isLoading, isError, error } = usePosts();
+  // Centralized post fetching with TanStack Query
+  // Updates automatically after create/update/delete mutations
+  const { data: posts = [], isLoading, isError, error } = usePostsQuery();
+
+  // Filter active posts only
+  const activePosts = useMemo(() => {
+    return posts.filter(post => post.postStatus === 'ACTIVE');
+  }, [posts]);
+
+  // Get latest posts sorted by creation date (newest first)
+  const latestPosts = useMemo(() => {
+    return [...activePosts].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [activePosts]);
+
+  // Hot posts - currently same as latest posts until API provides popularity data
+  const hotPosts = latestPosts;
 
   return (
     <div className='min-h-screen '>
@@ -18,13 +36,13 @@ export function Home() {
           posts={latestPosts}
           isLoading={isLoading}
           isError={isError}
-          error={error}
+          error={error instanceof Error ? error.message : undefined}
         />
         <PostSection
           posts={hotPosts}
           isLoading={isLoading}
           isError={isError}
-          error={error}
+          error={error instanceof Error ? error.message : undefined}
         />
       </div>
       <BlogSection />
