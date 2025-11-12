@@ -10,7 +10,12 @@ import { useMemo } from 'react';
 export function Home() {
   // Centralized post fetching with TanStack Query
   // Updates automatically after create/update/delete mutations
-  const { data: posts = [], isLoading, isError, error } = usePostsQuery();
+  const {
+    data: posts = [],
+    isLoading,
+    isError,
+    error,
+  } = usePostsQuery('GROUP_POST');
 
   // Filter active posts only
   const activePosts = useMemo(() => {
