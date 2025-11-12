@@ -8,6 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
+ENV CI=true
 RUN npm ci --omit=dev
 
 # Copy source code
