@@ -41,6 +41,7 @@ export function GroupPostCard({
       });
 
       toast.success('Đã gửi yêu cầu tham gia nhóm!');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||
