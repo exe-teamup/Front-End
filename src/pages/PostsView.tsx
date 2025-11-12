@@ -6,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { usePosts } from '@/hooks/usePosts';
 import { usePostStore } from '@/store/post';
 import { useStudentProfileStore } from '@/store/studentProfile';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -47,9 +46,6 @@ const MAJOR_OPTIONS = [
 export default function PostsView() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Fetch posts from API using the custom hook
-  const { activePosts, isLoading, isError, error } = usePosts();
 
   // Modal states
   const [openCreateModal, setOpenCreateModal] = React.useState(false);
