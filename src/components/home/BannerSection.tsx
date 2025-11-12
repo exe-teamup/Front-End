@@ -6,8 +6,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useMajors } from '@/hooks';
+import { useCreateUserPost } from '@/hooks/usePostsQuery';
 import { cn } from '@/lib/utils';
-import { usePostStore } from '@/store/post';
 import { useStudentProfileStore } from '@/store/studentProfile';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Zap } from 'lucide-react';
@@ -27,8 +27,7 @@ export function BannerSection({ className }: BannerSectionProps) {
   const [openFindModal, setOpenFindModal] = useState(false);
 
   const { profile } = useStudentProfileStore();
-  const { createUserPost, createUserPostStatus, createUserPostError } =
-    usePostStore();
+  const { mutateAsync: createUserPost, isPending } = useCreateUserPost();
   const { majors: availableMajors } = useMajors();
 
   const schema = z.object({
@@ -83,10 +82,12 @@ export function BannerSection({ className }: BannerSectionProps) {
       setTimeout(() => {
         navigate('/posts');
       }, 1000);
-    } catch {
-      toast.error(
-        createUserPostError || 'Không thể tạo bài đăng. Vui lòng thử lại.'
-      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Không thể tạo bài đăng. Vui lòng thử lại.';
+      toast.error(message);
     }
   };
 
@@ -116,7 +117,7 @@ export function BannerSection({ className }: BannerSectionProps) {
               </div>
 
               <nav className='space-y-1'>
-                {availableMajors.map(major => (
+                {availableMajors.slice(0, 6).map(major => (
                   <button
                     key={major.majorId}
                     onClick={() => handleMajorClick(major.majorId)}
@@ -267,12 +268,10 @@ export function BannerSection({ className }: BannerSectionProps) {
               </button>
               <button
                 type='submit'
-                disabled={createUserPostStatus === 'loading'}
+                disabled={isPending}
                 className='bg-primary text-white px-4 py-2 rounded-lg cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                {createUserPostStatus === 'loading'
-                  ? 'Đang đăng...'
-                  : 'Đăng bài'}
+                {isPending ? 'Đang đăng...' : 'Đăng bài'}
               </button>
             </DialogFooter>
           </form>

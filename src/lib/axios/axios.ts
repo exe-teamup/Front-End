@@ -22,11 +22,12 @@ axiosInstance.interceptors.request.use(
     }
 
     // Log requests in development only
-    // if (import.meta.env.DEV) {
-    //   console.log(
-    //     `[API Request] ${config.method?.toUpperCase()} ${config.url} at ${new Date().toISOString()}`
-    //   );
-    // }
+    if (import.meta.env.DEV) {
+      console.log(
+        `[API Request] ${config.method?.toUpperCase()} ${config.url}`,
+        config.headers.Authorization ? '✅ Token attached' : '❌ No token'
+      );
+    }
 
     return config;
   },
@@ -59,8 +60,11 @@ axiosInstance.interceptors.response.use(
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
         console.error(
-          `[API Error] ${status} ${error.config?.url}`,
-          error.response.data
+          `❌ [API Error] ${status} ${error.config?.url}`,
+          '\n📦 Response:',
+          error.response.data,
+          '\n🔑 Token:',
+          error.config?.headers.Authorization ? 'Sent' : 'Not sent'
         );
       }
 

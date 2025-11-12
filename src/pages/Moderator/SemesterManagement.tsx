@@ -254,7 +254,7 @@ export function SemesterManagement() {
       )}
 
       <Card className='shadow-lg border border-gray-200'>
-        <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
+        <CardHeader className='bg-linear-to-r from-primary to-gray-100'>
           <CardTitle className='text-white'>
             Danh sách Kỳ học ({totalItems})
           </CardTitle>
