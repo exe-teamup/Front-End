@@ -52,9 +52,12 @@ export function AppRoutes() {
     },
     {
       path: '/',
-      element: <MainLayout />,
+      element: (
+        <ProtectedRoute>
+          <MainLayout />
+        </ProtectedRoute>
+      ),
       children: [
-        // Public route: Home page
         {
           index: true,
           path: ROUTES.HOME,
@@ -119,7 +122,11 @@ export function AppRoutes() {
     // Posts-only layout without footer
     {
       path: '/posts',
-      element: <PostsLayout />,
+      element: (
+        <ProtectedRoute>
+          <PostsLayout />
+        </ProtectedRoute>
+      ),
       children: [
         {
           index: true,

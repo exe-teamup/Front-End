@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>()(
                 photoURL: firebaseUser.photoURL,
               };
               set({ status: 'authenticated', user, error: undefined });
-            } catch (error) {
+            } catch {
               // console.error('Error fetching ID token:', error);
               AuthTokenManager.clearTokens();
               set({
