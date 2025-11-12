@@ -1,11 +1,11 @@
-import { ApiClient } from '@/lib/axios';
 import { API_ENDPOINTS } from '@/config/apiEndpoints';
+import { ApiClient } from '@/lib/axios';
 import type {
-  Course,
+  CourseQueryParams,
   CreateCourseFormData,
   UpdateCourseFormData,
-  CourseQueryParams,
 } from '@/schemas/course.schema';
+import type { Course } from '@/types/course';
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -15,11 +15,6 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
-}
-
-export interface CourseWithDetails extends Course {
-  semesterCode: string;
-  lecturerName: string;
 }
 
 export class CourseService {
@@ -32,9 +27,9 @@ export class CourseService {
    */
   static async getAllCourses(
     params?: CourseQueryParams
-  ): Promise<PaginatedResponse<CourseWithDetails>> {
+  ): Promise<PaginatedResponse<Course>> {
     try {
-      const response = await ApiClient.get<CourseWithDetails[]>(this.BASE_URL);
+      const response = await ApiClient.get<Course[]>(this.BASE_URL);
       const allCourses = response.data || [];
 
       // Client-side pagination
@@ -57,8 +52,7 @@ export class CourseService {
         filteredCourses = filteredCourses.filter(
           course =>
             course.courseCode.toLowerCase().includes(searchTerm) ||
-            (course.courseName &&
-              course.courseName.toLowerCase().includes(searchTerm))
+            course.courseName?.toLowerCase().includes(searchTerm)
         );
       }
 
@@ -85,7 +79,7 @@ export class CourseService {
   static async getCoursesBySemester(
     semesterId: number,
     params?: Omit<CourseQueryParams, 'semesterId'>
-  ): Promise<PaginatedResponse<CourseWithDetails>> {
+  ): Promise<PaginatedResponse<Course>> {
     try {
       // Use getAllCourses with semesterId filter
       const page = params?.page ?? 1;
@@ -98,13 +92,24 @@ export class CourseService {
   }
 
   /**
+   * Get courses by lecturer
+   */
+  static async getCoursesByLecturer(lecturerId: number): Promise<Course[]> {
+    try {
+      const endpoint = API_ENDPOINTS.COURSES.BY_LECTURER(lecturerId);
+      const response = await ApiClient.get<Course[]>(endpoint);
+      return response.data || [];
+    } catch {
+      throw new Error(`Failed to fetch courses for lecturer ${lecturerId}`);
+    }
+  }
+
+  /**
    * Get course by ID
    */
-  static async getCourseById(id: number): Promise<CourseWithDetails> {
+  static async getCourseById(id: number): Promise<Course> {
     try {
-      const response = await ApiClient.get<CourseWithDetails>(
-        this.BY_ID_URL(id)
-      );
+      const response = await ApiClient.get<Course>(this.BY_ID_URL(id));
       return response.data;
     } catch {
       throw new Error(`Failed to fetch course ${id}`);

@@ -1,7 +1,16 @@
-﻿import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+﻿import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Pagination } from '@/components/ui/pagination';
 import {
   Select,
   SelectContent,
@@ -10,14 +19,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import {
   Table,
   TableBody,
   TableCell,
@@ -25,27 +26,89 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Pagination } from '@/components/ui/pagination';
-import { Search, UserPlus, X, ArrowUpDown } from 'lucide-react';
-import { mockGroups, mockLecturers, type Group } from './mockData';
+import { useGroups, useLecturers } from '@/hooks';
 import { useTableFeatures } from '@/hooks/useTableFeatures';
+import type { Group } from '@/types/group';
+import {
+  AlertCircle,
+  ArrowUpDown,
+  Loader2,
+  Search,
+  UserPlus,
+  X,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
+
+// Type for transformed group data to match component's expected format
+type TransformedGroup = {
+  id: string;
+  name: string;
+  leader: string;
+  leaderEmail: string;
+  members: string;
+  status: 'pending' | 'active' | 'finished';
+  lecturer?: string;
+  majorNames: string[];
+  originalGroup: Group; // Keep reference to original group
+};
 
 export function GroupOverviewManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [assigningGroup, setAssigningGroup] = useState<Group | null>(null);
+  const [assigningGroup, setAssigningGroup] = useState<TransformedGroup | null>(
+    null
+  );
   const [selectedLecturer, setSelectedLecturer] = useState('');
 
-  // Filter by status first
-  const filteredByStatus = mockGroups.filter(group => {
-    const matchesSearch =
-      group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      group.leader.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'all' || group.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Fetch real data using hooks
+  const { allGroups, isLoadingAllGroups, allGroupsError, refetchAllGroups } =
+    useGroups();
+  const {
+    lecturers,
+    isLoading: isLoadingLecturers,
+    error: lecturersError,
+  } = useLecturers();
+
+  // Transform real API data to match component's expected format
+  const transformedGroups = useMemo(() => {
+    return allGroups.map((group): TransformedGroup => {
+      // Map GroupStatus to component's status type
+      let status: 'pending' | 'active' | 'finished';
+      if (group.groupStatus === 'ACTIVE') {
+        status = 'active';
+      } else if (group.groupStatus === 'INACTIVE') {
+        status = 'pending';
+      } else {
+        status = 'finished';
+      }
+
+      return {
+        id: group.groupId,
+        name: group.groupName,
+        leader: group.leader.studentName,
+        leaderEmail: '', // API doesn't provide this yet
+        members: group.memberCount.toString(),
+        status,
+        lecturer: undefined, // Note: Add lecturer info when API supports it
+        majorNames: group.members
+          .map(m => m.majorName)
+          .filter((v, i, a) => v && a.indexOf(v) === i) as string[],
+        originalGroup: group,
+      };
+    });
+  }, [allGroups]);
+
+  // Filter by status and search
+  const filteredByStatus = useMemo(() => {
+    return transformedGroups.filter(group => {
+      const matchesSearch =
+        group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        group.leader.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus =
+        statusFilter === 'all' || group.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [transformedGroups, searchQuery, statusFilter]);
 
   // Use table features hook for pagination and sorting
   const {
@@ -67,13 +130,17 @@ export function GroupOverviewManagement() {
     sortField: 'name',
   });
 
-  const handleAssignLecturer = () => {
+  const handleAssignLecturer = async () => {
     if (assigningGroup && selectedLecturer) {
-      console.log(
-        `Assigning ${selectedLecturer} to group ${assigningGroup.name}`
-      );
+      // Note: Implement API call to assign lecturer to group when endpoint is available
+      // Example: await GroupService.assignLecturer(assigningGroup.id, selectedLecturer);
+
+      // For now, just close the dialog and refetch data
       setAssigningGroup(null);
       setSelectedLecturer('');
+
+      // Refetch groups to get updated data
+      await refetchAllGroups();
     }
   };
 
@@ -81,10 +148,14 @@ export function GroupOverviewManagement() {
     setSearchQuery('');
   };
 
-  const getStatusBadge = (status: Group['status']) => {
+  const getStatusBadge = (status: 'pending' | 'active' | 'finished') => {
     const variants: Record<
-      Group['status'],
-      { variant: any; label: string; color: string }
+      'pending' | 'active' | 'finished',
+      {
+        variant: 'default' | 'secondary' | 'outline';
+        label: string;
+        color: string;
+      }
     > = {
       active: {
         variant: 'default',
@@ -105,6 +176,10 @@ export function GroupOverviewManagement() {
     return variants[status];
   };
 
+  // Calculate loading and error states
+  const isLoading = isLoadingAllGroups || isLoadingLecturers;
+  const hasError = !!allGroupsError || !!lecturersError;
+
   return (
     <div className='space-y-6'>
       <div className='flex justify-between items-center'>
@@ -115,6 +190,22 @@ export function GroupOverviewManagement() {
           </p>
         </div>
       </div>
+
+      {/* Error Alert */}
+      {hasError && (
+        <Card className='border-red-200 bg-red-50'>
+          <CardContent className='pt-6'>
+            <div className='flex items-center gap-2 text-red-800'>
+              <AlertCircle className='h-5 w-5' />
+              <p className='font-medium'>
+                {allGroupsError ||
+                  lecturersError ||
+                  'Có lỗi xảy ra khi tải dữ liệu'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className='shadow-lg border border-gray-200'>
         <CardHeader className='bg-gradient-to-r from-primary to-gray-100'>
@@ -169,111 +260,121 @@ export function GroupOverviewManagement() {
           {/* Results count */}
           <div className='mb-4 text-sm text-text-body'>
             Hiển thị <span className='font-semibold'>{totalItems}</span> /{' '}
-            {mockGroups.length} nhóm
+            {transformedGroups.length} nhóm
           </div>
 
+          {/* Loading State */}
+          {isLoading && (
+            <div className='flex justify-center items-center py-8'>
+              <Loader2 className='w-8 h-8 animate-spin text-primary' />
+              <span className='ml-2 text-text-body'>Đang tải dữ liệu...</span>
+            </div>
+          )}
+
           {/* Table with hover effects */}
-          <div className='rounded-md border'>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead
-                    className='cursor-pointer'
-                    onClick={() => handleSort('name')}
-                  >
-                    <div className='flex items-center gap-2'>
-                      Nhóm
-                      <ArrowUpDown className='w-4 h-4' />
-                      {sortBy === 'name' && (
-                        <span className='text-xs'>
-                          {sortOrder === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className='cursor-pointer'
-                    onClick={() => handleSort('leader')}
-                  >
-                    <div className='flex items-center gap-2'>
-                      Leader
-                      <ArrowUpDown className='w-4 h-4' />
-                      {sortBy === 'leader' && (
-                        <span className='text-xs'>
-                          {sortOrder === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead>Số SV</TableHead>
-                  <TableHead>Giảng viên</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead className='text-right'>Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedData.length === 0 ? (
+          {!isLoading && (
+            <div className='rounded-md border'>
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className='text-center py-8 text-text-body'
+                    <TableHead
+                      className='cursor-pointer'
+                      onClick={() => handleSort('name')}
                     >
-                      Không tìm thấy nhóm nào phù hợp
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedData.map(group => {
-                    const statusInfo = getStatusBadge(group.status);
-                    return (
-                      <TableRow
-                        key={group.id}
-                        className='hover:bg-gray-50 transition-colors'
-                      >
-                        <TableCell className='font-medium text-text-title'>
-                          {group.name}
-                        </TableCell>
-                        <TableCell className='text-text-body'>
-                          {group.leader}
-                        </TableCell>
-                        <TableCell className='text-text-body'>
-                          <span className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm'>
-                            {group.members}
+                      <div className='flex items-center gap-2'>
+                        Nhóm
+                        <ArrowUpDown className='w-4 h-4' />
+                        {sortBy === 'name' && (
+                          <span className='text-xs'>
+                            {sortOrder === 'asc' ? '↑' : '↓'}
                           </span>
-                        </TableCell>
-                        <TableCell className='text-text-body'>
-                          {group.lecturer ? (
-                            <span className='font-medium'>
-                              {group.lecturer}
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className='cursor-pointer'
+                      onClick={() => handleSort('leader')}
+                    >
+                      <div className='flex items-center gap-2'>
+                        Leader
+                        <ArrowUpDown className='w-4 h-4' />
+                        {sortBy === 'leader' && (
+                          <span className='text-xs'>
+                            {sortOrder === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead>Số SV</TableHead>
+                    <TableHead>Giảng viên</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                    <TableHead className='text-right'>Thao tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className='text-center py-8 text-text-body'
+                      >
+                        Không tìm thấy nhóm nào phù hợp
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paginatedData.map(group => {
+                      const statusInfo = getStatusBadge(group.status);
+                      return (
+                        <TableRow
+                          key={group.id}
+                          className='hover:bg-gray-50 transition-colors'
+                        >
+                          <TableCell className='font-medium text-text-title'>
+                            {group.name}
+                          </TableCell>
+                          <TableCell className='text-text-body'>
+                            {group.leader}
+                          </TableCell>
+                          <TableCell className='text-text-body'>
+                            <span className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm'>
+                              {group.members}
                             </span>
-                          ) : (
-                            <span className='text-gray-400 italic'>
-                              Chưa có
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={statusInfo.variant}>
-                            {statusInfo.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className='text-right'>
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={() => setAssigningGroup(group)}
-                            className='hover:bg-primary hover:text-white transition-colors'
-                          >
-                            <UserPlus className='w-4 h-4 mr-2' />
-                            Phân công
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                          </TableCell>
+                          <TableCell className='text-text-body'>
+                            {group.lecturer ? (
+                              <span className='font-medium'>
+                                {group.lecturer}
+                              </span>
+                            ) : (
+                              <span className='text-gray-400 italic'>
+                                Chưa có
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={statusInfo.variant}>
+                              {statusInfo.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className='text-right'>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => setAssigningGroup(group)}
+                              className='hover:bg-primary hover:text-white transition-colors'
+                            >
+                              <UserPlus className='w-4 h-4 mr-2' />
+                              Phân công
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
           {/* Pagination */}
           <Pagination
@@ -316,11 +417,16 @@ export function GroupOverviewManagement() {
                   <SelectValue placeholder='Chọn giảng viên' />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockLecturers.map(lecturer => (
-                    <SelectItem key={lecturer.id} value={lecturer.id}>
-                      {lecturer.name} - {lecturer.email}
-                    </SelectItem>
-                  ))}
+                  {lecturers
+                    .filter(lecturer => lecturer.lecturerStatus === 'ACTIVE')
+                    .map(lecturer => (
+                      <SelectItem
+                        key={lecturer.lecturerId}
+                        value={lecturer.lecturerId.toString()}
+                      >
+                        {lecturer.lecturerName} - {lecturer.email}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

@@ -1,14 +1,3 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,17 +7,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { LecturerService, type Lecturer } from '@/services/lectureService';
-import { CourseService } from '@/services/courseService';
-import { toast } from 'sonner';
-import {
-  FileUp,
-  Lock,
-  LockOpen,
-  Mail,
-  GraduationCap,
-  Filter,
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -36,6 +16,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { CourseService } from '@/services/courseService';
+import { LecturerService, type Lecturer } from '@/services/lectureService';
+import {
+  FileUp,
+  Filter,
+  GraduationCap,
+  Lock,
+  LockOpen,
+  Mail,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export function LecturersManagement() {
   const [lecturers, setLecturers] = useState<Lecturer[]>([]);
@@ -54,10 +54,13 @@ export function LecturersManagement() {
     try {
       const newStatus =
         lecturer.lecturerStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-      // API expects 'status' field, not 'lecturerStatus'
+
       await LecturerService.updateLecturer(lecturer.lecturerId, {
-        status: newStatus,
-      } as Partial<Lecturer>);
+        lecturerName: lecturer.lecturerName,
+        email: lecturer.email,
+        lecturerStatus: newStatus,
+        accountStatus: lecturer.accountStatus,
+      });
 
       // Update local state
       setLecturers(prev =>
@@ -119,15 +122,7 @@ export function LecturersManagement() {
     try {
       setLoading(true);
       const data = await LecturerService.getAllLecturers();
-      // Add default course info for display
-      const lecturersWithCourse = data.map(lecturer => ({
-        ...lecturer,
-        courseId: lecturer.course?.courseId || 1,
-        courseCode: lecturer.course?.courseCode || 'SE1902',
-        email: lecturer.email || `lecturer${lecturer.lecturerId}@fpt.edu.vn`,
-        avatar: lecturer.avatar || '/images/avatar.jpg',
-      }));
-      setLecturers(lecturersWithCourse);
+      setLecturers(data);
     } catch {
       toast.error('Lỗi khi tải danh sách giảng viên');
     } finally {
@@ -149,23 +144,12 @@ export function LecturersManagement() {
 
     try {
       setUploading(true);
-      const uploadedLecturers = await LecturerService.uploadLecturers(file);
+      await LecturerService.uploadLecturers(file);
 
-      // Add default course info and refresh the list
-      const newLecturers = uploadedLecturers.map(lecturer => ({
-        ...lecturer,
-        course: {
-          courseId: 1,
-          courseCode: 'SE1902',
-        },
-        email: `lecturer${lecturer.lecturerId}@fpt.edu.vn`,
-        avatar: '/images/avatar.jpg',
-      }));
+      // Refresh the entire list to get updated data from server
+      await loadLecturers();
 
-      setLecturers(prev => [...prev, ...newLecturers]);
-      toast.success(
-        `Tải lên thành công ${uploadedLecturers.length} giảng viên`
-      );
+      toast.success('Tải lên giảng viên thành công');
     } catch {
       toast.error('Lỗi khi tải lên file');
     } finally {
@@ -177,19 +161,16 @@ export function LecturersManagement() {
 
   const filteredLecturers = lecturers.filter(lecturer => {
     // Search filter
+    const courseCodes = lecturer.courses.map(c => c.courseCode).join(' ');
     const matchesSearch =
       lecturer.lecturerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (lecturer.email &&
-        lecturer.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (lecturer.course?.courseCode &&
-        lecturer.course?.courseCode
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()));
+      lecturer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      courseCodes.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Course filter
     const matchesCourse =
       selectedCourse === 'all' ||
-      lecturer.course?.courseCode === selectedCourse;
+      lecturer.courses.some(course => course.courseCode === selectedCourse);
 
     // Status filter
     const matchesStatus =
@@ -304,11 +285,22 @@ export function LecturersManagement() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className='flex items-center space-x-2'>
+                  <div className='flex items-center gap-1 flex-wrap'>
                     <GraduationCap className='w-4 h-4 text-gray-400' />
-                    <span className='text-sm'>
-                      {lecturer.course?.courseCode}
-                    </span>
+                    {lecturer.courses.length > 0 ? (
+                      lecturer.courses.map(course => (
+                        <span
+                          key={course.courseId}
+                          className='text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded'
+                        >
+                          {course.courseCode}
+                        </span>
+                      ))
+                    ) : (
+                      <span className='text-sm text-gray-400'>
+                        Chưa có khóa học
+                      </span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>
