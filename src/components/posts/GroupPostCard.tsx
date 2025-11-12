@@ -3,6 +3,8 @@ import { Clock, User } from 'lucide-react';
 import { toast } from 'sonner';
 import type { GroupPost } from '../../types/post';
 import { formatDate } from '@/utils/formatDate';
+import { useJoinRequest } from '@/hooks/usePostsQuery';
+import { useStudentProfileStore } from '@/store/studentProfile';
 
 interface GroupPostCardProps {
   post: GroupPost;
@@ -17,9 +19,35 @@ export function GroupPostCard({
   post,
   showHotBadge = false,
 }: GroupPostCardProps) {
-  const handleApply = () => {
-    // TODO: Implement apply logic when API is ready
-    toast.info('Chức năng ứng tuyển đang được phát triển!');
+  const { profile } = useStudentProfileStore();
+  const { mutateAsync: sendJoinRequest, isPending } = useJoinRequest();
+
+  const handleApply = async () => {
+    if (!profile?.userId) {
+      toast.error('Vui lòng đăng nhập để ứng tuyển.');
+      return;
+    }
+
+    if (!post.groupId) {
+      toast.error('Không tìm thấy thông tin nhóm.');
+      return;
+    }
+
+    try {
+      await sendJoinRequest({
+        studentId: Number(profile.userId),
+        groupId: Number(post.groupId),
+        requestType: 'STUDENT_REQUEST',
+      });
+
+      toast.success('Đã gửi yêu cầu tham gia nhóm!');
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Không thể gửi yêu cầu. Vui lòng thử lại.';
+      toast.error(message);
+    }
   };
 
   const handleViewDetails = () => {
@@ -111,7 +139,7 @@ export function GroupPostCard({
       {/* Hot badge if needed */}
       {showHotBadge && (
         <div className='mb-4'>
-          <div className='inline-flex items-center gap-1 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-xs font-bold'>
+          <div className='inline-flex items-center gap-1 bg-linear-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-xs font-bold'>
             <span className='text-yellow-300'>🔥</span>
             <span>HOT TEAM</span>
           </div>
@@ -121,10 +149,11 @@ export function GroupPostCard({
       {/* Action Buttons */}
       <div className='flex gap-3'>
         <button
-          className='flex-1 bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer'
+          className='flex-1 bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
           onClick={handleApply}
+          disabled={isPending}
         >
-          Ứng tuyển
+          {isPending ? 'Đang gửi...' : 'Ứng tuyển'}
         </button>
         <button
           className='flex-1 bg-gray-100 text-text-title py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors cursor-pointer'

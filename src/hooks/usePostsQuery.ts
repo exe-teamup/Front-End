@@ -103,3 +103,19 @@ export function useRefreshPosts(postType?: PostType) {
     });
   };
 }
+
+export function useJoinRequest() {
+  return useMutation({
+    mutationFn: async (data: {
+      studentId: number;
+      groupId: number;
+      requestType: 'GROUP_INVITATION' | 'STUDENT_REQUEST';
+    }) => {
+      const response = await ApiClient.post(
+        serviceConfig.ENDPOINTS.JOIN_REQUESTS,
+        data
+      );
+      return response.data;
+    },
+  });
+}

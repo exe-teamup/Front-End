@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useGroupStore } from '../store/group';
 import { useStudentProfileStore } from '../store/studentProfile';
+import { getUserGroupStatus } from '../mock/groups.mockapi';
 
 /**
  * Custom hook to retrieve all group-related information
@@ -95,6 +96,15 @@ export const useGroups = () => {
   // Placeholder for pending requests count until API is ready
   const pendingRequestsCount = 0;
 
+  const incomingRequestsCount = useMemo(() => {
+    if (hasGroup) {
+      const userStatus = getUserGroupStatus();
+      return userStatus.incomingRequests.filter(req => req.status === 'PENDING')
+        .length;
+    }
+    return 0;
+  }, [hasGroup]);
+
   return {
     // Student's own group data
     myGroup: currentGroup,
@@ -108,6 +118,7 @@ export const useGroups = () => {
 
     // Join requests data (placeholder until API is available)
     pendingRequestsCount,
+    incomingRequestsCount,
 
     // Student status
     isLeader,
