@@ -197,22 +197,36 @@ export function GroupDetail() {
               <div className='space-y-4'>
                 {/* Leader */}
                 <div className='flex items-start gap-4'>
-                  <img
-                    src={'/images/avatar.jpg'}
-                    alt={group.leader.studentName}
-                    className='w-12 h-12 rounded-full object-cover'
-                  />
+                  <button
+                    type='button'
+                    onClick={() => navigate(`/exe/${group.leader.studentId}`)}
+                    className='w-12 h-12 rounded-full overflow-hidden cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+                    aria-label={`Xem profile của ${group.leader.studentName}`}
+                  >
+                    <img
+                      src={'/images/avatar.jpg'}
+                      alt={group.leader.studentName}
+                      className='w-full h-full object-cover'
+                    />
+                  </button>
                   <div className='flex-1'>
                     <div className='flex items-center gap-2 mb-1'>
-                      <h3 className='font-medium text-gray-900'>
-                        {group.leader.studentName}
-                      </h3>
+                      <button
+                        type='button'
+                        onClick={() =>
+                          navigate(`/exe/${group.leader.studentId}`)
+                        }
+                        className='font-medium text-gray-900 hover:text-primary cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded'
+                        aria-label={`Xem profile của ${group.leader.studentName}`}
+                      >
+                        <h3 className='inline'>{group.leader.studentName}</h3>
+                      </button>
                       <span className='px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full'>
                         Trưởng nhóm
                       </span>
                     </div>
                     <p className='text-sm text-gray-600'>
-                      {group.leader.studentName + '(should be leader email)'}
+                      {group.leader.majorName || 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -255,6 +269,54 @@ export function GroupDetail() {
                 </div>
               </div>
             </div>
+
+            {/* Members List */}
+            {group.members && group.members.length > 0 && (
+              <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
+                <h2 className='text-xl font-semibold text-gray-900 mb-4'>
+                  Thành viên ({group.members.length})
+                </h2>
+                <div className='space-y-3'>
+                  {group.members.map(member => (
+                    <div
+                      key={member.studentId}
+                      className='flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors'
+                    >
+                      <button
+                        type='button'
+                        onClick={() => navigate(`/exe/${member.studentId}`)}
+                        className='w-10 h-10 rounded-full overflow-hidden cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+                        aria-label={`Xem profile của ${member.studentName}`}
+                      >
+                        <img
+                          src={'/images/avatar.jpg'}
+                          alt={member.studentName}
+                          className='w-full h-full object-cover'
+                        />
+                      </button>
+                      <div className='flex-1'>
+                        <button
+                          type='button'
+                          onClick={() => navigate(`/exe/${member.studentId}`)}
+                          className='font-medium text-gray-900 hover:text-primary cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded'
+                          aria-label={`Xem profile của ${member.studentName}`}
+                        >
+                          <h3 className='inline'>{member.studentName}</h3>
+                        </button>
+                        <p className='text-sm text-gray-600'>
+                          {member.majorName || 'N/A'}
+                        </p>
+                      </div>
+                      {member.isLeader && (
+                        <span className='px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full'>
+                          Trưởng nhóm
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Sidebar */}

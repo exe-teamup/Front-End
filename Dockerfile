@@ -1,7 +1,7 @@
 # Stage: Serve prebuilt frontend using Nginx
 FROM nginx:alpine
 
-# Copy built files from dist (đã build sẵn ở local)
+# Copy built files from dist
 COPY dist /usr/share/nginx/html
 
 # Add basic SPA routing config
