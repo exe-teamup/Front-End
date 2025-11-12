@@ -7,7 +7,7 @@ interface UseTableFeaturesOptions<T> {
   sortField?: keyof T;
 }
 
-export function useTableFeatures<T extends Record<string, any>>({
+export function useTableFeatures<T>({
   data,
   itemsPerPage = 10,
   searchFields = [],

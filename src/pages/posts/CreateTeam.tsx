@@ -9,7 +9,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useMajors } from '@/hooks';
-import { usePostStore } from '@/store/post';
+import { useCreateGroupPost } from '@/hooks/usePostsQuery';
 import { useStudentProfileStore } from '@/store/studentProfile';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState } from 'react';
@@ -23,7 +23,7 @@ export function CreateTeam() {
   const [openSubmitConfirm, setOpenSubmitConfirm] = useState(false);
 
   const { profile } = useStudentProfileStore();
-  const { createGroupPost, createStatus, createError } = usePostStore();
+  const { mutateAsync: createGroupPost, isPending } = useCreateGroupPost();
   const {
     majors: availableMajors,
     isLoading: isMajorsLoading,
@@ -135,8 +135,12 @@ export function CreateTeam() {
       setTimeout(() => {
         navigate('/posts');
       }, 1000);
-    } catch {
-      toast.error(createError || 'Không thể tạo bài đăng. Vui lòng thử lại.');
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Không thể tạo bài đăng. Vui lòng thử lại.';
+      toast.error(message);
       setOpenSubmitConfirm(false);
     }
   };
@@ -317,11 +321,11 @@ export function CreateTeam() {
               </button>
               <button
                 type='submit'
-                disabled={createStatus === 'loading'}
+                disabled={isPending}
                 className='flex-1 bg-primary text-white py-2 rounded-lg text-lg cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
                 onClick={() => setOpenSubmitConfirm(true)}
               >
-                {createStatus === 'loading' ? 'Đang đăng...' : 'Đăng bài tuyển'}
+                {isPending ? 'Đang đăng...' : 'Đăng bài tuyển'}
               </button>
             </div>
           </form>

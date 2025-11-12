@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils';
 import { Clock, User } from 'lucide-react';
 import { toast } from 'sonner';
 import type { GroupPost } from '../../types/post';
+import { formatDate } from '@/utils/formatDate';
 
 interface GroupPostCardProps {
   post: GroupPost;
@@ -46,28 +47,6 @@ export function GroupPostCard({
         return null; // Don't show deleted posts
       default:
         return null;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-    );
-
-    if (diffInHours < 1) {
-      return 'Vừa xong';
-    } else if (diffInHours < 24) {
-      return `${diffInHours} giờ trước`;
-    } else if (diffInHours < 72) {
-      return `${Math.floor(diffInHours / 24)} ngày trước`;
-    } else {
-      return date.toLocaleDateString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
     }
   };
 

@@ -1,17 +1,19 @@
-import { ApiClient } from '@/lib/axios';
 import { API_ENDPOINTS } from '@/config/apiEndpoints';
+import { ApiClient } from '@/lib/axios';
+
+export interface Course {
+  courseCode: string;
+  courseId: number;
+}
 
 export interface Lecturer {
   lecturerId: number;
   lecturerName: string;
-  lecturerStatus: 'ACTIVE' | 'INACTIVE';
-  accountStatus: 'ACTIVE' | 'INACTIVE';
+  lecturerStatus: string;
+  accountStatus: string;
   accountId: number;
-  course: {
-    courseId?: number;
-    courseCode?: string;
-  };
   email: string;
+  courses: Course[];
   avatar?: string;
 }
 
