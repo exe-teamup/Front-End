@@ -1,6 +1,7 @@
 import MyGroupsTab from '@/components/groups/MyGroupsTab';
 import { Mail, Phone, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { ProfileSidebar } from '../../components/profile/ProfileSidebar';
 import { useStudentProfileStore } from '../../store/studentProfile';
 import { cn } from '../../utils/cn';
@@ -44,10 +45,14 @@ export function AccountSetting() {
         bio: formData.bio,
       });
       setIsEditing(false);
-      // TODO: Show success notification
-    } catch {
-      // TODO: Show error notification
-      // Error is already handled in the store
+      toast.success('Cập nhật thông tin thành công!');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Không thể cập nhật thông tin. Vui lòng thử lại.';
+      toast.error(errorMessage);
     }
   };
 
@@ -138,15 +143,12 @@ export function AccountSetting() {
                         id='fullName'
                         type='text'
                         value={formData.fullName}
-                        onChange={e =>
-                          handleInputChange('fullName', e.target.value)
-                        }
-                        disabled={!isEditing}
-                        className={cn(
-                          'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
-                          !isEditing && 'bg-gray-50 cursor-not-allowed'
-                        )}
+                        disabled
+                        className='w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed'
                       />
+                      <p className='text-xs text-gray-500 mt-1'>
+                        Không thể chỉnh sửa
+                      </p>
                     </div>
 
                     <div>
@@ -162,16 +164,13 @@ export function AccountSetting() {
                           id='email'
                           type='email'
                           value={formData.email}
-                          onChange={e =>
-                            handleInputChange('email', e.target.value)
-                          }
-                          disabled={!isEditing}
-                          className={cn(
-                            'w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary',
-                            !isEditing && 'bg-gray-50 cursor-not-allowed'
-                          )}
+                          disabled
+                          className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed'
                         />
                       </div>
+                      <p className='text-xs text-gray-500 mt-1'>
+                        Không thể chỉnh sửa
+                      </p>
                     </div>
                   </div>
 

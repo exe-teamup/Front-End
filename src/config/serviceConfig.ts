@@ -4,7 +4,7 @@ export const serviceConfig = {
     LOGIN_GOOGLE: '/authentication/login-google',
     LOGOUT: '/authentication/logout',
     STUDENT_PROFILE: '/users/profile',
-    UPDATE_STUDENT: (id: string) => `/students/${id}`,
+    UPDATE_STUDENT: (id: string) => `/users/${id}`,
     SEARCH_STUDENTS: '/users/search',
     GROUPS: '/groups',
     GROUP_BY_ID: (id: string) => `/groups/${id}`,

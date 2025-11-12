@@ -3,7 +3,7 @@ node_modules
 npm-debug.log*
 
 # Build output
-dist
+# dist - commented out because we build locally and need to copy dist folder
 
 # Development files
 .vite

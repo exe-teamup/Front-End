@@ -74,15 +74,19 @@ export const useStudentProfileStore = create<StudentProfileState>()(
             profile: updatedProfile,
             error: undefined,
           });
-        } catch (e: unknown) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
           const message =
-            e instanceof Error ? e.message : 'Failed to update profile';
+            e?.response?.data?.message ||
+            e?.message ||
+            'Failed to update profile';
           // Revert to original profile on error
           set({
             status: 'error',
             profile: currentProfile,
             error: message,
           });
+          throw e;
         }
       },
 
