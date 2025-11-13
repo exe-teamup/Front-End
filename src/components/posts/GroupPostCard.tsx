@@ -56,6 +56,11 @@ export function GroupPostCard({
     );
   }, [typedUserRequests, post.groupId, profile?.userId]);
 
+  // Check if user already has a group or is a leader (cannot apply or send invitation)
+  const hasGroupOrIsLeader = useMemo(() => {
+    return !!(profile?.groupId || profile?.leader);
+  }, [profile?.groupId, profile?.leader]);
+
   // Get author name based on post type
   const authorName = isUserPost
     ? typedUserData?.fullName || 'Đang tải...'
@@ -236,9 +241,13 @@ export function GroupPostCard({
             <button
               className='flex-1 bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
               onClick={handleSendInvitation}
-              disabled={isPending}
+              disabled={isPending || hasGroupOrIsLeader}
             >
-              {isPending ? 'Đang gửi...' : 'Gửi lời mời'}
+              {isPending
+                ? 'Đang gửi...'
+                : hasGroupOrIsLeader
+                  ? 'Bạn đã có nhóm'
+                  : 'Gửi lời mời'}
             </button>
             <button
               className='flex-1 bg-gray-100 text-text-title py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors cursor-pointer'
@@ -252,13 +261,15 @@ export function GroupPostCard({
             <button
               className='flex-1 bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
               onClick={handleApply}
-              disabled={isPending || hasSentRequest}
+              disabled={isPending || hasSentRequest || hasGroupOrIsLeader}
             >
               {isPending
                 ? 'Đang gửi...'
                 : hasSentRequest
                   ? 'Đã gửi yêu cầu'
-                  : 'Ứng tuyển'}
+                  : hasGroupOrIsLeader
+                    ? 'Bạn đã có nhóm'
+                    : 'Ứng tuyển'}
             </button>
             <button
               className='flex-1 bg-gray-100 text-text-title py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors cursor-pointer'

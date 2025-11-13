@@ -16,14 +16,14 @@ export const useGetMyNotifications = createQueryHook(
 
 /**
  * Mark notification as read
- * PUT /api/account-notifications/{id}/mark-as-read
+ * PUT /api/account-notifications/check/{id}
  */
 export const useMarkNotificationAsRead = () => {
   const queryClient = useQueryClient();
 
   return useMutation<unknown, AxiosError<{ message: string }>, number>({
     mutationFn: (accountNotificationId: number) =>
-      ApiClient.put(`${BASE_URL}/${accountNotificationId}/mark-as-read`, {}),
+      ApiClient.put(`${BASE_URL}/check/${accountNotificationId}`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
     },
@@ -31,10 +31,18 @@ export const useMarkNotificationAsRead = () => {
 };
 
 /**
- * Mark all notifications as read
- * PUT /api/account-notifications/mark-all-as-read
+ * Mark multiple notifications as read
+ * PUT /api/account-notifications/check
+ * Body: [accountNotificationId1, accountNotificationId2, ...]
  */
-export const useMarkAllNotificationsAsRead = createMutationHook(
-  'my-notifications',
-  `${BASE_URL}/mark-all-as-read`
-);
+export const useMarkAllNotificationsAsRead = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<unknown, AxiosError<{ message: string }>, number[]>({
+    mutationFn: (accountNotificationIds: number[]) =>
+      ApiClient.put(`${BASE_URL}/check`, accountNotificationIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
+    },
+  });
+};

@@ -66,6 +66,11 @@ function RelatedGroupsList({
     return filtered.slice(0, 6);
   }, [allGroups, leaderId]);
 
+  // Check if user already has a group or is a leader (cannot join)
+  const hasGroupOrIsLeader = React.useMemo(() => {
+    return !!(profile?.groupId || profile?.leader);
+  }, [profile?.groupId, profile?.leader]);
+
   const handleJoinGroup = (groupId: string) => {
     setShowCancelDialog(groupId);
   };
@@ -214,10 +219,15 @@ function RelatedGroupsList({
                 group.memberCount < (group.templates?.maxMember || 6) && (
                   <button
                     onClick={() => handleJoinGroup(group.groupId)}
-                    className='flex items-center gap-1 px-3 py-1 text-sm text-primary rounded-2xl cursor-pointer hover:bg-primary hover:text-white transition-colors'
+                    disabled={hasGroupOrIsLeader || isPending}
+                    className='flex items-center gap-1 px-3 py-1 text-sm text-primary rounded-2xl cursor-pointer hover:bg-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                   >
                     <UserPlus className='w-3 h-3' />
-                    Tham gia
+                    {isPending
+                      ? 'Đang gửi...'
+                      : hasGroupOrIsLeader
+                        ? 'Bạn đã có nhóm'
+                        : 'Tham gia'}
                   </button>
                 )}
             </div>
