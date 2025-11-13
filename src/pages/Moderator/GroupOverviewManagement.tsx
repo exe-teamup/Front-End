@@ -85,7 +85,7 @@ export function GroupOverviewManagement() {
       return {
         id: group.groupId,
         name: group.groupName,
-        leader: group.leader.studentName,
+        leader: group.leader?.studentName ?? '',
         leaderEmail: '', // API doesn't provide this yet
         members: group.memberCount.toString(),
         status,
@@ -333,7 +333,15 @@ export function GroupOverviewManagement() {
                             {group.name}
                           </TableCell>
                           <TableCell className='text-text-body'>
-                            {group.leader}
+                            {group.leader ? (
+                              <span className='font-medium'>
+                                {group.leader}
+                              </span>
+                            ) : (
+                              <span className='text-gray-400 italic'>
+                                Chưa có
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className='text-text-body'>
                             <span className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm'>
