@@ -77,10 +77,16 @@ export const useDeleteGroup = deleteMutationHook('groups', BASE_URL);
 export const useTransferLeader = (groupId?: string) => {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<
+    unknown,
+    AxiosError<{ message: string }>,
+    { newLeaderId: string }
+  >({
     mutationFn: (data: { newLeaderId: string }) =>
       ApiClient.put(`${BASE_URL}/${groupId}/transfer-leader`, data),
     onSuccess: () => {
+      // TanStack Query will auto-refetch user-profile with refetchOnWindowFocus
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['group', groupId] });
     },
@@ -98,25 +104,29 @@ export const useKickMember = (groupId?: string) => {
     mutationFn: (memberId: string) =>
       ApiClient.put(`${BASE_URL}/${groupId}/kick/${memberId}`, {}),
     onSuccess: () => {
+      // Invalidate user profile (kicked user's groupId changes)
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['join-requests'] });
     },
   });
 };
 
 /**
  * Leave group
- * POST /api/groups/{id}/leave
+ * PUT /api/groups/leave
  */
-export const useLeaveGroup = (groupId?: string) => {
+export const useLeaveGroup = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => ApiClient.post(`${BASE_URL}/${groupId}/leave`, {}),
+    mutationFn: () => ApiClient.put(`${BASE_URL}/leave`, {}),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
-      queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+      // TanStack Query will auto-refetch invalidated queries
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['join-requests'] });
     },
   });
 };
@@ -132,8 +142,11 @@ export const useAddMember = (groupId?: string) => {
     mutationFn: (memberId: string) =>
       ApiClient.post(`${BASE_URL}/${groupId}/add-member/${memberId}`, {}),
     onSuccess: () => {
+      // Invalidate user profile (new member's groupId changes)
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['join-requests'] });
     },
   });
 };

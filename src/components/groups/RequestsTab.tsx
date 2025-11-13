@@ -113,8 +113,9 @@ function RequestsTab() {
     try {
       await deleteRequest(String(showCancelDialog));
 
+      // The mutation hook already invalidates queries, but we can also refetch manually
       if (profile?.userId) {
-        queryClient.invalidateQueries({
+        await queryClient.refetchQueries({
           queryKey: ['join-requests-by-student', String(profile.userId)],
         });
       }
@@ -188,7 +189,7 @@ function RequestsTab() {
                       {group.groupName}
                     </h3>
                     <p className='text-sm text-black'>
-                      Trưởng nhóm: {group.leader.studentName}
+                      Trưởng nhóm: {group.leader?.studentName || 'Chưa có'}
                     </p>
                     <div className='flex flex-col md:flex-row items-start md:items-center md:gap-4 mt-1'>
                       <span className='text-sm text-black'>

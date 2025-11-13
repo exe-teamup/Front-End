@@ -1,9 +1,4 @@
-import {
-  createQueryHook,
-  createQueryWithPathParamHook,
-  createMutationHook,
-  deleteMutationHook,
-} from '../queryFactory';
+import { createQueryHook, createQueryWithPathParamHook } from '../queryFactory';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/lib/axios';
 import { AxiosError } from 'axios';
@@ -38,10 +33,31 @@ export const useGetJoinRequestsByStudent = createQueryWithPathParamHook(
  * Create join request
  * POST /api/join-requests
  */
-export const useCreateJoinRequest = createMutationHook(
-  'join-requests',
-  BASE_URL
-);
+export const useCreateJoinRequest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    unknown,
+    AxiosError<{ message: string }>,
+    {
+      studentId: number;
+      groupId: number;
+      requestType: 'GROUP_INVITATION' | 'STUDENT_REQUEST';
+    }
+  >({
+    mutationFn: data => ApiClient.post(BASE_URL, data),
+    onSuccess: () => {
+      // TanStack Query auto-refetches invalidated queries
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['join-requests'] });
+      queryClient.invalidateQueries({
+        queryKey: ['join-requests-by-student'],
+        exact: false,
+      });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+    },
+  });
+};
 
 /**
  * Handle join request (approve/reject)
@@ -72,8 +88,13 @@ export const useHandleJoinRequest = () => {
       });
     },
     onSuccess: () => {
+      // TanStack Query auto-refetches invalidated queries
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       queryClient.invalidateQueries({ queryKey: ['join-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['join-requests-by-student'] });
+      queryClient.invalidateQueries({
+        queryKey: ['join-requests-by-student'],
+        exact: false,
+      });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
   });
@@ -83,7 +104,20 @@ export const useHandleJoinRequest = () => {
  * Delete join request by ID
  * DELETE /api/join-requests/{id}
  */
-export const useDeleteJoinRequest = deleteMutationHook(
-  'join-requests',
-  BASE_URL
-);
+export const useDeleteJoinRequest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<unknown, AxiosError<{ message: string }>, string>({
+    mutationFn: (id: string) => ApiClient.delete(`${BASE_URL}/${id}`),
+    onSuccess: () => {
+      // TanStack Query auto-refetches invalidated queries
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['join-requests'] });
+      queryClient.invalidateQueries({
+        queryKey: ['join-requests-by-student'],
+        exact: false,
+      });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+    },
+  });
+};

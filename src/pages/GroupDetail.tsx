@@ -7,7 +7,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { GraduationCap, Link, Users } from 'lucide-react';
+import {
+  GraduationCap,
+  Link,
+  Users,
+  MoreVertical,
+  Eye,
+  UserX,
+} from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -15,18 +22,24 @@ import RelatedGroupsList from '../components/groups/RelatedGroupsList';
 import { getStatusInfo } from '../mock/groupDetail.mockapi';
 import { useGroupStore } from '../store/group';
 import { useStudentProfileStore } from '../store/studentProfile';
-import type { Group } from '../types/group';
 import { useJoinRequest } from '@/hooks/usePostsQuery';
+import { useKickMember } from '@/hooks/api/useGroupsApi';
 
 export function GroupDetail() {
   const { groupId } = useParams<{ groupId: string }>();
   const [showCancelDialog, setShowCancelDialog] = React.useState<string | null>(
     null
   );
+  const [openMenuId, setOpenMenuId] = React.useState<string | null>(null);
+  const [showKickDialog, setShowKickDialog] = React.useState<string | null>(
+    null
+  );
   const navigate = useNavigate();
   const { fetchGroupById, currentGroup } = useGroupStore();
   const { profile } = useStudentProfileStore();
   const { mutateAsync: sendJoinRequest, isPending } = useJoinRequest();
+  const { mutateAsync: kickMember, isPending: isKicking } =
+    useKickMember(groupId);
 
   useEffect(() => {
     if (groupId) {
@@ -35,9 +48,6 @@ export function GroupDetail() {
   }, [groupId, fetchGroupById]);
 
   const group = currentGroup;
-
-  // TODO: Map from backend response
-  const relatedGroups: Group[] = [];
 
   if (!group) {
     return (
@@ -94,6 +104,31 @@ export function GroupDetail() {
       toast.error(message);
     }
   };
+
+  const handleKickMember = async () => {
+    if (!showKickDialog || !groupId) return;
+
+    try {
+      await kickMember(showKickDialog);
+      toast.success('Đã loại thành viên khỏi nhóm');
+      setShowKickDialog(null);
+      setOpenMenuId(null);
+      // Refetch group data
+      if (groupId) {
+        fetchGroupById(groupId);
+      }
+    } catch {
+      toast.error('Có lỗi xảy ra, vui lòng thử lại');
+    }
+  };
+
+  const handleViewMemberProfile = (memberId: string) => {
+    navigate(`/exe/${memberId}`);
+    setOpenMenuId(null);
+  };
+
+  // Check if current user is the leader of this group
+  const isCurrentUserLeader = profile?.userId === group?.leader.studentId;
 
   return (
     <div className='min-h-screen bg-gray-50'>
@@ -179,14 +214,14 @@ export function GroupDetail() {
             </div>
 
             {/* About */}
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
+            {/* <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
               <h2 className='text-xl font-semibold text-gray-900 mb-4'>
                 Mô tả nhóm
               </h2>
               <p className='text-black text-sm md:text-base leading-relaxed'>
-                {group.groupName + ' -- Should be group description'}
+                {group.groupName}
               </p>
-            </div>
+            </div> */}
 
             {/* Admins */}
             <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
@@ -278,43 +313,114 @@ export function GroupDetail() {
                   Thành viên ({group.members.length})
                 </h2>
                 <div className='space-y-3'>
-                  {group.members.map(member => (
-                    <div
-                      key={member.studentId}
-                      className='flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors'
-                    >
-                      <button
-                        type='button'
-                        onClick={() => navigate(`/exe/${member.studentId}`)}
-                        className='w-10 h-10 rounded-full overflow-hidden cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
-                        aria-label={`Xem profile của ${member.studentName}`}
+                  {group.members.map(member => {
+                    const canKick =
+                      isCurrentUserLeader &&
+                      !member.isLeader &&
+                      member.studentId !== profile?.userId;
+                    const isMenuOpen = openMenuId === member.studentId;
+
+                    return (
+                      <div
+                        key={member.studentId}
+                        className='flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors relative'
                       >
-                        <img
-                          src={'/images/avatar.jpg'}
-                          alt={member.studentName}
-                          className='w-full h-full object-cover'
-                        />
-                      </button>
-                      <div className='flex-1'>
                         <button
                           type='button'
                           onClick={() => navigate(`/exe/${member.studentId}`)}
-                          className='font-medium text-gray-900 hover:text-primary cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded'
+                          className='w-10 h-10 rounded-full overflow-hidden cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
                           aria-label={`Xem profile của ${member.studentName}`}
                         >
-                          <h3 className='inline'>{member.studentName}</h3>
+                          <img
+                            src={'/images/avatar.jpg'}
+                            alt={member.studentName}
+                            className='w-full h-full object-cover'
+                          />
                         </button>
-                        <p className='text-sm text-gray-600'>
-                          {member.majorName || 'N/A'}
-                        </p>
+                        <div className='flex-1'>
+                          <button
+                            type='button'
+                            onClick={() => navigate(`/exe/${member.studentId}`)}
+                            className='font-medium text-gray-900 hover:text-primary cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded'
+                            aria-label={`Xem profile của ${member.studentName}`}
+                          >
+                            <h3 className='inline'>{member.studentName}</h3>
+                          </button>
+                          <p className='text-sm text-gray-600'>
+                            {member.majorName || 'N/A'}
+                          </p>
+                        </div>
+                        {member.isLeader && (
+                          <span className='px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full'>
+                            Trưởng nhóm
+                          </span>
+                        )}
+                        {canKick && (
+                          <div className='relative'>
+                            <button
+                              type='button'
+                              onClick={() =>
+                                setOpenMenuId(
+                                  isMenuOpen ? null : member.studentId
+                                )
+                              }
+                              className='p-1.5 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors'
+                              aria-label='Menu hành động'
+                            >
+                              <MoreVertical className='w-4 h-4 text-gray-500' />
+                            </button>
+
+                            {isMenuOpen && (
+                              <>
+                                {/* Backdrop */}
+                                <div
+                                  className='fixed inset-0 z-10'
+                                  role='button'
+                                  tabIndex={0}
+                                  aria-label='Đóng menu'
+                                  onClick={() => setOpenMenuId(null)}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      setOpenMenuId(null);
+                                    }
+                                  }}
+                                />
+
+                                {/* Menu */}
+                                <div className='absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20'>
+                                  <div className='py-1'>
+                                    <button
+                                      type='button'
+                                      onClick={() =>
+                                        handleViewMemberProfile(
+                                          member.studentId
+                                        )
+                                      }
+                                      className='flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary cursor-pointer'
+                                    >
+                                      <Eye className='w-4 h-4' />
+                                      Xem chi tiết
+                                    </button>
+                                    <button
+                                      type='button'
+                                      onClick={() => {
+                                        setShowKickDialog(member.studentId);
+                                        setOpenMenuId(null);
+                                      }}
+                                      className='flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer'
+                                    >
+                                      <UserX className='w-4 h-4' />
+                                      Loại khỏi nhóm
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {member.isLeader && (
-                        <span className='px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full'>
-                          Trưởng nhóm
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -322,7 +428,14 @@ export function GroupDetail() {
 
           {/* Right Sidebar */}
           <div className='lg:col-span-1'>
-            <RelatedGroupsList groups={relatedGroups} />
+            <RelatedGroupsList
+              leaderId={
+                group?.leader.studentId
+                  ? String(group.leader.studentId)
+                  : undefined
+              }
+              currentGroupMajor={group?.leader.majorName}
+            />
           </div>
         </div>
       </div>
@@ -347,6 +460,35 @@ export function GroupDetail() {
               className='bg-primary hover:bg-primary/80 text-white'
             >
               Gửi yêu cầu
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Kick Member Dialog */}
+      <AlertDialog
+        open={!!showKickDialog}
+        onOpenChange={() => setShowKickDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Loại thành viên khỏi nhóm?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className='py-4'>
+            <p className='text-sm text-gray-600'>
+              Bạn có chắc chắn muốn loại thành viên này khỏi nhóm? Hành động này
+              không thể hoàn tác và thành viên sẽ cần được mời lại nếu muốn tham
+              gia lại nhóm.
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleKickMember}
+              className='bg-red-600 hover:bg-red-700'
+              disabled={isKicking}
+            >
+              {isKicking ? 'Đang xử lý...' : 'Loại khỏi nhóm'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

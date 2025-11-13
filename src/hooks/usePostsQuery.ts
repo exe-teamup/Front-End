@@ -105,6 +105,8 @@ export function useRefreshPosts(postType?: PostType) {
 }
 
 export function useJoinRequest() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (data: {
       studentId: number;
@@ -116,6 +118,17 @@ export function useJoinRequest() {
         data
       );
       return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate all join-requests queries
+      queryClient.invalidateQueries({ queryKey: ['join-requests'] });
+      // Invalidate all join-requests-by-student queries (for all students)
+      queryClient.invalidateQueries({
+        queryKey: ['join-requests-by-student'],
+        exact: false,
+      });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
     },
   });
 }

@@ -75,14 +75,14 @@ export function Footer({ className }: FooterProps) {
                   Tạo nhóm
                 </a>
               </li>
-              <li>
+              {/* <li>
                 <a
                   href='/blog'
                   className='text-text-primary hover:text-primary transition-colors'
                 >
                   Blog
                 </a>
-              </li>
+              </li> */}
               <li>
                 <a
                   href='/help'

@@ -79,9 +79,9 @@ export function GroupPostCard({
         requestType: 'STUDENT_REQUEST',
       });
 
-      // Invalidate join requests query to refetch and update button state
+      // Refetch to ensure data is synced immediately
       if (profile?.userId) {
-        queryClient.invalidateQueries({
+        await queryClient.refetchQueries({
           queryKey: ['join-requests-by-student', String(profile.userId)],
         });
       }
@@ -114,6 +114,9 @@ export function GroupPostCard({
         groupId: Number(profile.groupId),
         requestType: 'GROUP_INVITATION',
       });
+
+      // Refetch to ensure data is synced immediately
+      await queryClient.refetchQueries({ queryKey: ['join-requests'] });
 
       toast.success('Đã gửi lời mời tham gia nhóm!');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

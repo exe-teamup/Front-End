@@ -11,32 +11,93 @@ import { UserPlus, Users } from 'lucide-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { ApiClient } from '@/lib/axios';
+import { useGetUserById } from '@/hooks/api/useUsersApi';
+import { useJoinRequest } from '@/hooks/usePostsQuery';
+import { useStudentProfileStore } from '@/store/studentProfile';
 import type { Group } from '../../types/group';
 
 interface RelatedGroupsListProps {
-  groups: Group[];
+  leaderId?: string;
   currentGroupMajor?: string;
 }
 
 function RelatedGroupsList({
-  groups,
+  leaderId,
   currentGroupMajor,
 }: RelatedGroupsListProps) {
+  const { profile } = useStudentProfileStore();
+  const { mutateAsync: sendJoinRequest, isPending } = useJoinRequest();
   const [showCancelDialog, setShowCancelDialog] = React.useState<string | null>(
     null
   );
+
+  // Fetch leader info to get majorId
+  const { data: leaderInfo } = useGetUserById(leaderId || '');
+
+  // Fetch related groups by majorId
+  const { data: allGroups = [], isLoading } = useQuery<Group[]>({
+    queryKey: ['groups', 'related', leaderInfo?.majorId],
+    queryFn: async () => {
+      if (!leaderInfo?.majorId) return [];
+
+      const response = await ApiClient.get<Group[]>('/groups', {
+        majorId: leaderInfo.majorId,
+      });
+      return response.data;
+    },
+    enabled: !!leaderInfo?.majorId,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Filter out current group and limit to 6
+  const relatedGroups = React.useMemo(() => {
+    if (!allGroups || !Array.isArray(allGroups)) return [];
+
+    // Filter out groups that match current leader (if leaderId is provided)
+    const filtered = leaderId
+      ? allGroups.filter(
+          group => group.leader && String(group.leader.studentId) !== leaderId
+        )
+      : allGroups;
+
+    // Limit to 6 groups
+    return filtered.slice(0, 6);
+  }, [allGroups, leaderId]);
 
   const handleJoinGroup = (groupId: string) => {
     setShowCancelDialog(groupId);
   };
 
-  const handleConfirmJoinRequest = () => {
-    if (showCancelDialog) {
-      // Call API to send join request
+  const handleConfirmJoinRequest = async () => {
+    if (!showCancelDialog || !profile?.userId) {
+      toast.error('Vui lòng đăng nhập để tham gia nhóm');
+      return;
+    }
+
+    try {
+      await sendJoinRequest({
+        studentId: Number(profile.userId),
+        groupId: Number(showCancelDialog),
+        requestType: 'STUDENT_REQUEST',
+      });
+
       toast.success(
-        'Đã gửi yêu cầu tham gia nhóm. Vui long chờ trưởng nhóm phê duyệt.'
+        'Đã gửi yêu cầu tham gia nhóm. Vui lòng chờ trưởng nhóm phê duyệt.'
       );
       setShowCancelDialog(null);
+    } catch (error) {
+      const message =
+        (
+          error as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
+        (error as { message?: string })?.message ||
+        'Không thể gửi yêu cầu. Vui lòng thử lại.';
+      toast.error(message);
     }
   };
 
@@ -76,14 +137,34 @@ function RelatedGroupsList({
     );
   };
 
-  if (groups.length === 0) {
+  if (isLoading) {
+    return (
+      <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
+        <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+          Nhóm bạn có thể quan tâm
+        </h3>
+        <div className='space-y-4'>
+          {[1, 2, 3].map(i => (
+            <div key={i} className='animate-pulse'>
+              <div className='h-4 bg-gray-200 rounded w-3/4 mb-2'></div>
+              <div className='h-3 bg-gray-200 rounded w-1/2'></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (relatedGroups.length === 0) {
     return (
       <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
         <h3 className='text-lg font-semibold text-gray-900 mb-4'>
           Nhóm bạn có thể quan tâm
         </h3>
         <p className='text-black text-sm'>
-          Không có nhóm nào cùng chuyên ngành {currentGroupMajor}
+          {currentGroupMajor
+            ? `Không có nhóm nào cùng chuyên ngành ${currentGroupMajor}`
+            : 'Không có nhóm nào để hiển thị'}
         </p>
       </div>
     );
@@ -99,7 +180,7 @@ function RelatedGroupsList({
       </p>
 
       <div className='space-y-4'>
-        {groups.map(group => (
+        {relatedGroups.map(group => (
           <div
             key={group.groupId}
             className='flex items-start gap-3 p-3 border-b border-gray-200 transition-colors'
@@ -162,8 +243,9 @@ function RelatedGroupsList({
             <AlertDialogAction
               onClick={handleConfirmJoinRequest}
               className='bg-primary hover:bg-primary/80 text-white'
+              disabled={isPending}
             >
-              Gửi yêu cầu
+              {isPending ? 'Đang gửi...' : 'Gửi yêu cầu'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

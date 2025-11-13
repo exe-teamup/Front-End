@@ -8,7 +8,7 @@ import {
   User,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +36,7 @@ interface RequestWithUser {
 
 function IncomingRequestsTab() {
   const { profile } = useStudentProfileStore();
+  const queryClient = useQueryClient();
   const [showApproveDialog, setShowApproveDialog] = useState<number | null>(
     null
   );
@@ -126,9 +127,12 @@ function IncomingRequestsTab() {
         requestStatus: 'APPROVED',
       });
 
+      // Refetch to ensure data is synced
+      await queryClient.refetchQueries({ queryKey: ['join-requests'] });
+
       toast.success('Đã chấp nhận yêu cầu tham gia nhóm');
       setShowApproveDialog(null);
-    } catch (error) {
+    } catch {
       toast.error('Có lỗi xảy ra, vui lòng thử lại');
     }
   };
@@ -147,6 +151,9 @@ function IncomingRequestsTab() {
         requestStatus: 'DENIED',
         denyReason: denyReason.trim(),
       });
+
+      // Refetch to ensure data is synced
+      await queryClient.refetchQueries({ queryKey: ['join-requests'] });
 
       toast.success('Đã từ chối yêu cầu tham gia nhóm');
       setShowRejectDialog(null);
