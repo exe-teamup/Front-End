@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ProfileSidebar } from '../../components/profile/ProfileSidebar';
 import { useStudentProfileStore } from '../../store/studentProfile';
+import { useStudentProfile } from '../../hooks/useStudentProfile';
+import { useGroups } from '../../hooks/useGroups';
 import { cn } from '../../utils/cn';
 
 type TabKey = 'account' | 'settings' | 'posts' | 'groups';
@@ -18,7 +20,9 @@ export function AccountSetting() {
     bio: '',
   });
 
-  const { profile, status, updateProfile } = useStudentProfileStore();
+  const { profile, isLoading: isLoadingProfile } = useStudentProfile();
+  const { myGroup, isLoadingOwnGroup, isLeader } = useGroups();
+  const { updateProfile } = useStudentProfileStore();
 
   // Profile is auto-fetched after sign-in in auth store
   // No need to fetch again on component mount
@@ -74,7 +78,7 @@ export function AccountSetting() {
   };
 
   // Show loading state
-  if (status === 'loading') {
+  if (isLoadingProfile) {
     return (
       <div className='max-w-7xl mx-auto px-4 py-8'>
         <div className='flex items-center justify-center h-64'>
@@ -85,7 +89,7 @@ export function AccountSetting() {
   }
 
   // Show error state
-  if (status === 'error' || !profile) {
+  if (!profile) {
     return (
       <div className='max-w-7xl mx-auto px-4 py-8'>
         <div className='flex items-center justify-center h-64'>
@@ -261,7 +265,11 @@ export function AccountSetting() {
 
           {activeTab === 'groups' && (
             <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-0'>
-              <MyGroupsTab />
+              <MyGroupsTab
+                currentGroup={myGroup}
+                isLoading={isLoadingOwnGroup}
+                isLeader={isLeader}
+              />
             </div>
           )}
         </div>
