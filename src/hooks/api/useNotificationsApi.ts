@@ -1,4 +1,4 @@
-import { createQueryHook, createMutationHook } from '../queryFactory';
+import { createQueryHook } from '../queryFactory';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/lib/axios';
 import { AxiosError } from 'axios';
