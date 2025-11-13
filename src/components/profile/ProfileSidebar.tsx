@@ -1,4 +1,4 @@
-import { User, Settings, Users } from 'lucide-react';
+import { User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProfileSidebarProps {
@@ -32,7 +32,7 @@ export function ProfileSidebar({
             <User className='w-4 h-4' />
             Thông tin cá nhân
           </button>
-          <button
+          {/* <button
             type='button'
             onClick={() => onChange && onChange('settings')}
             className={cn(
@@ -44,7 +44,7 @@ export function ProfileSidebar({
           >
             <Settings className='w-4 h-4' />
             Cài đặt
-          </button>
+          </button> */}
           {/* <button
             type='button'
             onClick={() => onChange && onChange('posts')}

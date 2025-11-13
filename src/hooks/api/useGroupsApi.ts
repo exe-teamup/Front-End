@@ -89,6 +89,7 @@ export const useTransferLeader = (groupId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
     },
   });
 };
@@ -109,6 +110,7 @@ export const useKickMember = (groupId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['group', groupId] });
       queryClient.invalidateQueries({ queryKey: ['join-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
     },
   });
 };
@@ -127,6 +129,7 @@ export const useLeaveGroup = () => {
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['join-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
     },
   });
 };
@@ -147,6 +150,7 @@ export const useAddMember = (groupId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['group', groupId] });
       queryClient.invalidateQueries({ queryKey: ['join-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
     },
   });
 };

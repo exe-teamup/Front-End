@@ -1,12 +1,18 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../constants/routes';
 import { useAuthStore } from '../../store/auth';
 import { Button } from '../Button/Button';
 import { IconBell, IconUser } from '../Icon/icons';
+import { NotificationDropdown } from '../notifications/NotificationDropdown';
+import { useGetMyNotifications } from '@/hooks/api/useNotificationsApi';
 
 export function AuthButton() {
   const { status, user, signOut } = useAuthStore();
   const navigate = useNavigate();
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const { data: notifications = [] } = useGetMyNotifications();
+
   const handleSignIn = () => {
     navigate(ROUTES.LOGIN);
   };
@@ -15,6 +21,12 @@ export function AuthButton() {
     await signOut();
     navigate(ROUTES.HOME);
   };
+
+  // Calculate unread count
+  const notificationsArray = Array.isArray(notifications) ? notifications : [];
+  const unreadCount = notificationsArray.filter(
+    (n: { checked: boolean }) => !n.checked
+  ).length;
 
   // Show loading state
   if (status === 'loading') {
@@ -29,15 +41,25 @@ export function AuthButton() {
   if (user && status !== 'unauthenticated') {
     return (
       <div className='flex items-center gap-6'>
-        <button
-          aria-label='notifications'
-          className='relative text-text-title cursor-pointer hover:text-primary transition-colors'
-        >
-          <IconBell className='h-6 w-6' />
-          <span className='absolute -top-1 -right-2 bg-error text-white text-xs rounded-full px-1'>
-            2
-          </span>
-        </button>
+        <div className='relative'>
+          <button
+            type='button'
+            aria-label='notifications'
+            onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+            className='relative text-text-title cursor-pointer hover:text-primary transition-colors'
+          >
+            <IconBell className='h-6 w-6' />
+            {unreadCount > 0 && (
+              <span className='absolute -top-1 -right-2 bg-error text-white text-xs rounded-full px-1.5 min-w-[20px] text-center'>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+          <NotificationDropdown
+            isOpen={isNotificationOpen}
+            onClose={() => setIsNotificationOpen(false)}
+          />
+        </div>
 
         {/* User Dropdown */}
         <div className='relative group'>

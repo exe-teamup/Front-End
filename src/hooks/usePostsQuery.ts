@@ -129,6 +129,7 @@ export function useJoinRequest() {
       });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
     },
   });
 }
