@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
 
   DASHBOARD: {
     STATS: '/dashboard/stats',
+    WORKLOAD: '/dashboard/workload',
   },
 } as const;
 
