@@ -25,7 +25,7 @@ export function Login() {
         if (account.role === 'ADMIN') {
           navigate(ROUTES.ADMIN.ROOT, { replace: true });
         } else if (account.role === 'MODERATOR') {
-          navigate('', { replace: true });
+          navigate(ROUTES.MODERATOR.ROOT, { replace: true });
         } else {
           navigate(ROUTES.HOME, { replace: true });
         }

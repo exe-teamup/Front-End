@@ -9,12 +9,15 @@ import {
 } from '@/components/ui/alert-dialog';
 import type { Group } from '@/types/group';
 import { Copy, Eye, MoreHorizontal, User, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '../Button';
 import { useJoinRequest } from '@/hooks/usePostsQuery';
 import { useStudentProfileStore } from '@/store/studentProfile';
+import { useGetJoinRequestsByStudent } from '@/hooks/api/useJoinRequestsApi';
+import type { JoinRequestResponse } from '@/types/joinRequest';
 
 interface GroupCardProps {
   group: Group;
@@ -30,7 +33,24 @@ function GroupCard({
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState<string | null>(null);
   const { profile } = useStudentProfileStore();
-  const { mutateAsync: sendJoinRequest } = useJoinRequest();
+  const queryClient = useQueryClient();
+  const { mutateAsync: sendJoinRequest, isPending } = useJoinRequest();
+
+  const { data: userRequests = [] } = useGetJoinRequestsByStudent(
+    profile?.userId ? String(profile.userId) : ''
+  );
+  const typedUserRequests = userRequests as unknown as JoinRequestResponse[];
+
+  const hasSentRequest = useMemo(() => {
+    if (!group.groupId || !profile?.userId) return false;
+
+    return typedUserRequests.some(
+      (req: JoinRequestResponse) =>
+        req.groupId === Number(group.groupId) &&
+        req.requestStatus === 'PENDING' &&
+        req.requestType === 'STUDENT_REQUEST'
+    );
+  }, [typedUserRequests, group.groupId, profile?.userId]);
 
   const handleCopyLink = () => {
     const groupUrl = `${window.location.origin}/groups/${group.groupId}`;
@@ -58,6 +78,12 @@ function GroupCard({
         groupId: Number(showCancelDialog),
         requestType: 'STUDENT_REQUEST',
       });
+
+      if (profile?.userId) {
+        queryClient.invalidateQueries({
+          queryKey: ['join-requests-by-student', String(profile.userId)],
+        });
+      }
 
       toast.success(
         'Đã gửi yêu cầu tham gia nhóm. Vui lòng chờ trưởng nhóm phê duyệt.'
@@ -145,8 +171,13 @@ function GroupCard({
               onClick={() => {
                 handleJoinRequest(group.groupId);
               }}
+              disabled={hasSentRequest || isPending}
             >
-              Tham gia nhóm
+              {isPending
+                ? 'Đang gửi...'
+                : hasSentRequest
+                  ? 'Đã gửi yêu cầu'
+                  : 'Tham gia nhóm'}
             </Button>
           </div>
         )}

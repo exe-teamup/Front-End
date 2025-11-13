@@ -7,17 +7,12 @@ type PostMajorInfo = {
 };
 
 export interface CreateGroupPostRequest {
-  userId: string;
-  groupId: string;
   title: string;
   postDetail?: string;
-  postStatus: PostStatus;
-  postMajorRequests?: [
-    {
-      majorId: string;
-      studentNum: number;
-    },
-  ];
+  postMajorRequests?: {
+    majorId: number;
+    studentNum: number;
+  }[];
 }
 
 export interface CreateUserPostRequest {
@@ -29,8 +24,9 @@ export interface CreateUserPostRequest {
 
 export interface GroupPost {
   postId: string;
-  authorName: string;
-  groupId: string;
+  authorName?: string;
+  userId?: number;
+  groupId?: string | null;
   title: string;
   postDetail?: string;
   postStatus: PostStatus;

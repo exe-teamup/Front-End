@@ -53,12 +53,27 @@ export const useHandleJoinRequest = () => {
   return useMutation<
     unknown,
     AxiosError<{ message: string }>,
-    { id: string; action: 'APPROVED' | 'REJECTED' }
+    {
+      id: string;
+      requestStatus: 'PENDING' | 'APPROVED' | 'DENIED' | 'WITHDRAWN';
+      denyReason?: string;
+    }
   >({
-    mutationFn: ({ id, action }) =>
-      ApiClient.patch(`${BASE_URL}/handle-request/${id}`, { action }),
+    mutationFn: async ({ id, requestStatus, denyReason }) => {
+      const requestBody: { requestStatus: string; denyReason: string | null } =
+        {
+          requestStatus,
+          denyReason:
+            requestStatus === 'DENIED' && denyReason ? denyReason : null,
+        };
+
+      return ApiClient.patch(`${BASE_URL}/handle-request/${id}`, requestBody, {
+        timeout: 15000,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['join-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['join-requests-by-student'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
   });
