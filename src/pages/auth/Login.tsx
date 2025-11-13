@@ -18,17 +18,12 @@ export function Login() {
         fetchProfile();
       }
 
-      // check role then navigate to their page
-      if (state?.from) {
-        navigate(state.from, { replace: true });
+      if (account.role === 'ADMIN') {
+        navigate(ROUTES.ADMIN.ROOT, { replace: true });
+      } else if (account.role === 'MODERATOR') {
+        navigate(ROUTES.MODERATOR.ROOT, { replace: true });
       } else {
-        if (account.role === 'ADMIN') {
-          navigate(ROUTES.ADMIN.ROOT, { replace: true });
-        } else if (account.role === 'MODERATOR') {
-          navigate(ROUTES.MODERATOR.ROOT, { replace: true });
-        } else {
-          navigate(ROUTES.HOME, { replace: true });
-        }
+        navigate(ROUTES.HOME, { replace: true });
       }
     }
   }, [status, user, navigate, state, account, fetchProfile]);
