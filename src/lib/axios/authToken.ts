@@ -9,8 +9,8 @@ function setCookie(name: string, value: string, days = 7) {
   const expires = new Date(
     Date.now() + days * 24 * 60 * 60 * 1000
   ).toUTCString();
-  // Use Lax to allow auth redirect flows, secure flag will be ignored on http but fine in dev
-  document.cookie = `${name}=${encodeURIComponent(value)}; Expires=${expires}; Path=/; SameSite=Lax; Secure`;
+  const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${name}=${encodeURIComponent(value)}; Expires=${expires}; Path=/; SameSite=Lax${secureFlag}`;
 }
 
 function getCookie(name: string): string | null {
@@ -21,7 +21,8 @@ function getCookie(name: string): string | null {
 }
 
 function deleteCookie(name: string) {
-  document.cookie = `${name}=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax; Secure`;
+  const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${name}=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax${secureFlag}`;
 }
 
 export class AuthTokenManager {

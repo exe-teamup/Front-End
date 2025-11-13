@@ -117,15 +117,12 @@ export function CreateTeam() {
 
     try {
       await createGroupPost({
-        userId: profile.userId,
-        groupId: profile.groupId,
         title: formData.title,
         postDetail: formData.postDetail,
-        postStatus: 'ACTIVE',
         postMajorRequests: formData.majors.map(m => ({
-          majorId: m.majorId,
+          majorId: Number(m.majorId),
           studentNum: m.studentNum,
-        })) as [{ majorId: string; studentNum: number }],
+        })),
       });
 
       toast.success('Đã tạo bài tuyển thành viên!');

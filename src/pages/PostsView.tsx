@@ -43,6 +43,28 @@ const MAJOR_OPTIONS = [
   'IT',
 ] as const;
 
+/**
+ * Parse date string from backend format "DD/MM/YYYY HH:mm:ss" to timestamp
+ */
+function parseCustomDate(dateStr: string): number {
+  try {
+    const [datePart, timePart] = dateStr.split(' ');
+    const [day, month, year] = datePart.split('/');
+    const [hours, minutes, seconds] = timePart.split(':');
+
+    return new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hours),
+      Number(minutes),
+      Number(seconds)
+    ).getTime();
+  } catch {
+    return 0;
+  }
+}
+
 export default function PostsView() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -137,7 +159,14 @@ export default function PostsView() {
       );
     }
 
-    return result;
+    // Sort by createdAt descending
+    const sorted = [...result].sort((a, b) => {
+      const timeA = parseCustomDate(a.createdAt);
+      const timeB = parseCustomDate(b.createdAt);
+      return timeB - timeA;
+    });
+
+    return sorted;
   }, [activePosts, time, major]);
 
   // Paginated posts (for "load more" functionality)

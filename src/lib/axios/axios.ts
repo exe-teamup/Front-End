@@ -21,21 +21,9 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Log requests in development only
-    if (import.meta.env.DEV) {
-      console.log(
-        `[API Request] ${config.method?.toUpperCase()} ${config.url}`,
-        config.headers.Authorization ? '✅ Token attached' : '❌ No token'
-      );
-    }
-
     return config;
   },
   (error: AxiosError) => {
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.error('[API Request Error]', error);
-    }
     return Promise.reject(error);
   }
 );
@@ -43,30 +31,12 @@ axiosInstance.interceptors.request.use(
 // Response interceptor
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Log successful responses in development only
-    // if (import.meta.env.DEV) {
-    //   console.log(
-    //     `[API Response] ${response.status} ${response.config.url} at ${new Date().toISOString()}`
-    //   );
-    // }
-
     return response;
   },
   (error: AxiosError) => {
     // Handle different error scenarios
     if (error.response) {
       const { status } = error.response;
-
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.error(
-          `❌ [API Error] ${status} ${error.config?.url}`,
-          '\n📦 Response:',
-          error.response.data,
-          '\n🔑 Token:',
-          error.config?.headers.Authorization ? 'Sent' : 'Not sent'
-        );
-      }
 
       // Handle specific error cases
       switch (status) {
@@ -94,14 +64,6 @@ axiosInstance.interceptors.response.use(
       }
     } else if (error.request) {
       // Network error
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.error('[Network Error]', error.request);
-      }
-    } else if (import.meta.env.DEV) {
-      // Something else happened
-      // eslint-disable-next-line no-console
-      console.error('[Error]', error.message);
     }
 
     return Promise.reject(error);

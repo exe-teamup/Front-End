@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Clock, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getUserGroupStatus, cancelGroupRequest } from '@/mock/groups.mockapi';
 import { toast } from 'sonner';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,36 +11,134 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useGetJoinRequestsByStudent } from '@/hooks/api/useJoinRequestsApi';
+import { useDeleteJoinRequest } from '@/hooks/api/useJoinRequestsApi';
+import { useStudentProfileStore } from '@/store/studentProfile';
+import { ApiClient } from '@/lib/axios';
+import { serviceConfig } from '@/config/serviceConfig';
+import type { JoinRequestResponse } from '@/types/joinRequest';
+import type { Group } from '@/types/group';
+
+interface RequestWithGroup {
+  request: JoinRequestResponse;
+  group: Group | undefined;
+  isLoading: boolean;
+}
 
 function RequestsTab() {
-  const userStatus = getUserGroupStatus();
-  const [showCancelDialog, setShowCancelDialog] = useState<string | null>(null);
+  const { profile } = useStudentProfileStore();
+  const queryClient = useQueryClient();
+  const [showCancelDialog, setShowCancelDialog] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const allRequests = userStatus.pendingRequests;
-  const totalPages = Math.ceil(allRequests.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const requests = allRequests.slice(startIndex, startIndex + itemsPerPage);
+  const { data: requests, isLoading: isLoadingRequests } =
+    useGetJoinRequestsByStudent(profile?.userId ? String(profile.userId) : '');
 
-  const handleCancelRequest = (requestId: string) => {
+  const requestsArray = useMemo(() => {
+    if (!requests) return [];
+    if (Array.isArray(requests)) {
+      return requests as JoinRequestResponse[];
+    }
+    if (requests && typeof requests === 'object' && 'data' in requests) {
+      return Array.isArray((requests as { data: unknown }).data)
+        ? ((requests as { data: unknown[] }).data as JoinRequestResponse[])
+        : [];
+    }
+    return [];
+  }, [requests]);
+
+  const pendingRequests = useMemo(() => {
+    if (!Array.isArray(requestsArray) || requestsArray.length === 0) {
+      return [];
+    }
+
+    const filtered = requestsArray.filter((req: JoinRequestResponse) => {
+      const isPending = req.requestStatus === 'PENDING';
+      const isStudentRequest = req.requestType === 'STUDENT_REQUEST';
+      return isPending && isStudentRequest;
+    });
+
+    return filtered;
+  }, [requestsArray]);
+
+  const groupQueries = useMemo(() => {
+    return pendingRequests.map((request: JoinRequestResponse) => ({
+      queryKey: [
+        'group',
+        String(request.groupId),
+        'request',
+        request.id,
+      ] as const,
+      queryFn: async () => {
+        const response = await ApiClient.get<Group>(
+          serviceConfig.ENDPOINTS.GROUP_BY_ID(String(request.groupId))
+        );
+        return response.data;
+      },
+      enabled: !!request.groupId,
+      staleTime: 5 * 60 * 1000,
+    }));
+  }, [pendingRequests]);
+
+  const groupDataQueries = useQueries({
+    queries: groupQueries,
+  });
+
+  const requestsWithGroupData: RequestWithGroup[] = useMemo(() => {
+    return pendingRequests.map((request, index: number) => ({
+      request,
+      group: groupDataQueries[index]?.data,
+      isLoading: groupDataQueries[index]?.isLoading ?? false,
+    }));
+  }, [pendingRequests, groupDataQueries]);
+
+  const { mutateAsync: deleteRequest, isPending: isDeleting } =
+    useDeleteJoinRequest();
+
+  const totalPages = Math.ceil(requestsWithGroupData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const displayedRequests = requestsWithGroupData.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  const handleCancelRequest = (requestId: number) => {
     setShowCancelDialog(requestId);
   };
 
-  const confirmCancelRequest = () => {
-    if (showCancelDialog) {
-      const success = cancelGroupRequest(showCancelDialog);
-      if (success) {
-        toast.success('Đã hủy yêu cầu tham gia nhóm');
-        // In a real app, this would call an API and refresh the list
-      } else {
-        toast.error('Có lỗi xảy ra, vui lòng thử lại');
+  const confirmCancelRequest = async () => {
+    if (!showCancelDialog) return;
+
+    try {
+      await deleteRequest(String(showCancelDialog));
+
+      if (profile?.userId) {
+        queryClient.invalidateQueries({
+          queryKey: ['join-requests-by-student', String(profile.userId)],
+        });
       }
+
+      toast.success('Đã hủy yêu cầu tham gia nhóm');
       setShowCancelDialog(null);
+    } catch {
+      toast.error('Có lỗi xảy ra, vui lòng thử lại');
     }
   };
 
-  if (allRequests.length === 0) {
+  if (isLoadingRequests) {
+    return (
+      <div className='p-8 text-center'>
+        <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+          <Clock className='w-8 h-8 text-gray-400 animate-pulse' />
+        </div>
+        <h3 className='text-lg font-medium text-gray-900 mb-2'>Đang tải...</h3>
+        <p className='text-gray-500'>Đang tải danh sách yêu cầu.</p>
+      </div>
+    );
+  }
+
+  if (pendingRequests.length === 0) {
     return (
       <div className='p-8 text-center'>
         <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
@@ -58,7 +156,7 @@ function RequestsTab() {
     <div className='p-6'>
       <div className='mb-4'>
         <h2 className='text-lg font-semibold text-gray-900'>
-          Yêu cầu tham gia ({allRequests.length})
+          Yêu cầu tham gia ({requestsWithGroupData.length})
         </h2>
         <p className='text-sm text-gray-500'>
           Các nhóm bạn đã gửi yêu cầu tham gia
@@ -67,40 +165,65 @@ function RequestsTab() {
       </div>
 
       <div className='space-y-4'>
-        {requests.map(request => (
+        {displayedRequests.map(({ request, group, isLoading }) => (
           <div
             key={request.id}
             className='flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50'
           >
-            <div className='flex items-center gap-4'>
+            <div className='flex items-center gap-4 flex-1'>
               <img
-                src={request.groupAvatar || '/images/logo.svg'}
-                alt={request.groupName}
+                src='/images/logo.svg'
+                alt={group?.groupName || 'Group'}
                 className='w-6 h-6 md:w-12 md:h-12 rounded-lg object-cover'
               />
-              <div className=''>
-                <h3 className='font-medium text-gray-900'>
-                  {request.groupName}
-                </h3>
-                <p className='text-sm text-black'>
-                  Trưởng nhóm: {request.groupLeader}
-                </p>
-                <div className='flex flex-col md:flex-row items-start md:items-center md:gap-4 mt-1'>
-                  <span className='text-sm text-black'>
-                    {request.memberCount}/{request.maxMembers} thành viên
-                  </span>
-                  <span className='text-sm text-black'>
-                    Gửi lúc:{' '}
-                    {new Date(request.requestedAt).toLocaleDateString('vi-VN')}
-                  </span>
-                </div>
+              <div className='flex-1'>
+                {isLoading ? (
+                  <div className='space-y-2'>
+                    <div className='h-4 bg-gray-200 rounded w-32 animate-pulse'></div>
+                    <div className='h-3 bg-gray-200 rounded w-48 animate-pulse'></div>
+                  </div>
+                ) : group ? (
+                  <>
+                    <h3 className='font-medium text-gray-900'>
+                      {group.groupName}
+                    </h3>
+                    <p className='text-sm text-black'>
+                      Trưởng nhóm: {group.leader.studentName}
+                    </p>
+                    <div className='flex flex-col md:flex-row items-start md:items-center md:gap-4 mt-1'>
+                      <span className='text-sm text-black'>
+                        {group.memberCount}/
+                        {group.templates?.maxMember || '---'} thành viên
+                      </span>
+                      <span className='text-sm text-black'>
+                        Gửi lúc:{' '}
+                        {new Date(request.createdAt).toLocaleDateString(
+                          'vi-VN',
+                          {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          }
+                        )}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className='text-sm text-gray-500'>
+                    Không thể tải thông tin nhóm
+                  </div>
+                )}
               </div>
             </div>
 
             <div className='flex items-center gap-2'>
               <button
+                type='button'
                 onClick={() => handleCancelRequest(request.id)}
-                className='flex items-center gap-2 cursor-pointer px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors'
+                disabled={isDeleting}
+                className='flex items-center gap-2 cursor-pointer px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 <X className='w-4 h-4' />
                 Hủy yêu cầu
@@ -115,6 +238,7 @@ function RequestsTab() {
         <div className='flex items-center justify-between mt-8 pt-6 border-t border-gray-200'>
           <div className='flex items-center gap-2'>
             <button
+              type='button'
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               className='flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-500 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed'
@@ -126,6 +250,7 @@ function RequestsTab() {
               Trang {currentPage} / {totalPages}
             </span>
             <button
+              type='button'
               onClick={() =>
                 setCurrentPage(Math.min(totalPages, currentPage + 1))
               }
@@ -154,6 +279,7 @@ function RequestsTab() {
               return (
                 <button
                   key={pageNum}
+                  type='button'
                   onClick={() => setCurrentPage(pageNum)}
                   className={`w-8 h-8 cursor-pointer rounded-full text-sm font-medium transition-colors ${
                     currentPage === pageNum
@@ -169,6 +295,7 @@ function RequestsTab() {
               <>
                 <span className='text-gray-400'>...</span>
                 <button
+                  type='button'
                   onClick={() => setCurrentPage(totalPages)}
                   className='w-8 h-8 cursor-pointer rounded-full text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                 >
@@ -199,8 +326,9 @@ function RequestsTab() {
             <AlertDialogAction
               onClick={confirmCancelRequest}
               className='bg-red-600 hover:bg-red-700'
+              disabled={isDeleting}
             >
-              Hủy yêu cầu
+              {isDeleting ? 'Đang xử lý...' : 'Hủy yêu cầu'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
