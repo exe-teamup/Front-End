@@ -259,9 +259,10 @@ export function GroupDetail() {
                     <div className='w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center'>
                       <GraduationCap className='w-6 h-6 text-gray-400' />
                     </div>
-                    <div className='flex items-center gap-2 mb-1'>
-                      <h3 className='font-medium text-gray-500'>
-                        Chưa chọn giảng viên
+                    <div className='flex flex-col items-start mb-1'>
+                      <h4 className='font-medium text-gray-900'>Mã lớp học</h4>
+                      <h3 className='font-medium text-primary'>
+                        {group.course.courseCode}
                       </h3>
                     </div>
                   </div>

@@ -1,7 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import { useGroupStore } from '../store/group';
 import { useStudentProfileStore } from '../store/studentProfile';
-import { getUserGroupStatus } from '../mock/groups.mockapi';
+import {
+  useGetJoinRequestsByStudent,
+  useGetAllJoinRequests,
+} from './api/useJoinRequestsApi';
+import type { JoinRequestResponse } from '../types/joinRequest';
 
 /**
  * Custom hook to retrieve all group-related information
@@ -60,50 +64,63 @@ export const useGroups = () => {
   const allGroupsError = listError;
   const hasError = !!ownGroupError || !!allGroupsError;
 
-  /* ============================================================
-   * GROUP JOIN REQUESTS - UNDER DEVELOPMENT
-   * ============================================================
-   * When server-side API is ready, uncomment the following code:
-   *
-   * const [joinRequests, setJoinRequests] = useState<GroupJoinRequest[]>([]);
-   * const [requestsStatus, setRequestsStatus] = useState<LoadingStatus>('idle');
-   * const [requestsError, setRequestsError] = useState<string>();
-   *
-   * useEffect(() => {
-   *   const fetchJoinRequests = async () => {
-   *     setRequestsStatus('loading');
-   *     try {
-   *       const response = await ApiClient.get<GroupJoinRequest[]>(
-   *         serviceConfig.ENDPOINTS.GROUP_JOIN_REQUESTS
-   *       );
-   *       setJoinRequests(response.data);
-   *       setRequestsStatus('success');
-   *     } catch (e) {
-   *       const message = e instanceof Error ? e.message : 'Failed to fetch join requests';
-   *       setRequestsError(message);
-   *       setRequestsStatus('error');
-   *     }
-   *   };
-   *
-   *   fetchJoinRequests();
-   * }, []);
-   *
-   * const pendingRequestsCount = useMemo(() => {
-   *   return joinRequests.filter(req => req.status === 'PENDING').length;
-   * }, [joinRequests]);
-   * ============================================================ */
+  const { data: studentRequests } = useGetJoinRequestsByStudent(
+    profile?.userId ? String(profile.userId) : ''
+  );
 
-  // Placeholder for pending requests count until API is ready
-  const pendingRequestsCount = 0;
+  const { data: allRequests } = useGetAllJoinRequests();
+
+  const studentRequestsArray = useMemo(() => {
+    if (!studentRequests) return [];
+    if (Array.isArray(studentRequests)) {
+      return studentRequests as JoinRequestResponse[];
+    }
+    if (
+      studentRequests &&
+      typeof studentRequests === 'object' &&
+      'data' in studentRequests
+    ) {
+      return Array.isArray((studentRequests as { data: unknown }).data)
+        ? ((studentRequests as { data: unknown[] })
+            .data as JoinRequestResponse[])
+        : [];
+    }
+    return [];
+  }, [studentRequests]);
+
+  const pendingRequestsCount = useMemo(() => {
+    if (
+      !Array.isArray(studentRequestsArray) ||
+      studentRequestsArray.length === 0
+    ) {
+      return 0;
+    }
+    return studentRequestsArray.filter(
+      (req: JoinRequestResponse) =>
+        req.requestStatus === 'PENDING' && req.requestType === 'STUDENT_REQUEST'
+    ).length;
+  }, [studentRequestsArray]);
+
+  const allRequestsArray = useMemo(() => {
+    if (!allRequests) return [];
+    if (Array.isArray(allRequests)) {
+      return allRequests as JoinRequestResponse[];
+    }
+    return [];
+  }, [allRequests]);
 
   const incomingRequestsCount = useMemo(() => {
-    if (hasGroup) {
-      const userStatus = getUserGroupStatus();
-      return userStatus.incomingRequests.filter(req => req.status === 'PENDING')
-        .length;
+    if (!hasGroup || !profile?.groupId) return 0;
+    if (!Array.isArray(allRequestsArray) || allRequestsArray.length === 0) {
+      return 0;
     }
-    return 0;
-  }, [hasGroup]);
+    return allRequestsArray.filter(
+      (req: JoinRequestResponse) =>
+        req.groupId === Number(profile.groupId) &&
+        req.requestStatus === 'PENDING' &&
+        req.requestType === 'STUDENT_REQUEST'
+    ).length;
+  }, [allRequestsArray, hasGroup, profile?.groupId]);
 
   return {
     // Student's own group data

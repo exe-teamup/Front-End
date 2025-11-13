@@ -1,10 +1,17 @@
 import { cn } from '@/lib/utils';
 import { Clock, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
 import type { GroupPost } from '../../types/post';
 import { formatDate } from '@/utils/formatDate';
 import { useJoinRequest } from '@/hooks/usePostsQuery';
 import { useStudentProfileStore } from '@/store/studentProfile';
+import { useGetUserById } from '@/hooks/api/useUsersApi';
+import { useGetJoinRequestsByStudent } from '@/hooks/api/useJoinRequestsApi';
+import { useQueryClient } from '@tanstack/react-query';
+import type { UserPublicProfile } from '@/types/user';
+import type { JoinRequestResponse } from '@/types/joinRequest';
 
 interface GroupPostCardProps {
   post: GroupPost;
@@ -12,7 +19,7 @@ interface GroupPostCardProps {
 }
 
 /**
- * GroupPostCard component for displaying group recruitment posts
+ * GroupPostCard component for displaying group recruitment posts and user posts
  * Uses real API data from GroupPost type
  */
 export function GroupPostCard({
@@ -21,6 +28,38 @@ export function GroupPostCard({
 }: GroupPostCardProps) {
   const { profile } = useStudentProfileStore();
   const { mutateAsync: sendJoinRequest, isPending } = useJoinRequest();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const isUserPost = post.postType === 'USER_POST';
+
+  // Fetch user name if it's a USER_POST
+  const { data: userData } = useGetUserById(
+    isUserPost && post.userId ? String(post.userId) : ''
+  );
+  const typedUserData = userData as UserPublicProfile | undefined;
+
+  // Fetch user's join requests to check if already sent
+  const { data: userRequests = [] } = useGetJoinRequestsByStudent(
+    profile?.userId ? String(profile.userId) : ''
+  );
+  const typedUserRequests = userRequests as unknown as JoinRequestResponse[];
+
+  // Check if user has already sent a request to this group
+  const hasSentRequest = useMemo(() => {
+    if (!post.groupId || !profile?.userId) return false;
+
+    return typedUserRequests.some(
+      (req: JoinRequestResponse) =>
+        req.groupId === Number(post.groupId) &&
+        req.requestStatus === 'PENDING' &&
+        req.requestType === 'STUDENT_REQUEST'
+    );
+  }, [typedUserRequests, post.groupId, profile?.userId]);
+
+  // Get author name based on post type
+  const authorName = isUserPost
+    ? typedUserData?.fullName || 'Đang tải...'
+    : post.authorName || 'N/A';
 
   const handleApply = async () => {
     if (!profile?.userId) {
@@ -40,6 +79,13 @@ export function GroupPostCard({
         requestType: 'STUDENT_REQUEST',
       });
 
+      // Invalidate join requests query to refetch and update button state
+      if (profile?.userId) {
+        queryClient.invalidateQueries({
+          queryKey: ['join-requests-by-student', String(profile.userId)],
+        });
+      }
+
       toast.success('Đã gửi yêu cầu tham gia nhóm!');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -51,9 +97,41 @@ export function GroupPostCard({
     }
   };
 
+  const handleSendInvitation = async () => {
+    if (!profile?.userId || !profile?.groupId) {
+      toast.error('Bạn cần có nhóm để gửi lời mời.');
+      return;
+    }
+
+    if (!post.userId) {
+      toast.error('Không tìm thấy thông tin người dùng.');
+      return;
+    }
+
+    try {
+      await sendJoinRequest({
+        studentId: Number(post.userId),
+        groupId: Number(profile.groupId),
+        requestType: 'GROUP_INVITATION',
+      });
+
+      toast.success('Đã gửi lời mời tham gia nhóm!');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Không thể gửi lời mời. Vui lòng thử lại.';
+      toast.error(message);
+    }
+  };
+
   const handleViewDetails = () => {
-    // TODO: Implement navigation to post details when route is ready
-    toast.info('Trang xem chi tiết đang được phát triển!');
+    if (isUserPost && post.userId) {
+      navigate(`/exe/${post.userId}`);
+    } else {
+      navigate(`/groups/${post.groupId}`);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -87,12 +165,13 @@ export function GroupPostCard({
           <h3 className='text-lg font-bold text-text-title mb-1 line-clamp-2'>
             {post.title}
           </h3>
+          {/* Show author name - fetch for USER_POST, use from API for GROUP_POST */}
           <div className='flex items-center gap-2 text-sm text-text-subtitle'>
             <User className='w-4 h-4' />
-            <span>{post.authorName}</span>
+            <span>{authorName}</span>
           </div>
         </div>
-        {getStatusBadge(post.postStatus)}
+        {isUserPost ? null : getStatusBadge(post.postStatus)}
       </div>
 
       {/* Post detail/description */}
@@ -149,19 +228,43 @@ export function GroupPostCard({
 
       {/* Action Buttons */}
       <div className='flex gap-3'>
-        <button
-          className='flex-1 bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-          onClick={handleApply}
-          disabled={isPending}
-        >
-          {isPending ? 'Đang gửi...' : 'Ứng tuyển'}
-        </button>
-        <button
-          className='flex-1 bg-gray-100 text-text-title py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors cursor-pointer'
-          onClick={handleViewDetails}
-        >
-          Xem chi tiết
-        </button>
+        {isUserPost ? (
+          <>
+            <button
+              className='flex-1 bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+              onClick={handleSendInvitation}
+              disabled={isPending}
+            >
+              {isPending ? 'Đang gửi...' : 'Gửi lời mời'}
+            </button>
+            <button
+              className='flex-1 bg-gray-100 text-text-title py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors cursor-pointer'
+              onClick={handleViewDetails}
+            >
+              Xem thông tin
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              className='flex-1 bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+              onClick={handleApply}
+              disabled={isPending || hasSentRequest}
+            >
+              {isPending
+                ? 'Đang gửi...'
+                : hasSentRequest
+                  ? 'Đã gửi yêu cầu'
+                  : 'Ứng tuyển'}
+            </button>
+            <button
+              className='flex-1 bg-gray-100 text-text-title py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors cursor-pointer'
+              onClick={handleViewDetails}
+            >
+              Xem chi tiết
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
