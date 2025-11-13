@@ -14,3 +14,4 @@ export { useMajors } from './useMajors';
 export { usePosts } from './usePosts';
 export { useSemesters } from './useSemesters';
 export { useStudents } from './useStudents';
+export { useWorkload } from './useWorkload';

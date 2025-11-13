@@ -74,12 +74,14 @@ export function CourseManagement() {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [formData, setFormData] = useState({
+    courseId: 0,
     courseName: '',
     courseCode: '',
     semesterId: 0,
     lecturerId: 0,
     maxGroup: 0,
     maxStudents: 0,
+    groupCount: 0,
     status: 'ACTIVE' as Course['status'],
   });
 
@@ -137,13 +139,15 @@ export function CourseManagement() {
   const openEdit = (course: Course) => {
     setSelectedCourse(course);
     setFormData({
+      courseId: course.courseId,
       courseName: course.courseName,
       courseCode: course.courseCode,
       semesterId: course.semesterId,
       lecturerId: course.lecturerId,
       maxGroup: course.maxGroup,
       maxStudents: course.maxStudents,
-      status: course.status,
+      groupCount: course.groupCount,
+      status: course.status || 'ACTIVE',
     });
     setIsEditOpen(true);
   };
@@ -509,6 +513,10 @@ export function CourseManagement() {
                       maxGroup: Number.parseInt(e.target.value) || 0,
                     })
                   }
+                  onInput={e => {
+                    const input = e.currentTarget;
+                    input.value = input.value.replace(/^0+(?=\d)/, '');
+                  }}
                 />
               </div>
               <div>
@@ -522,6 +530,10 @@ export function CourseManagement() {
                       maxStudents: Number.parseInt(e.target.value) || 0,
                     })
                   }
+                  onInput={e => {
+                    const input = e.currentTarget;
+                    input.value = input.value.replace(/^0+(?=\d)/, '');
+                  }}
                 />
               </div>
             </div>
