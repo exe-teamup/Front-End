@@ -1,3 +1,4 @@
+import { useGetMyNotifications } from '@/hooks/api/useNotificationsApi';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../constants/routes';
@@ -5,7 +6,6 @@ import { useAuthStore } from '../../store/auth';
 import { Button } from '../Button/Button';
 import { IconBell, IconUser } from '../Icon/icons';
 import { NotificationDropdown } from '../notifications/NotificationDropdown';
-import { useGetMyNotifications } from '@/hooks/api/useNotificationsApi';
 
 export function AuthButton() {
   const { status, user, signOut } = useAuthStore();
@@ -14,7 +14,7 @@ export function AuthButton() {
   const { data: notifications = [] } = useGetMyNotifications();
 
   const handleSignIn = () => {
-    navigate(ROUTES.LOGIN);
+    navigate(ROUTES.AUTH.ROOT);
   };
 
   const handleSignOut = async () => {
