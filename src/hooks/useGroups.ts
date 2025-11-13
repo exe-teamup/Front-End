@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useGroupStore } from '../store/group';
-import { useStudentProfileStore } from '../store/studentProfile';
+import { useStudentProfile } from './useStudentProfile';
 import {
   useGetJoinRequestsByStudent,
   useGetAllJoinRequests,
@@ -18,7 +18,8 @@ import type { JoinRequestResponse } from '../types/joinRequest';
  * @returns Object containing group data and loading states
  */
 export const useGroups = () => {
-  const { profile } = useStudentProfileStore();
+  // Use TanStack Query for profile (auto-refetch on window focus)
+  const { profile, isLeader, hasGroup } = useStudentProfile();
   const {
     currentGroup,
     fetchStatus,
@@ -44,15 +45,7 @@ export const useGroups = () => {
     }
   }, [fetchAllGroups, listStatus]);
 
-  // Determine if student is a leader
-  const isLeader = useMemo(() => {
-    return profile?.leader ?? false;
-  }, [profile?.leader]);
-
-  // Determine if student has a group
-  const hasGroup = useMemo(() => {
-    return !!profile?.groupId;
-  }, [profile?.groupId]);
+  // isLeader and hasGroup are now computed in useStudentProfile hook
 
   // Calculate loading states
   const isLoadingOwnGroup = fetchStatus === 'loading';

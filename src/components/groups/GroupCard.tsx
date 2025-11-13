@@ -155,7 +155,9 @@ function GroupCard({
               </div>
               <div className='flex items-center gap-1'>
                 <User className='w-4 h-4' />
-                <span>Trưởng nhóm: {group.leader.studentName}</span>
+                <span>
+                  Trưởng nhóm: {group.leader?.studentName || 'Chưa có'}
+                </span>
               </div>
             </div>
           </div>

@@ -4,7 +4,6 @@ import { CreateGroupModal } from '@/components/modals/CreateGroupModal';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { useStudentProfileStore } from '../../store/studentProfile';
 import { hasStudentJoinGroup } from '../../utils/groupStatus';
 import { AuthButton } from '../AuthButton';
@@ -50,7 +49,7 @@ export function Header() {
               >
                 Xem nhóm
               </a>
-              <a
+              {/* <a
                 href='/blog'
                 className='hover:text-primary transition-colors'
                 onClick={e => {
@@ -59,7 +58,7 @@ export function Header() {
                 }}
               >
                 Blog
-              </a>
+              </a> */}
             </nav>
           </div>
         </div>
