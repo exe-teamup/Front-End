@@ -52,6 +52,11 @@ function GroupCard({
     );
   }, [typedUserRequests, group.groupId, profile?.userId]);
 
+  // Check if user already has a group or is a leader (cannot join)
+  const hasGroupOrIsLeader = useMemo(() => {
+    return !!(profile?.groupId || profile?.leader);
+  }, [profile?.groupId, profile?.leader]);
+
   const handleCopyLink = () => {
     const groupUrl = `${window.location.origin}/groups/${group.groupId}`;
     navigator.clipboard.writeText(groupUrl);
@@ -173,13 +178,15 @@ function GroupCard({
               onClick={() => {
                 handleJoinRequest(group.groupId);
               }}
-              disabled={hasSentRequest || isPending}
+              disabled={hasSentRequest || isPending || hasGroupOrIsLeader}
             >
               {isPending
                 ? 'Đang gửi...'
                 : hasSentRequest
                   ? 'Đã gửi yêu cầu'
-                  : 'Tham gia nhóm'}
+                  : hasGroupOrIsLeader
+                    ? 'Bạn đã có nhóm'
+                    : 'Tham gia nhóm'}
             </Button>
           </div>
         )}
