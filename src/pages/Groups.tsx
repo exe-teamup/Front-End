@@ -26,6 +26,8 @@ export function Groups() {
     incomingRequestsCount,
   } = useGroups();
 
+  // TanStack Query auto-refetches on window focus (configured in useStudentProfile)
+
   const getActiveTabFromPath = useCallback((): TabType => {
     const path = location.pathname;
     if (path === '/groups/my') return 'my-groups';
@@ -80,8 +82,8 @@ export function Groups() {
           },
         ]
       : []),
-    // Tab "Yêu cầu vào nhóm" chỉ hiển thị khi đã có nhóm
-    ...(hasGroup
+    // Tab "Yêu cầu vào nhóm" chỉ hiển thị cho leader
+    ...(hasGroup && isLeader
       ? [
           {
             id: 'incoming-requests' as TabType,

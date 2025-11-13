@@ -1,9 +1,23 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { LogOut, Trash2, UserCog } from 'lucide-react';
+import {
+  LogOut,
+  Trash2,
+  UserCog,
+  MoreVertical,
+  Eye,
+  UserX,
+} from 'lucide-react';
 import type { Group } from '../../types/group';
 import GroupCard from './GroupCard';
+import {
+  useKickMember,
+  useLeaveGroup,
+  useTransferLeader,
+  useDeleteGroup,
+} from '@/hooks/api/useGroupsApi';
+import { useStudentProfileStore } from '@/store/studentProfile';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,9 +39,23 @@ function MyGroupsTab({
   isLoading = false,
   isLeader = false,
 }: MyGroupsTabProps) {
+  const navigate = useNavigate();
+  const { profile } = useStudentProfileStore();
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDisbandDialog, setShowDisbandDialog] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [showKickDialog, setShowKickDialog] = useState<string | null>(null);
+
+  const { mutateAsync: kickMember, isPending: isKicking } = useKickMember(
+    currentGroup?.groupId ? String(currentGroup.groupId) : undefined
+  );
+  const { mutateAsync: leaveGroup, isPending: isLeaving } = useLeaveGroup();
+  const { mutateAsync: transferLeader, isPending: isTransferring } =
+    useTransferLeader(
+      currentGroup?.groupId ? String(currentGroup.groupId) : undefined
+    );
+  const { mutateAsync: deleteGroup, isPending: isDeleting } = useDeleteGroup();
   // Show loading state
   if (isLoading) {
     return (
@@ -62,16 +90,60 @@ function MyGroupsTab({
 
   const { members } = currentGroup;
 
-  const handleLeaveGroup = () => {
-    // TODO: Call API to leave group
-    toast.success('Đã rời khỏi nhóm');
-    setShowLeaveDialog(false);
+  const handleLeaveGroup = async () => {
+    try {
+      await leaveGroup();
+      toast.success('Đã rời khỏi nhóm');
+      setShowLeaveDialog(false);
+      // Navigate to groups page after leaving
+      navigate('/groups');
+    } catch {
+      toast.error('Có lỗi xảy ra, vui lòng thử lại');
+    }
   };
 
-  const handleDisbandGroup = () => {
-    // TODO: Call API to disband group
-    toast.success('Đã giải tán nhóm');
-    setShowDisbandDialog(false);
+  const handleDisbandGroup = async () => {
+    if (!currentGroup?.groupId) return;
+
+    try {
+      await deleteGroup(String(currentGroup.groupId));
+      toast.success('Đã giải tán nhóm');
+      setShowDisbandDialog(false);
+      // Navigate to groups page after disbanding
+      navigate('/groups');
+    } catch {
+      toast.error('Có lỗi xảy ra, vui lòng thử lại');
+    }
+  };
+
+  const handleTransferLeader = async (newLeaderId: string) => {
+    if (!currentGroup?.groupId) return;
+
+    try {
+      await transferLeader({ newLeaderId });
+      toast.success('Đã chuyển quyền leader thành công');
+      setShowTransferDialog(false);
+    } catch {
+      toast.error('Có lỗi xảy ra, vui lòng thử lại');
+    }
+  };
+
+  const handleKickMember = async () => {
+    if (!showKickDialog || !currentGroup?.groupId) return;
+
+    try {
+      await kickMember(showKickDialog);
+      toast.success('Đã loại thành viên khỏi nhóm');
+      setShowKickDialog(null);
+      setOpenMenuId(null);
+    } catch {
+      toast.error('Có lỗi xảy ra, vui lòng thử lại');
+    }
+  };
+
+  const handleViewMemberProfile = (memberId: string) => {
+    navigate(`/exe/${memberId}`);
+    setOpenMenuId(null);
   };
 
   return (
@@ -129,33 +201,98 @@ function MyGroupsTab({
             </h3>
           </div>
           <ul className='divide-y'>
-            {members.map(m => (
-              <li
-                key={m.studentId}
-                className='px-6 py-3 flex items-center gap-3'
-              >
-                <img
-                  src={'/images/avatar.jpg'}
-                  alt={m.studentName}
-                  className='w-8 h-8 rounded-full object-cover'
-                />
-                <div className='flex-1 min-w-0'>
-                  <div className='flex items-center gap-2'>
-                    <span className='text-sm font-medium text-gray-900 truncate'>
-                      {m.studentName}
-                    </span>
-                    {m.isLeader && (
-                      <span className='text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700'>
-                        Leader
+            {members.map(m => {
+              const canKick =
+                isLeader && !m.isLeader && m.studentId !== profile?.userId;
+              const isMenuOpen = openMenuId === m.studentId;
+
+              return (
+                <li
+                  key={m.studentId}
+                  className='px-6 py-3 flex items-center gap-3 relative'
+                >
+                  <img
+                    src={'/images/avatar.jpg'}
+                    alt={m.studentName}
+                    className='w-8 h-8 rounded-full object-cover'
+                  />
+                  <div className='flex-1 min-w-0'>
+                    <div className='flex items-center gap-2'>
+                      <span className='text-sm font-medium text-gray-900 truncate'>
+                        {m.studentName}
                       </span>
-                    )}
+                      {m.isLeader && (
+                        <span className='text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700'>
+                          Leader
+                        </span>
+                      )}
+                    </div>
+                    <p className='text-xs text-gray-500 truncate'>
+                      {m.majorName || 'N/A'}
+                    </p>
                   </div>
-                  <p className='text-xs text-gray-500 truncate'>
-                    {m.studentName}
-                  </p>
-                </div>
-              </li>
-            ))}
+                  {canKick && (
+                    <div className='relative'>
+                      <button
+                        type='button'
+                        onClick={() =>
+                          setOpenMenuId(isMenuOpen ? null : m.studentId)
+                        }
+                        className='p-1.5 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors'
+                        aria-label='Menu hành động'
+                      >
+                        <MoreVertical className='w-4 h-4 text-gray-500' />
+                      </button>
+
+                      {isMenuOpen && (
+                        <>
+                          {/* Backdrop */}
+                          <div
+                            className='fixed inset-0 z-10'
+                            role='button'
+                            tabIndex={0}
+                            aria-label='Đóng menu'
+                            onClick={() => setOpenMenuId(null)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                setOpenMenuId(null);
+                              }
+                            }}
+                          />
+
+                          {/* Menu */}
+                          <div className='absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20'>
+                            <div className='py-1'>
+                              <button
+                                type='button'
+                                onClick={() =>
+                                  handleViewMemberProfile(m.studentId)
+                                }
+                                className='flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary cursor-pointer'
+                              >
+                                <Eye className='w-4 h-4' />
+                                Xem chi tiết
+                              </button>
+                              <button
+                                type='button'
+                                onClick={() => {
+                                  setShowKickDialog(m.studentId);
+                                  setOpenMenuId(null);
+                                }}
+                                className='flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer'
+                              >
+                                <UserX className='w-4 h-4' />
+                                Loại khỏi nhóm
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
@@ -176,8 +313,9 @@ function MyGroupsTab({
             <AlertDialogAction
               onClick={handleLeaveGroup}
               className='bg-red-600 hover:bg-red-700'
+              disabled={isLeaving}
             >
-              Rời nhóm
+              {isLeaving ? 'Đang xử lý...' : 'Rời nhóm'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -202,8 +340,9 @@ function MyGroupsTab({
             <AlertDialogAction
               onClick={handleDisbandGroup}
               className='bg-red-600 hover:bg-red-700'
+              disabled={isDeleting}
             >
-              Giải tán nhóm
+              {isDeleting ? 'Đang xử lý...' : 'Giải tán nhóm'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -227,14 +366,9 @@ function MyGroupsTab({
                 .map(member => (
                   <button
                     key={member.studentId}
-                    onClick={() => {
-                      // TODO: Implement transfer logic
-                      toast.info(
-                        `Chức năng chuyển quyền cho ${member.studentName} đang được phát triển`
-                      );
-                      setShowTransferDialog(false);
-                    }}
-                    className='w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left'
+                    onClick={() => handleTransferLeader(member.studentId)}
+                    disabled={isTransferring}
+                    className='w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed'
                   >
                     <img
                       src='/images/avatar.jpg'
@@ -255,6 +389,35 @@ function MyGroupsTab({
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Kick Member Dialog */}
+      <AlertDialog
+        open={!!showKickDialog}
+        onOpenChange={() => setShowKickDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Loại thành viên khỏi nhóm?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className='py-4'>
+            <p className='text-sm text-gray-600'>
+              Bạn có chắc chắn muốn loại thành viên này khỏi nhóm? Hành động này
+              không thể hoàn tác và thành viên sẽ cần được mời lại nếu muốn tham
+              gia lại nhóm.
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleKickMember}
+              className='bg-red-600 hover:bg-red-700'
+              disabled={isKicking}
+            >
+              {isKicking ? 'Đang xử lý...' : 'Loại khỏi nhóm'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
