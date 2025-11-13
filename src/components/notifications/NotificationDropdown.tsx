@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Bell, CheckCheck } from 'lucide-react';
 import {
   useGetMyNotifications,
@@ -42,11 +42,18 @@ export function NotificationDropdown({
   }, [isOpen, onClose]);
 
   // Ensure notifications is an array
-  const notificationsArray: AccountNotification[] = Array.isArray(notifications)
-    ? notifications
-    : [];
+  const notificationsArray: AccountNotification[] = React.useMemo(
+    () => (Array.isArray(notifications) ? notifications : []),
+    [notifications]
+  );
 
-  const unreadCount = notificationsArray.filter(n => !n.checked).length;
+  const sortedNotifications = React.useMemo(() => {
+    return [...notificationsArray].sort(
+      (a, b) => b.accountNotificationId - a.accountNotificationId
+    );
+  }, [notificationsArray]);
+
+  const unreadCount = sortedNotifications.filter(n => !n.checked).length;
 
   const handleMarkAsRead = async (accountNotificationId: number) => {
     try {
@@ -58,7 +65,14 @@ export function NotificationDropdown({
 
   const handleMarkAllAsRead = async () => {
     try {
-      await markAllAsRead({});
+      // Get all unread notification IDs
+      const unreadIds = sortedNotifications
+        .filter(n => !n.checked)
+        .map(n => n.accountNotificationId);
+
+      if (unreadIds.length > 0) {
+        await markAllAsRead(unreadIds);
+      }
     } catch {
       // Silent fail
     }
@@ -107,14 +121,14 @@ export function NotificationDropdown({
         <div className='overflow-y-auto flex-1'>
           {isLoading ? (
             <div className='p-4 text-center text-gray-500'>Đang tải...</div>
-          ) : notificationsArray.length === 0 ? (
+          ) : sortedNotifications.length === 0 ? (
             <div className='p-8 text-center'>
               <Bell className='w-12 h-12 text-gray-300 mx-auto mb-3' />
               <p className='text-gray-500'>Không có thông báo nào</p>
             </div>
           ) : (
             <div className='divide-y divide-gray-100'>
-              {notificationsArray.map(notification => (
+              {sortedNotifications.map(notification => (
                 <button
                   key={notification.accountNotificationId}
                   type='button'
