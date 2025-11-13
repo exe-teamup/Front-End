@@ -82,8 +82,7 @@ export function LecturerManagement() {
   const [formData, setFormData] = useState({
     lecturerName: '',
     email: '',
-    lecturerStatus: 'ACTIVE',
-    accountStatus: 'ACTIVE',
+    status: 'ACTIVE',
   });
 
   // Filter lecturers by semester
@@ -181,8 +180,7 @@ export function LecturerManagement() {
     setFormData({
       lecturerName: lecturer.lecturerName,
       email: lecturer.email,
-      lecturerStatus: lecturer.lecturerStatus,
-      accountStatus: lecturer.accountStatus,
+      status: lecturer.lecturerStatus,
     });
     setIsEditOpen(true);
   };
@@ -481,6 +479,7 @@ export function LecturerManagement() {
                 onChange={e =>
                   setFormData({ ...formData, lecturerName: e.target.value })
                 }
+                disabled
               />
             </div>
             <div>
@@ -491,32 +490,16 @@ export function LecturerManagement() {
                 onChange={e =>
                   setFormData({ ...formData, email: e.target.value })
                 }
+                disabled
               />
             </div>
             <div className='grid grid-cols-2 gap-4'>
               <div>
                 <Label>Trạng thái giảng viên</Label>
                 <Select
-                  value={formData.lecturerStatus}
+                  value={formData.status}
                   onValueChange={value =>
-                    setFormData({ ...formData, lecturerStatus: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='ACTIVE'>ACTIVE</SelectItem>
-                    <SelectItem value='INACTIVE'>INACTIVE</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Trạng thái tài khoản</Label>
-                <Select
-                  value={formData.accountStatus}
-                  onValueChange={value =>
-                    setFormData({ ...formData, accountStatus: value })
+                    setFormData({ ...formData, status: value })
                   }
                 >
                   <SelectTrigger>

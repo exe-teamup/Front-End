@@ -18,3 +18,21 @@ export interface DashboardStats {
   pendingJoinRequests: number;
   recentActivity: RecentActivity[];
 }
+
+export interface LecturerWorkloadDetail {
+  lecturerId: number;
+  lecturerName: string;
+  email: string;
+  currentLoad: number;
+  quota: number;
+  percentage: number;
+  status: string;
+}
+
+export interface WorkloadData {
+  totalLecturers: number;
+  lecturersWithSlot: number;
+  lecturersAlmostFull: number;
+  lecturersFull: number;
+  lecturerDetails: LecturerWorkloadDetail[];
+}
