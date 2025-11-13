@@ -55,6 +55,7 @@ export const useCreateJoinRequest = () => {
         exact: false,
       });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
     },
   });
 };
@@ -96,6 +97,7 @@ export const useHandleJoinRequest = () => {
         exact: false,
       });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
     },
   });
 };
@@ -118,6 +120,7 @@ export const useDeleteJoinRequest = () => {
         exact: false,
       });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
     },
   });
 };

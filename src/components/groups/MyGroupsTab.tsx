@@ -17,7 +17,7 @@ import {
   useTransferLeader,
   useDeleteGroup,
 } from '@/hooks/api/useGroupsApi';
-import { useStudentProfileStore } from '@/store/studentProfile';
+import { useStudentProfile } from '@/hooks/useStudentProfile';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,7 +40,7 @@ function MyGroupsTab({
   isLeader = false,
 }: MyGroupsTabProps) {
   const navigate = useNavigate();
-  const { profile } = useStudentProfileStore();
+  const { profile } = useStudentProfile();
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDisbandDialog, setShowDisbandDialog] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
