@@ -24,7 +24,6 @@ import {
   AlertCircle,
   AlertTriangle,
   ArrowUpDown,
-  Edit,
   Loader2,
   Search,
   UserCheck,
@@ -302,16 +301,6 @@ export function WorkloadGiangVien() {
                             />
                           </div>
                         </div>
-
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => handleEditQuota(lecturer)}
-                          className='min-w-[100px]'
-                        >
-                          <Edit className='w-4 h-4 mr-2' />
-                          Sửa quota
-                        </Button>
                       </div>
                     </div>
                   );
