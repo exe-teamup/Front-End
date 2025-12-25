@@ -20,7 +20,7 @@ const userInfo = {
 const AdminRoute = {
   path: ROUTES.ADMIN.ROOT,
   element: (
-    <ProtectedRoute userRole='ADMIN'>
+    <ProtectedRoute>
       <DashboardLayout userRole='ADMIN' user={userInfo} />
     </ProtectedRoute>
   ),
